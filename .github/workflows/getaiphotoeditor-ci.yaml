@@ -1,0 +1,36 @@
+name: GetAIPhotoEditor checks
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  typecheck-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_PROVIDER: sqlite
+      DATABASE_URL: file:data/ci.db
+      AUTH_SECRET: ci-only-replace-before-launch-password-not-for-production
+      VITE_APP_URL: https://getaiphotoeditor.com
+      VITE_APP_NAME: GetAIPhotoEditor
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Build app
+        run: pnpm build
+      - name: Typecheck
+        run: pnpm exec tsc --noEmit
+      - name: Test payment guards
+        run: pnpm test:payment
+      - name: Test Waffo provider
+        run: pnpm test:waffo

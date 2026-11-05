@@ -8,6 +8,7 @@ import { createTask, findTask, getTasks, updateTask, AITaskStatus } from '@/modu
 import { EDIT_CREDITS, getPhotoTool } from '@/modules/photo-editor/config';
 import { createPhotoProvider, getSelectedPhotoProvider, photoModelInput } from '@/modules/photo-editor/service';
 import { verifyUploadToken } from '@/modules/photo-editor/upload-token';
+import { getAllConfigs } from '@/modules/config/service';
 import { md5 } from '@/lib/hash';
 import { enforceMinIntervalRateLimit } from '@/lib/rate-limit';
 import { respData, respErr } from '@/lib/resp';
@@ -56,6 +57,12 @@ async function POST({ request }: { request: Request }) {
     return respData({ jobId: previous.id, status: previous.status, credits: previous.costCredits });
   }
 
+  // The current provider adapters need a publicly fetchable HTTPS input
+  // image; R2 with no public domain would bill users for an inaccessible file.
+  const configs = await getAllConfigs();
+  if (!configs.r2_domain?.startsWith('https://')) {
+    return respErr('Photo editing is unavailable until an HTTPS R2 image domain is configured', { status: 503 });
+  }
   const provider = await getSelectedPhotoProvider();
   let instance: Awaited<ReturnType<typeof createPhotoProvider>>;
   try { instance = await createPhotoProvider(provider); }
