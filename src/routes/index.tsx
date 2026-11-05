@@ -112,6 +112,21 @@ const FEATURES = [
     '/#editor',
     'Restyle a photo',
   ],
+  [
+    'Remove Clothing Wrinkles',
+    'Smooth creases and wrinkles in shirts, dresses, or other garments while keeping the fabric texture, fit, and overall look natural.',
+    '/#editor',
+    'Smooth clothing wrinkles',
+  ],
+] as const;
+
+const FEATURE_IMAGES = [
+  '/images/ai-photo-editor/remove-background.jpg',
+  '/images/ai-photo-editor/portrait-retouch.jpg',
+  '/images/ai-photo-editor/enhance-photo.jpg',
+  '/images/ai-photo-editor/remove-object.jpg',
+  '/images/ai-photo-editor/restyle-photo.jpg',
+  '/images/ai-photo-editor/remove-clothing-wrinkles.jpg',
 ] as const;
 
 const USE_CASES = [
@@ -213,14 +228,20 @@ function HomePage() {
             fix or creative transformation.
           </p>
           <div className="mt-9 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map(([title, description, href, action]) => (
+            {FEATURES.map(([title, description, href, action], index) => (
               <article
                 key={title}
-                className="flex flex-col rounded-2xl border border-slate-200 bg-white p-7"
+                className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6"
               >
-                <span className="mb-5 flex size-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                  <WandSparkles className="size-5" />
-                </span>
+                <img
+                  src={FEATURE_IMAGES[index]}
+                  alt={`Before and after AI photo edit: ${title}`}
+                  width={1672}
+                  height={941}
+                  loading="lazy"
+                  decoding="async"
+                  className="mb-5 aspect-[1672/941] w-full rounded-xl bg-slate-100 object-cover"
+                />
                 <h3 className="text-lg font-semibold">{title}</h3>
                 <p className="mt-3 flex-1 text-sm leading-7 text-slate-600">
                   {description}
