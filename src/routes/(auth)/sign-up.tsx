@@ -42,8 +42,18 @@ function SignUpPage() {
   const navigatingRef = useRef(false);
   const [error, setError] = useState('');
 
-  const [redirectParam, setRedirectParam] = useState<string | null>(null);
-  const [callbackUrl, setCallbackUrl] = useState<string | null>(null);
+  // Read query on first client render so social login doesn't fall back before
+  // useEffect runs (e.g. fast click on Google right after hydration).
+  const [redirectParam, setRedirectParam] = useState<string | null>(() =>
+    typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('redirect')
+      : null
+  );
+  const [callbackUrl, setCallbackUrl] = useState<string | null>(() =>
+    typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('callbackUrl')
+      : null
+  );
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -51,24 +61,29 @@ function SignUpPage() {
     setCallbackUrl(params.get('callbackUrl'));
   }, []);
 
-  // Already signed in (visited /sign-up directly, or a stale callbackUrl looped
-  // back here) → go home. The auth pages never gate themselves, so this can't loop.
-  useEffect(() => {
-    if (sessionPending || navigatingRef.current) return;
-    if (session?.user) {
-      navigatingRef.current = true;
-      router.push('/');
-    }
-  }, [sessionPending, session?.user, router]);
-
   // Allow only same-site relative paths, and never an auth page (would loop).
   const safeCallbackUrl = safeInternalPath(callbackUrl);
 
   const afterLoginUrl = resolveAfterAuthUrl({
     redirect: redirectParam,
     callbackUrl,
-    fallback: '/settings',
+    fallback: '/',
   });
+
+  // Already signed in → return to the callback destination (or home).
+  useEffect(() => {
+    if (sessionPending || navigatingRef.current) return;
+    if (session?.user) {
+      navigatingRef.current = true;
+      const params = new URLSearchParams(window.location.search);
+      const dest = resolveAfterAuthUrl({
+        redirect: params.get('redirect'),
+        callbackUrl: params.get('callbackUrl'),
+        fallback: '/',
+      });
+      window.location.assign(localizeHref(dest));
+    }
+  }, [sessionPending, session?.user]);
 
   // Carry callbackUrl/redirect across to sign-in so the destination survives the switch.
   const switchQuery = (() => {

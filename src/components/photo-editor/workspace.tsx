@@ -195,7 +195,11 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
       window.setTimeout(() => {
         window.location.href =
           '/sign-in?callbackUrl=' +
-          encodeURIComponent(window.location.pathname + window.location.search);
+          encodeURIComponent(
+            window.location.pathname +
+              window.location.search +
+              window.location.hash
+          );
       }, 600);
       return;
     }

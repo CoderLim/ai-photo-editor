@@ -6,11 +6,16 @@ import { ArrowRight, Menu, X } from 'lucide-react';
 import { useSession } from '@/core/auth/client';
 import { Link } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
+import { currentPathWithQuery } from '@/lib/redirect';
 import { cn } from '@/lib/utils';
 import { m } from '@/paraglide/messages.js';
 import { SiteUserMenu } from '@/components/site-user-menu';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { buttonVariants } from '@/components/ui/button';
+
+function authHref(path: '/sign-in' | '/sign-up') {
+  return `${path}?callbackUrl=${encodeURIComponent(currentPathWithQuery('/'))}`;
+}
 
 export interface NavLink {
   href: string;
@@ -91,7 +96,7 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
             />
           ) : (
             <Link
-              href="/settings"
+              href={authHref('/sign-in')}
               className={cn(
                 buttonVariants({ size: 'sm' }),
                 'ml-1.5 gap-1.5 rounded-lg bg-blue-600 px-3.5 text-white hover:bg-blue-700'
@@ -154,7 +159,7 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
               />
             ) : (
               <Link
-                href="/settings"
+                href={authHref('/sign-in')}
                 className={cn(
                   buttonVariants({ size: 'sm' }),
                   'gap-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700'
