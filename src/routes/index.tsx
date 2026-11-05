@@ -83,7 +83,21 @@ function HomePage() {
         <div className="mt-9 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map(([title, description, href, action]) => (
             <article key={title} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-7">
-              <span className="mb-5 flex size-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><WandSparkles className="size-5"/></span>
+              {title === 'Remove and Replace Backgrounds' || title === 'Retouch Portraits and Skin' || title === 'Restyle Photos With Text Prompts' ? (
+                <img
+                  src={title === 'Remove and Replace Backgrounds' ? '/images/ai-photo-editor/background-example.jpg' : title === 'Retouch Portraits and Skin' ? '/images/ai-photo-editor/portrait-example.jpg' : '/images/ai-photo-editor/restyle-example.jpg'}
+                  alt={`AI editing before-and-after illustration: ${title}`}
+                  width={480}
+                  height={270}
+                  loading="lazy"
+                  decoding="async"
+                  className="mb-5 aspect-[16/9] w-full rounded-xl bg-slate-100 object-cover"
+                />
+              ) : (
+                <div className="mb-5 flex aspect-[16/9] items-center justify-center rounded-xl bg-gradient-to-br from-blue-50 to-violet-100">
+                  <WandSparkles className="size-10 text-blue-500" aria-hidden="true"/>
+                </div>
+              )}
               <h3 className="text-lg font-semibold">{title}</h3>
               <p className="mt-3 flex-1 text-sm leading-7 text-slate-600">{description}</p>
               <Link href={href} className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-blue-600">{action} <ArrowRight className="size-4"/></Link>
