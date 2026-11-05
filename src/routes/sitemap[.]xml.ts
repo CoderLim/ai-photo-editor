@@ -8,6 +8,10 @@ const STATIC_PATHS = [
   '',
   '/pricing',
   '/blog',
+  '/tools',
+  '/tools/remove-object',
+  '/tools/change-background',
+  '/tools/enhance-photo',
   '/privacy-policy',
   '/terms-of-service',
 ];

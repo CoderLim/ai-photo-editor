@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowRight, Menu, X } from 'lucide-react';
+import { ArrowRight, Menu, X, Aperture } from 'lucide-react';
 
 import { useSession } from '@/core/auth/client';
 import { Link } from '@/core/i18n/navigation';
@@ -33,9 +33,7 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         {/* Brand */}
         <Link href="/" className="flex items-center">
-          <span className="font-serif text-lg italic">
-            {envConfigs.app_name}
-          </span>
+          <span className="inline-flex items-center gap-2 text-base font-bold tracking-tight"><span className="inline-flex size-9 items-center justify-center rounded-xl bg-blue-600 text-white"><Aperture className="size-5"/></span>{envConfigs.app_name}</span>
         </Link>
 
         {/* Desktop nav */}
