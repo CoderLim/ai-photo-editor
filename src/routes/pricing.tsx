@@ -1,38 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router';
-
-import { m } from '@/paraglide/messages.js';
-import { getLocale } from '@/paraglide/runtime.js';
 import { Footer } from '@/blocks/footer';
 import { Header } from '@/blocks/header';
 import { Pricing } from '@/blocks/pricing';
+import { envConfigs } from '@/config';
 
 export const Route = createFileRoute('/pricing')({
-  loader: () => {
-    const locale = getLocale();
-    return {
-      title: m['landing.pricing.title']({}, { locale }),
-      description: m['landing.pricing.description']({}, { locale }),
-    };
-  },
-  head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          { title: loaderData.title },
-          { name: 'description', content: loaderData.description },
-        ]
-      : [],
+  head: () => ({
+    meta: [
+      { title: 'Pricing — GetAIPhotoEditor' },
+      { name: 'description', content: 'One-time AI photo editing credit packs. No subscriptions. 200, 500 or 1200 credits for simple photo editing.' },
+    ],
+    links: [{ rel: 'canonical', href: envConfigs.app_url + '/pricing' }],
   }),
-  component: PricingPage,
+  component: () => <div className="min-h-screen bg-[#f7f9fc]"><Header /><main><Pricing /></main><Footer /></div>,
 });
-
-function PricingPage() {
-  return (
-    <div className="bg-background text-foreground flex min-h-screen flex-col">
-      <Header />
-      <main className="flex-1">
-        <Pricing />
-      </main>
-      <Footer />
-    </div>
-  );
-}
