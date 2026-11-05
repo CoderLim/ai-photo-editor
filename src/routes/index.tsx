@@ -459,7 +459,7 @@ export const Route = createFileRoute('/')({
       title: HOME_TITLE,
       description: HOME_DESCRIPTION,
       path: '/',
-      image: '/images/ai-photo-editor/background-example.jpg',
+      image: '/og.png',
     }),
   component: HomePage,
 });

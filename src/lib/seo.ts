@@ -85,9 +85,7 @@ export function pageHead(input: PageSeoInput): {
   const localized = !!input.localized;
   const canonicalLocale = localized ? locale : baseLocale;
   const canonical = absoluteUrl(input.path, canonicalLocale);
-  const image = absoluteAsset(
-    input.image ?? envConfigs.app_logo ?? '/logo.png'
-  );
+  const image = absoluteAsset(input.image ?? '/og.png');
 
   const meta: MetaEntry[] = [
     { title: input.title },
