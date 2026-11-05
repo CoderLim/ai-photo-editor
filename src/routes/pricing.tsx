@@ -1,36 +1,27 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-import { m } from '@/paraglide/messages.js';
-import { getLocale } from '@/paraglide/runtime.js';
+import { pageHead } from '@/lib/seo';
 import { Footer } from '@/blocks/footer';
 import { Header } from '@/blocks/header';
 import { Pricing } from '@/blocks/pricing';
 
 export const Route = createFileRoute('/pricing')({
-  loader: () => {
-    const locale = getLocale();
-    return {
-      title: m['landing.pricing.title']({}, { locale }),
-      description: m['landing.pricing.description']({}, { locale }),
-    };
-  },
-  head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          { title: loaderData.title },
-          { name: 'description', content: loaderData.description },
-        ]
-      : [],
-  }),
+  head: () =>
+    pageHead({
+      title: 'AI Photo Editor Pricing — Credit Packs | GetAIPhotoEditor',
+      description:
+        'AI photo editor credit packs — pay once, no subscription. Choose 200, 500, or 1200 credits for backgrounds, retouching, and enhancements.',
+      path: '/pricing',
+    }),
   component: PricingPage,
 });
 
 function PricingPage() {
   return (
-    <div className="bg-background text-foreground flex min-h-screen flex-col">
+    <div className="min-h-screen bg-[#f7f9fc]">
       <Header />
-      <main className="flex-1">
-        <Pricing />
+      <main>
+        <Pricing title="AI Photo Editor Pricing" headingAs="h1" />
       </main>
       <Footer />
     </div>

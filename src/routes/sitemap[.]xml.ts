@@ -1,13 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { envConfigs } from '@/config';
-import { baseLocale, locales, localizeUrl } from '@/paraglide/runtime.js';
+import { absoluteUrl, sitemapLocalesForPath } from '@/lib/seo';
+import { baseLocale } from '@/paraglide/runtime.js';
 import { getLocalPosts, mergePosts } from '@/content/posts';
 
 const STATIC_PATHS = [
   '',
   '/pricing',
   '/blog',
+  '/tools',
+  '/guest-post',
   '/privacy-policy',
   '/terms-of-service',
 ];
@@ -20,18 +23,19 @@ type Entry = {
 };
 
 function urlFor(path: string, locale: string): string {
-  return localizeUrl(`${envConfigs.app_url}${path || '/'}`, {
-    locale: locale as (typeof locales)[number],
-  }).href;
+  return absoluteUrl(path || '/', locale);
 }
 
 function entryXml(e: Entry): string {
-  const alternates = locales
-    .map(
+  const path = e.path || '/';
+  const langs = sitemapLocalesForPath(path);
+  const alternates = [
+    ...langs.map(
       (loc) =>
         `    <xhtml:link rel="alternate" hreflang="${loc}" href="${urlFor(e.path, loc)}"/>`
-    )
-    .join('\n');
+    ),
+    `    <xhtml:link rel="alternate" hreflang="x-default" href="${urlFor(e.path, baseLocale)}"/>`,
+  ].join('\n');
   return [
     '  <url>',
     `    <loc>${urlFor(e.path, baseLocale)}</loc>`,

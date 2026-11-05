@@ -8,6 +8,7 @@ import {
   PaymentManager,
   StripeProvider,
   WechatPayProvider,
+  WaffoProvider,
 } from '@/core/payment';
 import {
   PaymentStatus,
@@ -71,6 +72,12 @@ async function getPaymentManager(): Promise<PaymentManager> {
     c('stripe_secret_key') || c('stripe_api_key'),
     c('creem_enabled'),
     c('creem_api_key'),
+    c('waffo_enabled'),
+    c('waffo_merchant_id'),
+    c('waffo_private_key'),
+    c('waffo_store_id'),
+    c('waffo_environment'),
+    c('waffo_product_ids_mapping'),
     c('alipay_app_id'),
     c('wechat_mch_id'),
     c('default_payment_provider'),
@@ -108,6 +115,18 @@ async function getPaymentManager(): Promise<PaymentManager> {
           c('creem_environment') === 'production' ? 'production' : 'sandbox',
       }),
       isDefault
+    );
+  }
+
+  if (c('waffo_enabled') === 'true' && c('waffo_merchant_id') && c('waffo_private_key') && c('waffo_store_id')) {
+    manager.addProvider(
+      new WaffoProvider({
+        merchantId: c('waffo_merchant_id'),
+        privateKey: c('waffo_private_key'),
+        storeId: c('waffo_store_id'),
+        environment: c('waffo_environment') === 'prod' ? 'prod' : 'test',
+      }),
+      c('default_payment_provider') === 'waffo'
     );
   }
 
@@ -175,6 +194,21 @@ export async function createCheckout(params: {
   // Resolve provider-specific product ID (e.g. Creem product_ids_mapping)
   const resolvedProvider = provider || pm.getDefaultProvider()?.name;
   let resolvedProductId = paymentOrder.productId;
+  if (resolvedProvider === 'waffo' && paymentOrder.productId) {
+    const raw = configs.waffo_product_ids_mapping || '';
+    let ids: Record<string, string>;
+    try {
+      ids = JSON.parse(raw);
+    } catch {
+      throw new Error('Waffo product ID mapping is not configured');
+    }
+    if (!ids || typeof ids !== 'object' || Array.isArray(ids) ||
+        typeof ids[paymentOrder.productId] !== 'string' ||
+        !ids[paymentOrder.productId].trim()) {
+      throw new Error('Waffo product ID mapping missing for ' + paymentOrder.productId);
+    }
+    resolvedProductId = ids[paymentOrder.productId];
+  }
   if (resolvedProvider === 'creem' && paymentOrder.productId) {
     const mapping = configs.creem_product_ids_mapping;
     if (mapping) {
@@ -347,6 +381,21 @@ export async function settleCheckoutOrder(
   const subscriptionInfo = session.subscriptionInfo;
 
   if (session.paymentStatus === PaymentStatus.SUCCESS) {
+    if (provider === 'waffo') {
+      const configs = await getAllConfigs();
+      const mode = session.metadata?.waffoMode ||
+        session.paymentResult?.mode || session.paymentResult?.waffoMode;
+      if (configs.waffo_environment === 'prod' && mode === 'test') {
+        throw new Error('Refusing Waffo test-mode payment in production');
+      }
+      const paidAmount = paymentInfo?.paymentAmount;
+      const paidCurrency = (paymentInfo?.paymentCurrency || '').toLowerCase();
+      if (typeof paidAmount !== 'number' ||
+          paidAmount !== existingOrder.amount ||
+          paidCurrency !== (existingOrder.currency || '').toLowerCase()) {
+        throw new Error('Waffo payment amount/currency mismatch for order ' + existingOrder.orderNo);
+      }
+    }
     // CNY providers charge exactly the order amount (no coupons or tax on
     // their side), so any mismatch means the notification belongs to some
     // other trade — refuse to settle rather than grant on the wrong payment.

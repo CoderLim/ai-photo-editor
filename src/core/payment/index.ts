@@ -124,6 +124,7 @@ export class PaymentManager {
 export const paymentManager = new PaymentManager();
 
 // Export all providers
+export * from './waffo';
 export * from './stripe';
 export * from './creem';
 export * from './paypal';

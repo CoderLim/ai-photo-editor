@@ -27,6 +27,7 @@
     "test:admin": "node --import tsx --test tests/admin-agent.test.ts",
     "test:guest-posts": "node --import tsx --test tests/guest-posts.test.ts tests/guest-post-notify.test.ts",
     "test:payment": "node --import tsx --test tests/payment-idempotency.test.ts tests/payment-guards.test.ts tests/refund.test.ts",
+    "test:waffo": "node --import tsx --test src/core/payment/waffo.test.ts",
     "test:atomic": "node --import tsx --test tests/atomic.test.ts",
     "test:atomic:d1": "ATOMIC_D1=1 node --import tsx --test tests/atomic.test.ts",
     "test:atomic:pg": "TSX_TSCONFIG_PATH=tests/tsconfig.pg.json node --import tsx --test tests/atomic.test.ts"
@@ -58,6 +59,7 @@
     "@tiptap/extension-placeholder": "^3.32.0",
     "@tiptap/react": "^3.32.0",
     "@tiptap/starter-kit": "^3.32.0",
+    "@waffo/pancake-ts": "^0.19.1",
     "@types/mdx": "^2.0.14",
     "aws4fetch": "^1.0.20",
     "better-auth": "^1.7.14",
@@ -125,5 +127,6 @@
       "seroval-plugins": "1.6.8",
       "next": "-"
     }
-  }
+  },
+  "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319"
 }

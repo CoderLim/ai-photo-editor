@@ -46,6 +46,25 @@ exports, permission codes, and behavior that changes for end users.
 
 ---
 
+## 2026-11-05: English-only locale (Chinese removed)
+
+The app no longer ships a `zh` locale. Paraglide `locales` is `["en"]` only,
+`messages/zh.json` and `*.zh.mdx` content are gone, the language switcher UI is
+removed, and bot notifications are English-only (`notify_language` setting
+removed).
+
+### Action required
+
+- Delete any leftover `messages/zh.json` and `src/content/**/*.zh.mdx` if a
+  prior sync left them behind.
+- Remove `/zh…` links from marketing, sitemaps, and external docs; old `/zh`
+  URLs will 404 unless you add your own redirects.
+- If the admin Notify tab still shows a stored `notify_language` row, it is
+  ignored — notifications always render in English. You can delete the config
+  key from the database if you want a clean settings table.
+- Clear the `PARAGLIDE_LOCALE` cookie in browsers that previously selected
+  Chinese so they stop requesting a missing locale.
+
 ## 2026-10-28: Dependency security upgrade
 
 `pnpm audit` went from 189 advisories (8 critical, 78 high) to 2 (one

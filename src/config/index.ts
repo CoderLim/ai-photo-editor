@@ -16,9 +16,11 @@ const publicEnv = (key: string) => metaEnv[key] ?? procEnv[key];
 export const envConfigs: Record<string, string> = {
   // App (public)
   app_url: publicEnv('VITE_APP_URL') ?? 'http://localhost:3000',
-  app_name: publicEnv('VITE_APP_NAME') ?? 'ShipAny',
-  app_description: publicEnv('VITE_APP_DESCRIPTION') ?? 'Ship your SaaS faster',
-  app_logo: publicEnv('VITE_APP_LOGO') ?? '/logo.svg',
+  app_name: publicEnv('VITE_APP_NAME') ?? 'GetAIPhotoEditor',
+  app_description:
+    publicEnv('VITE_APP_DESCRIPTION') ??
+    'Edit photos with AI. Remove, replace and enhance with a simple prompt.',
+  app_logo: publicEnv('VITE_APP_LOGO') ?? '/logo.png',
 
   // Database
   database_url: procEnv.DATABASE_URL ?? '',
@@ -32,6 +34,15 @@ export const envConfigs: Record<string, string> = {
   auth_url: procEnv.AUTH_URL ?? publicEnv('VITE_APP_URL') ?? '',
   auth_secret: procEnv.AUTH_SECRET ?? '',
   auth_cookie_prefix: procEnv.AUTH_COOKIE_PREFIX ?? '',
+
+  // Payment - Waffo Pancake
+  waffo_enabled: procEnv.WAFFO_ENABLED ?? '',
+  waffo_environment: procEnv.WAFFO_ENVIRONMENT ?? 'test',
+  waffo_merchant_id: procEnv.WAFFO_MERCHANT_ID ?? '',
+  waffo_private_key: procEnv.WAFFO_PRIVATE_KEY ?? '',
+  waffo_store_id: procEnv.WAFFO_STORE_ID ?? '',
+  waffo_product_ids_mapping: procEnv.WAFFO_PRODUCT_IDS_MAPPING ?? '',
+  default_payment_provider: procEnv.DEFAULT_PAYMENT_PROVIDER ?? '',
 
   // Payment - Stripe
   stripe_secret_key: procEnv.STRIPE_SECRET_KEY ?? '',

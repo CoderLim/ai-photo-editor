@@ -12,7 +12,7 @@
  *   fake (risk flags, anything money-related) and record those on the server
  *   with `recordEvent()` from `@/modules/events/service`.
  *
- * Label: add `admin.user_detail.timeline_<kind>` to messages/{en,zh}.json
+ * Label: add `admin.user_detail.timeline_<kind>` to messages/en.json
  * (falls back to the kind itself).
  *
  * This file is imported by the browser bundle: no server imports here.

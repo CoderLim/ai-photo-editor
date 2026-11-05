@@ -1,5 +1,7 @@
 import handler from '@tanstack/react-start/server-entry';
 
+import { paraglideMiddleware } from '@/paraglide/server.js';
+
 import { envConfigs } from './config';
 import { runWithDbScope } from './core/db/request-scope';
 import {
@@ -8,7 +10,6 @@ import {
   sanitizeReferrer,
   sanitizeUtm,
 } from './lib/cookie';
-import { paraglideMiddleware } from './paraglide/server.js';
 
 // On Cloudflare Workers, stash the binding env (D1, ASSETS, …) on globalThis
 // so synchronous code paths (e.g. the db() singleton with DATABASE_PROVIDER=d1)

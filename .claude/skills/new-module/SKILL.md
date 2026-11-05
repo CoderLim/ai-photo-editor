@@ -214,7 +214,7 @@ feature's important moments show up too:
   4. `detail` is flat: up to 10 keys, strings ≤ 200 chars, numbers or
      booleans. No secrets, emails or other personal data.
 - **Label** every new kind: `admin.user_detail.timeline_<kind>` in both
-  `messages/en.json` and `messages/zh.json`.
+  `messages/en.json`.
 - Agents read the same data with the `users_timeline` admin operation.
 - Adding the first event to an existing project needs the `user_event` table
   (UPGRADING.md, 2026-10-12).

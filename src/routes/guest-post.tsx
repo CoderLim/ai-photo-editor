@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 
+import { pageHead } from '@/lib/seo';
 import { m } from '@/paraglide/messages.js';
 import { getLocale } from '@/paraglide/runtime.js';
 import { Footer } from '@/blocks/footer';
@@ -10,18 +11,21 @@ export const Route = createFileRoute('/guest-post')({
   loader: () => {
     const locale = getLocale();
     return {
+      locale,
       title: m['guest_posts.landing.title']({}, { locale }),
       description: m['guest_posts.landing.description']({}, { locale }),
     };
   },
-  head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          { title: loaderData.title },
-          { name: 'description', content: loaderData.description },
-        ]
-      : [],
-  }),
+  head: ({ loaderData }) =>
+    loaderData
+      ? pageHead({
+          title: `${loaderData.title} | GetAIPhotoEditor`,
+          description: loaderData.description,
+          path: '/guest-post',
+          locale: loaderData.locale,
+          localized: true,
+        })
+      : {},
   component: GuestPostPage,
 });
 

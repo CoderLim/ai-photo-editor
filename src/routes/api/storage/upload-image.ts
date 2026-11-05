@@ -3,9 +3,8 @@ import path from 'node:path';
 import { createFileRoute } from '@tanstack/react-router';
 
 import { getAuth } from '@/core/auth';
-import { envConfigs } from '@/config';
+import { issueUploadToken } from '@/modules/photo-editor/upload-token';
 import { getStorage } from '@/modules/storage/service';
-import { md5 } from '@/lib/hash';
 import { enforceMinIntervalRateLimit } from '@/lib/rate-limit';
 import { respData, respErr } from '@/lib/resp';
 
@@ -25,14 +24,11 @@ const extFromMime = (mimeType: string) => {
   return map[mimeType] || '';
 };
 
-// Cap for the no-storage local-disk fallback (dev). Configurable via INLINE_IMAGE_MAX_KB.
+// Single per-file cap for both R2 and the local-disk fallback.
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 // Per request: bounds memory (formData() buffers the whole body) and storage use.
 const MAX_FILES_PER_REQUEST = 10;
 const MAX_REQUEST_BYTES = 20 * 1024 * 1024;
-
-const INLINE_MAX_BYTES =
-  (Number(envConfigs.inline_image_max_kb) || 10240) * 1024;
 
 async function POST({ request }: { request: Request }) {
   const limited = enforceMinIntervalRateLimit(request, {
@@ -92,10 +88,8 @@ async function POST({ request }: { request: Request }) {
       const arrayBuffer = await file.arrayBuffer();
       const body = new Uint8Array(arrayBuffer);
 
-      const digest = md5(body);
-      // R2Provider prepends its own uploadPath (default `uploads`), so the object
-      // key is the bare filename. The local fallback uses `public/uploads/<file>`.
-      const objectKey = `${digest}.${ext}`;
+      // Use randomized upload names so different users' private photos are not deduplicated.
+      const objectKey = 'photo-' + crypto.randomUUID() + '.' + ext;
 
       // No storage configured → persist to public/uploads and return a short
       // local URL. Avoids inlining a giant base64 data URL into DB columns (some
@@ -106,12 +100,6 @@ async function POST({ request }: { request: Request }) {
         if ((globalThis as any).__CF_ENV__) {
           return respErr(
             'Storage is not configured. Set up R2 in Admin → Settings → Storage.'
-          );
-        }
-        if (body.length > INLINE_MAX_BYTES) {
-          const limitKb = Math.round(INLINE_MAX_BYTES / 1024);
-          return respErr(
-            `Image too large (${(body.length / 1024).toFixed(0)}KB > ${limitKb}KB). Configure storage or use a smaller image.`
           );
         }
         const dir = path.join(process.cwd(), 'public', 'uploads');
@@ -159,9 +147,15 @@ async function POST({ request }: { request: Request }) {
       });
     }
 
+    const authorizedResults = await Promise.all(
+      uploadResults.map(async (r) => ({
+        ...r,
+        token: await issueUploadToken(session.user.id, r.url),
+      }))
+    );
     return respData({
-      urls: uploadResults.map((r) => r.url),
-      results: uploadResults,
+      urls: authorizedResults.map((r) => r.url),
+      results: authorizedResults,
     });
   } catch (e: any) {
     console.error('upload image failed:', e);

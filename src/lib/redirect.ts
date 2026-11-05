@@ -105,8 +105,8 @@ export function resolveAfterAuthUrl(params: {
 
 /**
  * Current path + query, for "bring me back here afterwards". De-localized
- * (`/zh/chat` → `/chat`) because internal hrefs in this app are locale-free —
- * the router rewrite adds the prefix back on the way out.
+ * (any locale prefix → locale-free path) because internal hrefs in this app
+ * are locale-free — the router rewrite adds the prefix back on the way out.
  */
 export function currentPathWithQuery(fallback = '/'): string {
   if (typeof window === 'undefined') return fallback;

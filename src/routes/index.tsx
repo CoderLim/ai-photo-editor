@@ -1,71 +1,441 @@
 import { createFileRoute } from '@tanstack/react-router';
+import {
+  ArrowRight,
+  CheckCircle2,
+  Layers,
+  Sparkles,
+  WandSparkles,
+} from 'lucide-react';
 
+import { Link } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
-import { m } from '@/paraglide/messages.js';
-import { getLocale, locales, localizeUrl } from '@/paraglide/runtime.js';
-import { Blog } from '@/blocks/blog';
-import { CTA } from '@/blocks/cta';
-import { FAQ } from '@/blocks/faq';
-import { Features } from '@/blocks/features';
+import { PHOTO_TOOLS } from '@/modules/photo-editor/config';
+import { pageHead } from '@/lib/seo';
 import { Footer } from '@/blocks/footer';
 import { Header } from '@/blocks/header';
-import { Hero } from '@/blocks/hero';
 import { Pricing } from '@/blocks/pricing';
-import { SupportWidget } from '@/blocks/support-widget';
-import { getBlogPostsFn } from '@/content/posts/server';
+import { PhotoEditorWorkspace } from '@/components/photo-editor/workspace';
 
-/**
- * Default landing page — demo content. Rewrite this file (and the blocks in
- * src/blocks/) for your project. The primitives in src/components/ stay.
- * See /quick-start or /clone-website to automate the rewrite.
- */
+const FAQS = [
+  [
+    'Is this AI photo editor really free?',
+    'Yes to start. You get 10 free credits without signing in (enough for one standard 1K edit). Sign in and you get 10 more. Each standard 1K edit uses 10 credits; one-time credit packs are available when you need more.',
+  ],
+  [
+    'Can I use it without signing up?',
+    'Yes. Upload a photo, write a prompt, and generate with your 10 guest credits — no account required. Sign in anytime for 10 more credits and to keep results in My Creations.',
+  ],
+  [
+    'Does it work on iPhone or Android without an app?',
+    'Yes. Use a modern browser on iPhone, Android, Mac, or Windows. No additional app installation is needed.',
+  ],
+  [
+    'What happens to my photos after editing?',
+    'Before generation, your selected photo stays in your browser. When you generate, it is uploaded for processing and the result is stored so you can access My Creations after signing in. We do not promise automatic deletion; see the Privacy Policy for data-handling information.',
+  ],
+  [
+    'How is AI photo editing different from Photoshop?',
+    'AI editing lets you describe changes in words instead of manually handling masks and layers. It is convenient for quick creative edits, while traditional desktop tools provide more exact control. Always inspect generated details.',
+  ],
+  [
+    'What is the best resolution to upload?',
+    'Choose a clear, well-lit JPG, PNG or WebP image up to 10 MB. Standard edits generate a 1K output, which may not preserve your upload’s original resolution.',
+  ],
+] as const;
+
+const HOME_TITLE = 'AI Photo Editor: Free AI Image Editor Online, No Sign-Up';
+const HOME_DESCRIPTION =
+  'Free AI photo editor online. Remove objects, retouch portraits, enhance photos, and restyle images with text prompts — No Sign-Up.';
+
+const structuredDataJsonLd = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      name: envConfigs.app_name,
+      url: envConfigs.app_url,
+      description: HOME_DESCRIPTION,
+    },
+    {
+      '@type': 'SoftwareApplication',
+      name: envConfigs.app_name,
+      applicationCategory: 'MultimediaApplication',
+      operatingSystem: 'Web',
+      url: envConfigs.app_url,
+      description: HOME_DESCRIPTION,
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD',
+        description:
+          '10 free credits without signing in; 10 more after sign-in. Each 1K edit uses 10 credits',
+      },
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: FAQS.map(([question, answer]) => ({
+        '@type': 'Question',
+        name: question,
+        acceptedAnswer: { '@type': 'Answer', text: answer },
+      })),
+    },
+  ],
+});
+
+const FEATURES = [
+  [
+    'Remove and Replace Backgrounds',
+    'Change a distracting backdrop to a clean studio, outdoor scene, or brighter sky. Review fine edges after generation.',
+  ],
+  [
+    'Retouch Portraits and Skin',
+    'Ask for subtle skin cleanup, softer lighting, or a polished headshot while keeping the person recognizable.',
+  ],
+  [
+    'Enhance Blurry or Low-Quality Photos',
+    'Improve apparent clarity, lighting, and colors. Generative edits cannot guarantee recovery of lost image details.',
+  ],
+  [
+    'Erase Objects and People',
+    'Remove an unwanted item or passerby and ask AI to reconstruct the surrounding background naturally.',
+  ],
+  [
+    'Restyle Photos With Text Prompts',
+    'Describe cinematic light, a golden-hour mood, vintage color, or another creative look using plain words.',
+  ],
+  [
+    'Remove Clothing Wrinkles',
+    'Smooth creases and wrinkles in shirts, dresses, or other garments while keeping the fabric texture, fit, and overall look natural.',
+  ],
+] as const;
+
+const FEATURE_IMAGES = [
+  '/images/ai-photo-editor/remove-background.jpg',
+  '/images/ai-photo-editor/portrait-retouch.jpg',
+  '/images/ai-photo-editor/enhance-photo.jpg',
+  '/images/ai-photo-editor/remove-object.jpg',
+  '/images/ai-photo-editor/restyle-photo.jpg',
+  '/images/ai-photo-editor/remove-clothing-wrinkles.jpg',
+] as const;
+
+const USE_CASES = [
+  [
+    'E-commerce and Product Sellers',
+    'Prepare cleaner product backgrounds and more consistent-looking listing images with a simple description.',
+  ],
+  [
+    'Social Creators',
+    'Refresh profile photos, social posts, and thumbnails without installing another app.',
+  ],
+  [
+    'Photographers',
+    'Experiment with object cleanup, skin retouching, and creative lighting, then review every detail.',
+  ],
+  [
+    'Real Estate',
+    'Explore brighter interiors and sky changes. Keep listing images accurate and disclose material changes as required.',
+  ],
+] as const;
+
 function HomePage() {
-  const { posts } = Route.useLoaderData();
-
   return (
-    <div className="bg-background text-foreground flex min-h-screen flex-col">
+    <div className="min-h-screen bg-[#f7f9fc] text-slate-900">
       <Header />
       <main>
-        <Hero />
-        <Features />
+        <section className="relative overflow-hidden border-b border-slate-100 bg-gradient-to-b from-[#f1f6ff] via-[#f9fbff] to-[#f7f9fc] px-4 pt-10 pb-12 sm:px-6 sm:pt-14 sm:pb-14">
+          <div className="mx-auto max-w-[1320px]">
+            <div className="mb-5 text-center sm:mb-6">
+              <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white/80 px-4 py-1.5 text-xs font-semibold tracking-[0.15em] text-blue-600 uppercase">
+                <Sparkles className="size-3.5" /> AI-powered photo editing
+              </p>
+              <h1 className="mx-auto max-w-4xl text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl lg:text-[2.75rem]">
+                AI Photo Editor Online
+              </h1>
+              <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
+                Upload a photo and describe the edit in plain words — 10 free
+                credits without signing in, plus 10 more when you create an
+                account.
+              </p>
+            </div>
+            <div id="editor">
+              <PhotoEditorWorkspace />
+            </div>
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-slate-500">
+              <span className="inline-flex items-center gap-2">
+                <CheckCircle2 className="size-4 text-blue-600" /> 10 free
+                credits to start
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <CheckCircle2 className="size-4 text-blue-600" /> No app to
+                install
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <CheckCircle2 className="size-4 text-blue-600" /> Original photo
+                kept intact
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+          <div className="rounded-2xl border border-slate-200 bg-white p-8 sm:p-10">
+            <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
+              No app to install
+            </p>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              Edit Photos With AI Right in Your Browser
+            </h2>
+            <p className="mt-4 max-w-3xl leading-8 text-slate-600">
+              Choose a JPG, PNG or WebP photo and describe your edit in everyday
+              language — remove backgrounds, retouch portraits, enhance blurry
+              shots, erase objects, or swap skies. No Photoshop or desktop app
+              needed on iPhone, Android, Mac, or Windows.
+            </p>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-500">
+              Start with 10 free guest credits (one standard 1K edit). Sign in
+              for 10 more. Upload limit is 10 MB. Review faces and details
+              before using generated photos.
+            </p>
+          </div>
+        </section>
+        <section id="features" className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
+          <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
+            AI photo editing features
+          </p>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            What You Can Do With Our AI Photo Editor
+          </h2>
+          <p className="mt-4 max-w-2xl leading-7 text-slate-600">
+            Use a task-specific tool or write your own instruction for a quick
+            fix or creative transformation.
+          </p>
+          <div className="mt-9 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {FEATURES.map(([title, description], index) => (
+              <article
+                key={title}
+                className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6"
+              >
+                <img
+                  src={FEATURE_IMAGES[index]}
+                  alt={`Before and after AI photo edit: ${title}`}
+                  width={1672}
+                  height={941}
+                  loading="lazy"
+                  decoding="async"
+                  className="mb-5 aspect-[1672/941] w-full rounded-xl bg-slate-100 object-cover"
+                />
+                <h3 className="text-lg font-semibold">{title}</h3>
+                <p className="mt-3 text-sm leading-7 text-slate-600">
+                  {description}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
+        <section className="border-y border-slate-200 bg-white px-4 py-20 sm:px-6">
+          <div className="mx-auto max-w-6xl">
+            <h2 className="text-center text-3xl font-bold tracking-tight sm:text-4xl">
+              How to Edit a Photo With AI
+            </h2>
+            <p className="mt-3 text-center text-slate-500">
+              Three steps to your edited image.
+            </p>
+            <div className="mt-10 grid gap-5 md:grid-cols-3">
+              {[
+                [
+                  '01',
+                  'Upload your photo',
+                  'Choose a JPG, PNG or WebP image up to 10 MB. No account needed to start.',
+                ],
+                [
+                  '02',
+                  'Describe the change',
+                  'Try “remove the background”, “make it look like golden hour”, or “clear acne while keeping the face natural”.',
+                ],
+                [
+                  '03',
+                  'Generate and download',
+                  'Generate a 1K edit with your free credits, inspect the result, then download or refine it. Sign in for 10 more credits and My Creations.',
+                ],
+              ].map(([number, title, description]) => (
+                <div
+                  key={number}
+                  className="rounded-2xl border border-slate-100 bg-slate-50 p-7"
+                >
+                  <span className="text-sm font-bold text-blue-600">
+                    {number}
+                  </span>
+                  <h3 className="mt-4 text-lg font-semibold">{title}</h3>
+                  <p className="mt-2 text-sm leading-7 text-slate-600">
+                    {description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+        <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+          <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
+            Use cases
+          </p>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Who Uses It
+          </h2>
+          <div className="mt-9 grid gap-5 md:grid-cols-2">
+            {USE_CASES.map(([title, description]) => (
+              <article
+                key={title}
+                className="rounded-2xl border border-slate-200 bg-white p-7"
+              >
+                <h3 className="text-lg font-semibold">{title}</h3>
+                <p className="mt-3 text-sm leading-7 text-slate-600">
+                  {description}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
+        <section className="border-y border-slate-200 bg-white px-4 py-20 sm:px-6">
+          <div className="mx-auto max-w-6xl">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              AI Photo Editor vs Desktop Software
+            </h2>
+            <p className="mt-4 max-w-3xl leading-7 text-slate-600">
+              For quick retouching and creative changes, browser-based AI
+              editing can be simpler than learning Photoshop. Desktop software
+              still offers greater manual precision.
+            </p>
+            <div className="mt-8 grid gap-5 md:grid-cols-2">
+              <div className="rounded-2xl border border-blue-100 bg-blue-50 p-7">
+                <h3 className="text-lg font-semibold">
+                  Browser-based AI photo editing
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-slate-600">
+                  Describe a change instead of learning selections and masks. No
+                  installation; standard results are generated at 1K and may
+                  vary.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-7">
+                <h3 className="text-lg font-semibold">
+                  Traditional desktop editing
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-slate-600">
+                  Work with layers, precise masks, and pixel-level adjustments
+                  for highly controlled edits and repeatable exports.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
         <Pricing />
-        <FAQ />
-        <Blog posts={posts} />
-        <CTA />
+        <section id="faq" className="mx-auto max-w-4xl px-4 py-20 sm:px-6">
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">FAQ</h2>
+          <p className="mt-3 text-slate-500">
+            Questions about AI photo editing online.
+          </p>
+          <div className="mt-7">
+            {FAQS.map(([question, answer]) => (
+              <div key={question} className="border-b border-slate-200 py-6">
+                <h3 className="text-lg font-semibold text-slate-900">
+                  {question}
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-slate-600">
+                  {answer}
+                </p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-5 text-sm text-slate-500">
+            See our{' '}
+            <Link
+              href="/privacy-policy"
+              className="font-semibold text-blue-600 hover:underline"
+            >
+              Privacy Policy
+            </Link>{' '}
+            for additional information about data handling.
+          </p>
+        </section>
+        <section
+          id="tools"
+          className="border-t border-slate-200 bg-white px-4 py-20 sm:px-6"
+        >
+          <div className="mx-auto max-w-6xl">
+            <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
+                  Explore tools
+                </p>
+                <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                  More AI Photo Tools
+                </h2>
+                <p className="mt-3 max-w-xl text-slate-500">
+                  Open a task-focused editor. Start with free credits; each
+                  standard 1K edit uses 10 credits.
+                </p>
+              </div>
+              <Link
+                href="/tools"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600"
+              >
+                All AI tools <ArrowRight className="size-4" />
+              </Link>
+            </div>
+            <div className="grid gap-5 md:grid-cols-3">
+              {PHOTO_TOOLS.map((tool, i) => (
+                <Link
+                  key={tool.slug}
+                  href="#editor"
+                  className="group overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg"
+                >
+                  <span
+                    className={
+                      'mb-8 inline-flex size-12 items-center justify-center rounded-xl ' +
+                      (i === 0
+                        ? 'bg-blue-50 text-blue-600'
+                        : i === 1
+                          ? 'bg-indigo-50 text-indigo-600'
+                          : 'bg-sky-50 text-sky-600')
+                    }
+                  >
+                    {i === 0 ? (
+                      <WandSparkles className="size-6" />
+                    ) : i === 1 ? (
+                      <Layers className="size-6" />
+                    ) : (
+                      <Sparkles className="size-6" />
+                    )}
+                  </span>
+                  <h3 className="text-lg font-semibold">{tool.title}</h3>
+                  <p className="mt-2 min-h-16 text-sm leading-6 text-slate-500">
+                    {tool.description}
+                  </p>
+                  <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-blue-600">
+                    Open tool{' '}
+                    <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: structuredDataJsonLd }}
+        />
       </main>
       <Footer />
-      <SupportWidget />
     </div>
   );
 }
-
 export const Route = createFileRoute('/')({
-  loader: async () => {
-    const locale = getLocale();
-    const posts = await getBlogPostsFn({ data: { locale, limit: 3 } });
-    return { locale, posts };
-  },
-  head: ({ loaderData }) => {
-    const locale = loaderData?.locale ?? 'en';
-    const urlFor = (loc: string) =>
-      localizeUrl(`${envConfigs.app_url}/`, { locale: loc as any }).href;
-    return {
-      meta: [
-        {
-          name: 'description',
-          content: m['landing.hero.subheadline']({}, { locale: locale as any }),
-        },
-      ],
-      links: [
-        { rel: 'canonical', href: urlFor(locale) },
-        ...locales.map((loc) => ({
-          rel: 'alternate',
-          hrefLang: loc,
-          href: urlFor(loc),
-        })),
-        { rel: 'alternate', hrefLang: 'x-default', href: urlFor('en') },
-      ],
-    };
-  },
+  head: () =>
+    pageHead({
+      title: HOME_TITLE,
+      description: HOME_DESCRIPTION,
+      path: '/',
+      image: '/og.png',
+    }),
   component: HomePage,
 });

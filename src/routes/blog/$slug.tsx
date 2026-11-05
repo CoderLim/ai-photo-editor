@@ -13,9 +13,10 @@ import { toast } from 'sonner';
 
 import { Link, useRouter } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
+import { pageHead } from '@/lib/seo';
 import { cn } from '@/lib/utils';
 import { m } from '@/paraglide/messages.js';
-import { getLocale, localizeUrl } from '@/paraglide/runtime.js';
+import { getLocale } from '@/paraglide/runtime.js';
 import { useGuestPostCheckout } from '@/hooks/use-guest-post-checkout';
 import { formatPrice, guestPostSubmitProblem } from '@/hooks/use-guest-posts';
 import { Footer } from '@/blocks/footer';
@@ -52,23 +53,22 @@ export const Route = createFileRoute('/blog/$slug')({
     if (!loaderData) return {};
     const { locale, post } = loaderData;
     if (post.preview) {
-      return {
-        meta: [
-          { title: `${post.title} | ${envConfigs.app_name}` },
-          { name: 'robots', content: 'noindex, nofollow' },
-        ],
-      };
+      return pageHead({
+        title: `${post.title} | ${envConfigs.app_name}`,
+        description: post.description || post.title,
+        path: `/blog/${post.slug}`,
+        locale,
+        noindex: true,
+      });
     }
-    const canonical = localizeUrl(`${envConfigs.app_url}/blog/${post.slug}`, {
-      locale: locale as any,
-    }).href;
-    return {
-      meta: [
-        { title: `${post.title} | ${envConfigs.app_name}` },
-        { name: 'description', content: post.description },
-      ],
-      links: [{ rel: 'canonical', href: canonical }],
-    };
+    return pageHead({
+      title: `${post.title} | ${envConfigs.app_name}`,
+      description: post.description || post.title,
+      path: `/blog/${post.slug}`,
+      locale,
+      localized: true,
+      image: post.image,
+    });
   },
   component: BlogPostPage,
 });
@@ -208,8 +208,23 @@ function BlogPostPage() {
   const LocalContent =
     post.source === 'local' ? loadLocalPost(post.slug, locale)?.default : null;
 
+  const articleJsonLd = !post.preview
+    ? JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: post.title,
+        description: post.description,
+        datePublished: post.createdAt,
+        author: post.authorName
+          ? { '@type': 'Person', name: post.authorName }
+          : { '@type': 'Organization', name: envConfigs.app_name },
+        image: post.image || undefined,
+        mainEntityOfPage: `${envConfigs.app_url}/blog/${post.slug}`,
+      })
+    : null;
+
   return (
-    <div className="bg-background text-foreground flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-[#f7f9fc] text-slate-900">
       <Header />
       <main className="flex-1 px-6 py-12 md:px-8 md:py-16">
         {post.preview && (
@@ -219,25 +234,28 @@ function BlogPostPage() {
             content={post.content || ''}
           />
         )}
+        {articleJsonLd ? (
+          <script type="application/ld+json">{articleJsonLd}</script>
+        ) : null}
         <article className="mx-auto max-w-3xl">
           <Link
             href="/blog"
-            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-2 text-sm font-medium transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
           >
             <ArrowLeft className="size-4" />
             {m['blog.back_to_blog']()}
           </Link>
 
-          <header className="border-border mt-8 mb-6 border-b pb-6">
+          <header className="mt-8 mb-6 border-b border-slate-200 pb-6">
             {post.sponsored && (
-              <span className="text-muted-foreground border-border mb-3 inline-block rounded-full border px-2.5 py-0.5 text-xs font-medium tracking-wide uppercase">
+              <span className="mb-3 inline-block rounded-full border border-slate-200 px-2.5 py-0.5 text-xs font-medium tracking-wide text-slate-500 uppercase">
                 {m['blog.sponsored']()}
               </span>
             )}
-            <h1 className="text-foreground text-3xl font-semibold tracking-tight md:text-4xl">
+            <h1 className="text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
               {post.title}
             </h1>
-            <div className="text-muted-foreground mt-4 flex items-center gap-4 text-sm">
+            <div className="mt-4 flex items-center gap-4 text-sm text-slate-500">
               <span className="inline-flex items-center gap-1.5">
                 <Calendar className="size-4" />
                 {formatPostDate(post.createdAt, locale)}
@@ -260,19 +278,19 @@ function BlogPostPage() {
           </header>
 
           {post.description && (
-            <p className="text-muted-foreground mb-6">{post.description}</p>
+            <p className="mb-6 text-slate-600">{post.description}</p>
           )}
 
           {post.image && (
             <img
               src={post.image}
               alt={post.title}
-              className="border-border mb-8 w-full rounded-2xl border object-cover"
+              className="mb-8 w-full rounded-2xl border border-slate-200 object-cover"
             />
           )}
 
           {LocalContent ? (
-            <div className="text-foreground/90 text-[15px] leading-7">
+            <div className="text-[15px] leading-7 text-slate-800">
               <MDXProvider components={mdxComponents}>
                 <LocalContent />
               </MDXProvider>

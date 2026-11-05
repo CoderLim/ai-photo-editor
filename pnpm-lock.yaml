@@ -79,6 +79,9 @@ importers:
       '@tiptap/starter-kit':
         specifier: ^3.32.0
         version: 3.32.0
+      '@waffo/pancake-ts':
+        specifier: ^0.19.1
+        version: 0.19.1
       '@types/mdx':
         specifier: ^2.0.14
         version: 2.0.14
@@ -2818,6 +2821,11 @@ packages:
         optional: true
       oxc-transform-react:
         optional: true
+
+  '@waffo/pancake-ts@0.19.1':
+    resolution: {integrity: sha512-X1vCyZcVwbFROZiQQrrDh3OPqm8KvEX3/65PT9xGy10zWTNX1nO+D1cL1ERBe17ot57mI9T5Dhzt/Gf2k/lIdg==}
+    engines: {node: '>=20.0.0'}
+
 
   abort-controller@3.0.0:
     resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
@@ -7619,6 +7627,9 @@ snapshots:
     dependencies:
       '@rolldown/pluginutils': 1.0.1
       vite: 8.3.5(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)
+
+  '@waffo/pancake-ts@0.19.1': {}
+
 
   abort-controller@3.0.0:
     dependencies:

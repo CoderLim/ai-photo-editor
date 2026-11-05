@@ -8,7 +8,6 @@ import { Link } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
 import { cn } from '@/lib/utils';
 import { m } from '@/paraglide/messages.js';
-import { LocaleSelector } from '@/components/locale-selector';
 import { SiteUserMenu } from '@/components/site-user-menu';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { buttonVariants } from '@/components/ui/button';
@@ -25,21 +24,38 @@ const isExternalHref = (href: string) => /^https?:\/\//.test(href);
 
 export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
   const { data: session } = useSession();
   const user = session?.user;
+  const logo = envConfigs.app_logo;
+  const showLogo = !!logo && !logoFailed;
 
   return (
-    <header className="bg-background/80 sticky top-0 z-50 w-full backdrop-blur-sm">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200/70 bg-white/85 backdrop-blur-md">
+      <div className="relative mx-auto flex h-14 max-w-[1320px] items-center justify-between px-4 sm:px-6">
         {/* Brand */}
-        <Link href="/" className="flex items-center">
-          <span className="font-serif text-lg italic">
+        <Link href="/" className="relative z-10 flex items-center">
+          <span className="inline-flex items-center gap-2.5 text-sm font-semibold tracking-tight text-slate-900">
+            {showLogo ? (
+              <img
+                src={logo}
+                alt=""
+                width={28}
+                height={28}
+                className="size-7 rounded-[7px] object-cover"
+                onError={() => setLogoFailed(true)}
+              />
+            ) : (
+              <span className="inline-flex size-7 items-center justify-center rounded-lg bg-blue-600 text-[11px] font-bold text-white">
+                {(envConfigs.app_name || 'A').charAt(0)}
+              </span>
+            )}
             {envConfigs.app_name}
           </span>
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden items-center gap-6 md:flex">
+        {/* Desktop nav — visually centered */}
+        <nav className="absolute inset-x-0 hidden items-center justify-center gap-8 md:flex">
           {navLinks?.map((link) =>
             isExternalHref(link.href) ? (
               <a
@@ -47,7 +63,7 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
                 href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+                className="text-sm text-slate-500 transition-colors hover:text-slate-900"
               >
                 {link.label}
               </a>
@@ -56,7 +72,7 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
                 key={link.href}
                 href={link.href}
                 target={link.external ? '_blank' : undefined}
-                className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+                className="text-sm text-slate-500 transition-colors hover:text-slate-900"
               >
                 {link.label}
               </Link>
@@ -65,8 +81,7 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
         </nav>
 
         {/* Desktop actions */}
-        <div className="hidden items-center gap-3 md:flex">
-          <LocaleSelector />
+        <div className="relative z-10 hidden items-center gap-1.5 md:flex">
           <ThemeToggle />
           {user ? (
             <SiteUserMenu
@@ -75,16 +90,22 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
               image={user.image}
             />
           ) : (
-            <Link href="/settings" className={cn(buttonVariants(), 'gap-1.5')}>
+            <Link
+              href="/settings"
+              className={cn(
+                buttonVariants({ size: 'sm' }),
+                'ml-1.5 gap-1.5 rounded-lg bg-blue-600 px-3.5 text-white hover:bg-blue-700'
+              )}
+            >
               {m['common.nav.get_started']()}
-              <ArrowRight className="size-4" />
+              <ArrowRight className="size-3.5" />
             </Link>
           )}
         </div>
 
         {/* Mobile toggle */}
         <button
-          className="p-2 md:hidden"
+          className="relative z-10 p-2 md:hidden"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={mobileOpen}
@@ -95,8 +116,8 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="border-border border-t px-4 pt-2 pb-4 md:hidden">
-          <nav className="flex flex-col gap-2">
+        <div className="border-t border-slate-200 bg-white px-4 pt-2 pb-4 md:hidden">
+          <nav className="flex flex-col gap-1">
             {navLinks?.map((link) =>
               isExternalHref(link.href) ? (
                 <a
@@ -104,7 +125,7 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md px-3 py-2 text-sm transition-colors"
+                  className="rounded-md px-3 py-2.5 text-sm text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
                   onClick={() => setMobileOpen(false)}
                 >
                   {link.label}
@@ -114,7 +135,7 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
                   key={link.href}
                   href={link.href}
                   target={link.external ? '_blank' : undefined}
-                  className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md px-3 py-2 text-sm transition-colors"
+                  className="rounded-md px-3 py-2.5 text-sm text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
                   onClick={() => setMobileOpen(false)}
                 >
                   {link.label}
@@ -122,8 +143,7 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
               )
             )}
           </nav>
-          <div className="border-border mt-3 flex items-center gap-2 border-t pt-3">
-            <LocaleSelector />
+          <div className="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3">
             <ThemeToggle />
             <div className="flex-1" />
             {user ? (
@@ -135,7 +155,10 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
             ) : (
               <Link
                 href="/settings"
-                className={cn(buttonVariants(), 'gap-1.5')}
+                className={cn(
+                  buttonVariants({ size: 'sm' }),
+                  'gap-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700'
+                )}
                 onClick={() => setMobileOpen(false)}
               >
                 {m['common.nav.get_started']()}

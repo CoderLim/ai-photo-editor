@@ -8,6 +8,7 @@ import { Link, useRouter } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
 import { apiPost } from '@/lib/api-client';
 import { resolveAfterAuthUrl, safeInternalPath } from '@/lib/redirect';
+import { pageHead } from '@/lib/seo';
 import { m } from '@/paraglide/messages.js';
 import { localizeHref } from '@/paraglide/runtime.js';
 import { usePublicConfig } from '@/hooks/use-public-config';
@@ -349,5 +350,13 @@ function SignUpPage() {
 }
 
 export const Route = createFileRoute('/(auth)/sign-up')({
+  head: () =>
+    pageHead({
+      title: 'Sign Up — GetAIPhotoEditor',
+      description:
+        'Create a GetAIPhotoEditor account to edit photos with AI and save your creations.',
+      path: '/sign-up',
+      noindex: true,
+    }),
   component: SignUpPage,
 });

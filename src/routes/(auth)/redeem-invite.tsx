@@ -4,6 +4,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { signOut, useSession } from '@/core/auth/client';
 import { useRouter } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
+import { pageHead } from '@/lib/seo';
 import { m } from '@/paraglide/messages.js';
 import { localizeHref } from '@/paraglide/runtime.js';
 import { Button } from '@/components/ui/button';
@@ -160,5 +161,12 @@ function RedeemInvitePage() {
 }
 
 export const Route = createFileRoute('/(auth)/redeem-invite')({
+  head: () =>
+    pageHead({
+      title: 'Redeem Invite — GetAIPhotoEditor',
+      description: 'Redeem an invite code for GetAIPhotoEditor.',
+      path: '/redeem-invite',
+      noindex: true,
+    }),
   component: RedeemInvitePage,
 });
