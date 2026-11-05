@@ -1,0 +1,49 @@
+{
+  "domain": "getaiphotoeditor.com",
+  "site": {
+    "name": "GetAIPhotoEditor",
+    "canonicalUrl": "https://getaiphotoeditor.com"
+  },
+  "repository": {
+    "owner": "CoderLim",
+    "name": "ai-photo-editor",
+    "visibility": "public",
+    "template": "git@github.com:shipany-ai/shipany-tanstack.git"
+  },
+  "hosting": {
+    "provider": "cloudflare",
+    "type": "workers",
+    "projectName": "ai-photo-editor",
+    "productionBranch": "main",
+    "deployCommand": "pnpm cf:deploy"
+  },
+  "registrar": {
+    "provider": "spaceship"
+  },
+  "cloudflare": {
+    "alwaysHttps": true,
+    "redirectWwwToApex": true,
+    "crawlerHints": false
+  },
+  "email": {
+    "enabled": true,
+    "aliases": ["support"],
+    "destinationEnv": "SUPPORT_EMAIL_DESTINATION"
+  },
+  "analytics": {
+    "ga4": true,
+    "plausible": true,
+    "injectCommand": "node scripts/set-ga-id.mjs \"$AUTO_LAUNCH_GA_ID\""
+  },
+  "search": {
+    "gsc": true,
+    "sitemapPath": "/sitemap.xml"
+  },
+  "audit": {
+    "buildCommand": "pnpm build",
+    "launchAuditCommand": ""
+  },
+  "payments": {
+    "enabled": true
+  }
+}
