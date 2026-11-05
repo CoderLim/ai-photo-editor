@@ -33,16 +33,13 @@ export function Footer() {
         <div>
           <p className="mb-4 text-sm font-semibold text-slate-900">Resources</p>
           <div className="flex flex-col gap-3 text-sm">
-            <Link href="/tools/remove-object" className="hover:text-blue-600">
+            <Link href="/#editor" className="hover:text-blue-600">
               Object Remover
             </Link>
-            <Link
-              href="/tools/change-background"
-              className="hover:text-blue-600"
-            >
+            <Link href="/#editor" className="hover:text-blue-600">
               Background Changer
             </Link>
-            <Link href="/tools/enhance-photo" className="hover:text-blue-600">
+            <Link href="/#editor" className="hover:text-blue-600">
               Photo Enhancer
             </Link>
           </div>

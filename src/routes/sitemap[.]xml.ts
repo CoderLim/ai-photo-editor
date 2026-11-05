@@ -1,7 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { envConfigs } from '@/config';
-import { PHOTO_TOOLS } from '@/modules/photo-editor/config';
 import { absoluteUrl, sitemapLocalesForPath } from '@/lib/seo';
 import { baseLocale } from '@/paraglide/runtime.js';
 import { getLocalPosts, mergePosts } from '@/content/posts';
@@ -11,7 +10,6 @@ const STATIC_PATHS = [
   '/pricing',
   '/blog',
   '/tools',
-  ...PHOTO_TOOLS.map((tool) => '/tools/' + tool.slug),
   '/guest-post',
   '/privacy-policy',
   '/terms-of-service',
@@ -58,7 +56,7 @@ export const Route = createFileRoute('/sitemap.xml')({
         const entries: Entry[] = STATIC_PATHS.map((path) => ({
           path,
           changeFrequency: path === '/blog' ? 'daily' : 'weekly',
-          priority: path === '' ? 1 : path.startsWith('/tools/') ? 0.9 : 0.8,
+          priority: path === '' ? 1 : 0.8,
         }));
 
         // Blog posts: db posts merged with local MDX posts.

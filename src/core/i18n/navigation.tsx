@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode } from 'react';
+import type { ComponentProps, MouseEvent, ReactNode } from 'react';
 import {
   Link as RouterLink,
   useLocation,
@@ -22,11 +22,47 @@ type LinkProps = Omit<ComponentProps<'a'>, 'href'> & {
   children?: ReactNode;
 };
 
-export function Link({ href, locale, prefetch, ...rest }: LinkProps) {
+function scrollToHash(hash: string | undefined) {
+  if (!hash || typeof document === 'undefined') return;
+  const id = hash.replace(/^#/, '');
+  // Wait a frame so route transitions can paint the target.
+  requestAnimationFrame(() => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  });
+}
+
+export function Link({ href, locale, prefetch, onClick, ...rest }: LinkProps) {
   if (/^(https?:|mailto:|tel:|#)/.test(href)) {
-    return <a href={href} {...rest} />;
+    return (
+      <a
+        href={href}
+        onClick={(e) => {
+          onClick?.(e);
+          if (!e.defaultPrevented && href.startsWith('#')) {
+            scrollToHash(href);
+          }
+        }}
+        {...rest}
+      />
+    );
   }
   const Comp = RouterLink as any;
+  // Parse ?search and #hash so hrefs like `/#editor` navigate correctly.
+  if (href.includes('?') || href.includes('#')) {
+    const opts = toNavigateOptions(href);
+    return (
+      <Comp
+        {...opts}
+        {...rest}
+        onClick={(e: MouseEvent<HTMLAnchorElement>) => {
+          onClick?.(e);
+          if (e.defaultPrevented) return;
+          // Same-route hash navigations often noop in the router — scroll manually.
+          scrollToHash(opts.hash);
+        }}
+      />
+    );
+  }
   return <Comp to={href} {...rest} />;
 }
 

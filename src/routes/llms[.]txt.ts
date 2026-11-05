@@ -1,7 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { envConfigs } from '@/config';
-import { PHOTO_TOOLS } from '@/modules/photo-editor/config';
 import { baseLocale } from '@/paraglide/runtime.js';
 import { getLocalPosts, mergePosts } from '@/content/posts';
 
@@ -21,11 +20,6 @@ const STATIC_PAGES: { path: string; title: string; description: string }[] = [
     title: 'AI Photo Tools',
     description: 'Task-focused AI photo editing tools',
   },
-  ...PHOTO_TOOLS.map((tool) => ({
-    path: `/tools/${tool.slug}`,
-    title: tool.title,
-    description: tool.description,
-  })),
   { path: '/blog', title: 'Blog', description: 'Guides and product notes' },
   {
     path: '/privacy-policy',
