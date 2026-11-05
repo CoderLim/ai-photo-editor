@@ -8,17 +8,17 @@ const STATIC_PAGES: { path: string; title: string; description: string }[] = [
   {
     path: '',
     title: 'AI Photo Editor',
-    description: 'Edit photos online with natural-language prompts',
+    description: 'Free AI photo editor online with natural-language prompts',
   },
   {
     path: '/pricing',
     title: 'Pricing',
-    description: 'One-time AI photo editing credit packs',
+    description: 'AI photo editor credit packs — pay once',
   },
   {
     path: '/tools',
     title: 'AI Photo Tools',
-    description: 'Task-focused AI photo editing tools',
+    description: 'Task-focused AI photo editor tools',
   },
   { path: '/blog', title: 'Blog', description: 'Guides and product notes' },
 ];

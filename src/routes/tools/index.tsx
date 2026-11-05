@@ -12,7 +12,7 @@ export const Route = createFileRoute('/tools/')({
     pageHead({
       title: 'AI Photo Editing Tools — GetAIPhotoEditor',
       description:
-        'Browse task-focused AI photo editing tools for object removal, background changes, and image enhancement. Prepare free; generate with credits.',
+        'Task-focused AI photo editor tools for object removal, background changes, and image enhancement. Prepare free; generate with credits.',
       path: '/tools',
     }),
   component: ToolsPage,

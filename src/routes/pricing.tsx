@@ -10,7 +10,7 @@ export const Route = createFileRoute('/pricing')({
     pageHead({
       title: 'AI Photo Editor Pricing — Credit Packs | GetAIPhotoEditor',
       description:
-        'One-time AI photo editing credit packs. No subscriptions. Choose 200, 500, or 1200 credits for background changes, retouching, and enhancements.',
+        'AI photo editor credit packs — pay once, no subscription. Choose 200, 500, or 1200 credits for backgrounds, retouching, and enhancements.',
       path: '/pricing',
     }),
   component: PricingPage,

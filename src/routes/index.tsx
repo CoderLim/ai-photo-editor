@@ -45,7 +45,7 @@ const FAQS = [
 
 const HOME_TITLE = 'AI Photo Editor: Free AI Image Editor Online, No Sign-Up';
 const HOME_DESCRIPTION =
-  'Edit photos instantly with AI. Preserve the rest. Remove objects, Enhance photos, retouch portraits, restyle photos, and transform images in one click';
+  'Free AI photo editor online. Remove objects, retouch portraits, enhance photos, and restyle images with text prompts — no app to install.';
 
 const structuredDataJsonLd = JSON.stringify({
   '@context': 'https://schema.org',
