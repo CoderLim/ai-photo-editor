@@ -285,6 +285,8 @@ export class FalProvider implements AIProvider {
     if (!model) {
       return '';
     }
+    // This edit endpoint is a three-part path on fal queue.
+    if (model === 'google/nano-banana-2.1/edit') return model;
     const parts = model.split('/');
     if (parts.length <= 2) {
       return model;

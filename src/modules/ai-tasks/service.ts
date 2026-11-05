@@ -19,6 +19,7 @@ export enum AITaskStatus {
  */
 export async function createTask(params: {
   userId: string;
+  id?: string; // deterministic ID for idempotent photo edit requests
   mediaType: string;
   provider: string;
   model: string;
@@ -29,14 +30,19 @@ export async function createTask(params: {
   const { userId, mediaType, provider, model, prompt, costCredits, options } =
     params;
 
+  if (params.id) {
+    const previous = await findTask(params.id);
+    if (previous) return { ...previous, alreadyExisted: true };
+  }
   for (let attempt = 0; attempt < 3; attempt++) {
     const taskData: typeof aiTask.$inferInsert = {
-      id: getUuid(),
+      id: params.id || getUuid(),
       userId,
       mediaType,
       provider,
       model,
       prompt,
+      options: options ? JSON.stringify(options) : null,
       status: AITaskStatus.PENDING,
       costCredits: costCredits || 0,
     };
@@ -68,6 +74,10 @@ export async function createTask(params: {
       ]);
     } catch (error) {
       // A concurrent spend drained the grants we planned on: re-plan.
+      if (params.id) {
+        const previous = await findTask(params.id);
+        if (previous) return { ...previous, alreadyExisted: true };
+      }
       if (error instanceof AtomicGuardError) continue;
       throw error;
     }

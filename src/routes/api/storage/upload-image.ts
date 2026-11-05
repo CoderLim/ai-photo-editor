@@ -3,6 +3,7 @@ import path from 'node:path';
 import { createFileRoute } from '@tanstack/react-router';
 
 import { getAuth } from '@/core/auth';
+import { issueUploadToken } from '@/modules/photo-editor/upload-token';
 import { envConfigs } from '@/config';
 import { getStorage } from '@/modules/storage/service';
 import { md5 } from '@/lib/hash';
@@ -159,9 +160,13 @@ async function POST({ request }: { request: Request }) {
       });
     }
 
+    const authorizedResults = await Promise.all(uploadResults.map(async (r) => ({
+      ...r,
+      token: await issueUploadToken(session.user.id, r.url),
+    })));
     return respData({
-      urls: uploadResults.map((r) => r.url),
-      results: uploadResults,
+      urls: authorizedResults.map((r) => r.url),
+      results: authorizedResults,
     });
   } catch (e: any) {
     console.error('upload image failed:', e);
