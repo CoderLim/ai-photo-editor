@@ -1036,6 +1036,14 @@ export function getSettings(): Setting[] {
 
     // ─── AI / Replicate ──────────────────────────────────────────────
     {
+      name: 'photo_editor_provider', title: 'Photo editor primary provider',
+      type: 'select',
+      options: [{ label: 'Replicate', value: 'replicate' }, { label: 'fal.ai', value: 'fal' }],
+      group: 'replicate', tab: 'ai', defaultValue: 'replicate',
+      tip: 'Manually choose the provider. Do not re-run already submitted jobs when switching.',
+    },
+
+    {
       name: 'replicate_api_token',
       title: 'API Token',
       type: 'password',

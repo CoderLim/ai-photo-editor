@@ -6,7 +6,6 @@ import { getAuth } from '@/core/auth';
 import { issueUploadToken } from '@/modules/photo-editor/upload-token';
 import { envConfigs } from '@/config';
 import { getStorage } from '@/modules/storage/service';
-import { md5 } from '@/lib/hash';
 import { enforceMinIntervalRateLimit } from '@/lib/rate-limit';
 import { respData, respErr } from '@/lib/resp';
 
@@ -93,10 +92,8 @@ async function POST({ request }: { request: Request }) {
       const arrayBuffer = await file.arrayBuffer();
       const body = new Uint8Array(arrayBuffer);
 
-      const digest = md5(body);
-      // R2Provider prepends its own uploadPath (default `uploads`), so the object
-      // key is the bare filename. The local fallback uses `public/uploads/<file>`.
-      const objectKey = `${digest}.${ext}`;
+      // Use randomized upload names so different users' private photos are not deduplicated.
+      const objectKey = 'photo-' + crypto.randomUUID() + '.' + ext;
 
       // No storage configured → persist to public/uploads and return a short
       // local URL. Avoids inlining a giant base64 data URL into DB columns (some

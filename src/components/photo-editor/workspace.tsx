@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import {
-  ArrowRight, Check, Download, ImagePlus, LoaderCircle, RotateCcw,
-  Sparkles, UploadCloud, WandSparkles, X, ZoomIn
+  Download, ImagePlus, LoaderCircle, RotateCcw,
+  Sparkles, UploadCloud, WandSparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSession } from '@/core/auth/client';
@@ -73,7 +73,9 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
         const draft = value.result as Draft | undefined;
         if (draft?.file instanceof File) {
           setFile(draft.file);
-          setPreview(URL.createObjectURL(draft.file));
+          const restoredUrl = URL.createObjectURL(draft.file);
+          previewRef.current = restoredUrl;
+          setPreview(restoredUrl);
           if (!tool) setPrompt(draft.prompt || '');
         }
       };
@@ -115,6 +117,7 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
           clearDraft();
         } else if (job.status === 'failed' || job.status === 'canceled') {
           setStatus('failed');
+          requestId.current = null;
           toast.error('Edit failed. Your credits have been restored.');
         }
       } catch { /* transient provider status failure: retry */ }

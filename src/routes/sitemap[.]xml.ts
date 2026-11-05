@@ -3,15 +3,14 @@ import { createFileRoute } from '@tanstack/react-router';
 import { envConfigs } from '@/config';
 import { baseLocale, locales, localizeUrl } from '@/paraglide/runtime.js';
 import { getLocalPosts, mergePosts } from '@/content/posts';
+import { PHOTO_TOOLS } from '@/modules/photo-editor/config';
 
 const STATIC_PATHS = [
   '',
   '/pricing',
   '/blog',
   '/tools',
-  '/tools/remove-object',
-  '/tools/change-background',
-  '/tools/enhance-photo',
+  ...PHOTO_TOOLS.map((tool) => '/tools/' + tool.slug),
   '/privacy-policy',
   '/terms-of-service',
 ];

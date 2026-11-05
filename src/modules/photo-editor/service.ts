@@ -1,4 +1,4 @@
-import { FalProvider, ReplicateProvider, AIMediaType, type AIProvider } from '@/core/ai';
+import { FalProvider, ReplicateProvider, type AIProvider } from '@/core/ai';
 import { getAllConfigs } from '@/modules/config/service';
 import { getStorage } from '@/modules/storage/service';
 import { FAL_EDIT_MODEL, REPLICATE_EDIT_MODEL } from './config';
