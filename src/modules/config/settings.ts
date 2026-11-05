@@ -141,6 +141,12 @@ export function getSettingGroups(): SettingGroup[] {
       tab: 'payment',
     },
     {
+      name: 'waffo',
+      title: 'Waffo Pancake',
+      description: 'Waffo checkout for one-time credit packs',
+      tab: 'payment',
+    },
+    {
       name: 'paypal',
       title: 'PayPal',
       description: 'PayPal payment gateway',
@@ -601,6 +607,7 @@ export function getSettings(): Setting[] {
       options: [
         { label: 'Stripe', value: 'stripe' },
         { label: 'Creem', value: 'creem' },
+        { label: 'Waffo Pancake', value: 'waffo' },
         { label: 'PayPal', value: 'paypal' },
         { label: 'Alipay', value: 'alipay' },
         { label: 'WeChat Pay', value: 'wechat' },
@@ -694,6 +701,24 @@ export function getSettings(): Setting[] {
       placeholder: '留空使用实际金额，填 1 则支付 $0.01',
       group: 'creem',
       tab: 'payment',
+    },
+
+    // ─── Payment / Waffo ─────────────────────────────────────────────
+    { name: 'waffo_enabled', title: 'Enable Waffo', type: 'switch', group: 'waffo', tab: 'payment' },
+    {
+      name: 'waffo_environment', title: 'Environment', type: 'select',
+      options: [{ label: 'Test', value: 'test' }, { label: 'Production', value: 'prod' }],
+      defaultValue: 'test', group: 'waffo', tab: 'payment',
+      tip: 'Production requires a real Waffo Production API key; test keys never charge real money.',
+    },
+    { name: 'waffo_merchant_id', title: 'Merchant ID', type: 'text', group: 'waffo', tab: 'payment' },
+    { name: 'waffo_private_key', title: 'Private Key', type: 'password', group: 'waffo', tab: 'payment' },
+    { name: 'waffo_store_id', title: 'Store ID', type: 'text', group: 'waffo', tab: 'payment' },
+    {
+      name: 'waffo_product_ids_mapping', title: 'Product IDs Mapping', type: 'textarea',
+      placeholder: '{"starter_pack":"PROD_xxx","creator_pack":"PROD_xxx","pro_pack":"PROD_xxx"}',
+      tip: 'JSON mapping of local pricing catalog IDs to distinct Waffo store product IDs.',
+      group: 'waffo', tab: 'payment',
     },
 
     // ─── Payment / PayPal ────────────────────────────────────────────
