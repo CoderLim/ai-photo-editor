@@ -1,40 +1,68 @@
 import { Link } from '@/core/i18n/navigation';
 
 export function Footer() {
-  return <footer className="border-t border-slate-200 bg-white px-4 py-12 text-slate-600 sm:px-6">
-    <div className="mx-auto grid max-w-6xl gap-9 md:grid-cols-[2fr_1fr_1fr_1fr]">
-      <div>
-        <p className="text-lg font-bold tracking-tight text-slate-900">GetAIPhotoEditor</p>
-        <p className="mt-3 max-w-sm text-sm leading-6">
-          Edit photos with natural-language prompts. Practical AI tools for everyday creative work.
-        </p>
-      </div>
-      <div>
-        <p className="mb-4 text-sm font-semibold text-slate-900">Product</p>
-        <div className="flex flex-col gap-3 text-sm">
-          <Link href="/" className="hover:text-blue-600">AI Photo Editor</Link>
-          <Link href="/tools" className="hover:text-blue-600">AI Tools</Link>
-          <Link href="/pricing" className="hover:text-blue-600">Pricing</Link>
+  return (
+    <footer className="border-t border-slate-200 bg-white px-4 py-12 text-slate-600 sm:px-6">
+      <div className="mx-auto grid max-w-6xl gap-9 md:grid-cols-[2fr_1fr_1fr_1fr]">
+        <div>
+          <p className="text-lg font-bold tracking-tight text-slate-900">
+            GetAIPhotoEditor
+          </p>
+          <p className="mt-3 max-w-sm text-sm leading-6">
+            Edit photos with natural-language prompts. Practical AI tools for
+            everyday creative work.
+          </p>
+        </div>
+        <div>
+          <p className="mb-4 text-sm font-semibold text-slate-900">Product</p>
+          <div className="flex flex-col gap-3 text-sm">
+            <Link href="/" className="hover:text-blue-600">
+              AI Photo Editor
+            </Link>
+            <Link href="/tools" className="hover:text-blue-600">
+              AI Tools
+            </Link>
+            <Link href="/pricing" className="hover:text-blue-600">
+              Pricing
+            </Link>
+            <Link href="/blog" className="hover:text-blue-600">
+              Blog
+            </Link>
+          </div>
+        </div>
+        <div>
+          <p className="mb-4 text-sm font-semibold text-slate-900">Resources</p>
+          <div className="flex flex-col gap-3 text-sm">
+            <Link href="/tools/remove-object" className="hover:text-blue-600">
+              Object Remover
+            </Link>
+            <Link
+              href="/tools/change-background"
+              className="hover:text-blue-600"
+            >
+              Background Changer
+            </Link>
+            <Link href="/tools/enhance-photo" className="hover:text-blue-600">
+              Photo Enhancer
+            </Link>
+          </div>
+        </div>
+        <div>
+          <p className="mb-4 text-sm font-semibold text-slate-900">Legal</p>
+          <div className="flex flex-col gap-3 text-sm">
+            <Link href="/privacy-policy" className="hover:text-blue-600">
+              Privacy Policy
+            </Link>
+            <Link href="/terms-of-service" className="hover:text-blue-600">
+              Terms of Service
+            </Link>
+          </div>
         </div>
       </div>
-      <div>
-        <p className="mb-4 text-sm font-semibold text-slate-900">Account</p>
-        <div className="flex flex-col gap-3 text-sm">
-          <Link href="/creations" className="hover:text-blue-600">My Creations</Link>
-          <Link href="/settings" className="hover:text-blue-600">Account settings</Link>
-        </div>
+      <div className="mx-auto mt-10 flex max-w-6xl flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-6 text-xs text-slate-500">
+        <span>© {new Date().getFullYear()} GetAIPhotoEditor</span>
+        <span>Built for simple, powerful photo edits</span>
       </div>
-      <div>
-        <p className="mb-4 text-sm font-semibold text-slate-900">Legal</p>
-        <div className="flex flex-col gap-3 text-sm">
-          <Link href="/privacy-policy" className="hover:text-blue-600">Privacy Policy</Link>
-          <Link href="/terms-of-service" className="hover:text-blue-600">Terms of Service</Link>
-        </div>
-      </div>
-    </div>
-    <div className="mx-auto mt-10 flex max-w-6xl flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-6 text-xs text-slate-500">
-      <span>© {new Date().getFullYear()} GetAIPhotoEditor</span>
-      <span>Built for simple, powerful photo edits</span>
-    </div>
-  </footer>;
+    </footer>
+  );
 }

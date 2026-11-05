@@ -13,9 +13,10 @@ import { toast } from 'sonner';
 
 import { Link, useRouter } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
+import { pageHead } from '@/lib/seo';
 import { cn } from '@/lib/utils';
 import { m } from '@/paraglide/messages.js';
-import { getLocale, localizeUrl } from '@/paraglide/runtime.js';
+import { getLocale } from '@/paraglide/runtime.js';
 import { useGuestPostCheckout } from '@/hooks/use-guest-post-checkout';
 import { formatPrice, guestPostSubmitProblem } from '@/hooks/use-guest-posts';
 import { Footer } from '@/blocks/footer';
@@ -52,23 +53,22 @@ export const Route = createFileRoute('/blog/$slug')({
     if (!loaderData) return {};
     const { locale, post } = loaderData;
     if (post.preview) {
-      return {
-        meta: [
-          { title: `${post.title} | ${envConfigs.app_name}` },
-          { name: 'robots', content: 'noindex, nofollow' },
-        ],
-      };
+      return pageHead({
+        title: `${post.title} | ${envConfigs.app_name}`,
+        description: post.description || post.title,
+        path: `/blog/${post.slug}`,
+        locale,
+        noindex: true,
+      });
     }
-    const canonical = localizeUrl(`${envConfigs.app_url}/blog/${post.slug}`, {
-      locale: locale as any,
-    }).href;
-    return {
-      meta: [
-        { title: `${post.title} | ${envConfigs.app_name}` },
-        { name: 'description', content: post.description },
-      ],
-      links: [{ rel: 'canonical', href: canonical }],
-    };
+    return pageHead({
+      title: `${post.title} | ${envConfigs.app_name}`,
+      description: post.description || post.title,
+      path: `/blog/${post.slug}`,
+      locale,
+      localized: true,
+      image: post.image,
+    });
   },
   component: BlogPostPage,
 });
@@ -208,6 +208,21 @@ function BlogPostPage() {
   const LocalContent =
     post.source === 'local' ? loadLocalPost(post.slug, locale)?.default : null;
 
+  const articleJsonLd = !post.preview
+    ? JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: post.title,
+        description: post.description,
+        datePublished: post.createdAt,
+        author: post.authorName
+          ? { '@type': 'Person', name: post.authorName }
+          : { '@type': 'Organization', name: envConfigs.app_name },
+        image: post.image || undefined,
+        mainEntityOfPage: `${envConfigs.app_url}/blog/${post.slug}`,
+      })
+    : null;
+
   return (
     <div className="bg-background text-foreground flex min-h-screen flex-col">
       <Header />
@@ -219,6 +234,9 @@ function BlogPostPage() {
             content={post.content || ''}
           />
         )}
+        {articleJsonLd ? (
+          <script type="application/ld+json">{articleJsonLd}</script>
+        ) : null}
         <article className="mx-auto max-w-3xl">
           <Link
             href="/blog"

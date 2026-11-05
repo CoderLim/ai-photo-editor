@@ -5,9 +5,22 @@ import { baseLocale } from '@/paraglide/runtime.js';
 import { getLocalPosts, mergePosts } from '@/content/posts';
 
 const STATIC_PAGES: { path: string; title: string; description: string }[] = [
-  { path: '', title: 'Home', description: 'Landing page' },
-  { path: '/pricing', title: 'Pricing', description: 'Pricing plans' },
-  { path: '/blog', title: 'Blog', description: 'Blog posts and articles' },
+  {
+    path: '',
+    title: 'AI Photo Editor',
+    description: 'Edit photos online with natural-language prompts',
+  },
+  {
+    path: '/pricing',
+    title: 'Pricing',
+    description: 'One-time AI photo editing credit packs',
+  },
+  {
+    path: '/tools',
+    title: 'AI Photo Tools',
+    description: 'Task-focused AI photo editing tools',
+  },
+  { path: '/blog', title: 'Blog', description: 'Guides and product notes' },
 ];
 
 export const Route = createFileRoute('/llms-full.txt')({

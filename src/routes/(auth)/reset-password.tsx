@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { resetPassword } from '@/core/auth/client';
 import { Link, useRouter } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
+import { pageHead } from '@/lib/seo';
 import { m } from '@/paraglide/messages.js';
 import { TextField } from '@/components/form-field';
 import { Button } from '@/components/ui/button';
@@ -184,5 +185,12 @@ function ResetPasswordPage() {
 }
 
 export const Route = createFileRoute('/(auth)/reset-password')({
+  head: () =>
+    pageHead({
+      title: 'Reset Password — GetAIPhotoEditor',
+      description: 'Choose a new password for your GetAIPhotoEditor account.',
+      path: '/reset-password',
+      noindex: true,
+    }),
   component: ResetPasswordPage,
 });

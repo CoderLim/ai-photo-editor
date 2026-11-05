@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { authClient, useSession } from '@/core/auth/client';
 import { Link, useRouter } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
+import { pageHead } from '@/lib/seo';
 import { m } from '@/paraglide/messages.js';
 import { deLocalizeHref, localizeHref } from '@/paraglide/runtime.js';
 import { Button } from '@/components/ui/button';
@@ -299,5 +300,12 @@ function VerifyEmailPage() {
 }
 
 export const Route = createFileRoute('/(auth)/verify-email')({
+  head: () =>
+    pageHead({
+      title: 'Verify Email — GetAIPhotoEditor',
+      description: 'Verify your email address for GetAIPhotoEditor.',
+      path: '/verify-email',
+      noindex: true,
+    }),
   component: VerifyEmailPage,
 });

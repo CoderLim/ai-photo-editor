@@ -1,13 +1,42 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { envConfigs } from '@/config';
+import { PHOTO_TOOLS } from '@/modules/photo-editor/config';
 import { baseLocale } from '@/paraglide/runtime.js';
 import { getLocalPosts, mergePosts } from '@/content/posts';
 
 const STATIC_PAGES: { path: string; title: string; description: string }[] = [
-  { path: '', title: 'Home', description: 'Landing page' },
-  { path: '/pricing', title: 'Pricing', description: 'Pricing plans' },
-  { path: '/blog', title: 'Blog', description: 'Blog posts and articles' },
+  {
+    path: '',
+    title: 'AI Photo Editor',
+    description: 'Edit photos online with natural-language prompts',
+  },
+  {
+    path: '/pricing',
+    title: 'Pricing',
+    description: 'One-time AI photo editing credit packs',
+  },
+  {
+    path: '/tools',
+    title: 'AI Photo Tools',
+    description: 'Task-focused AI photo editing tools',
+  },
+  ...PHOTO_TOOLS.map((tool) => ({
+    path: `/tools/${tool.slug}`,
+    title: tool.title,
+    description: tool.description,
+  })),
+  { path: '/blog', title: 'Blog', description: 'Guides and product notes' },
+  {
+    path: '/privacy-policy',
+    title: 'Privacy Policy',
+    description: 'How we handle your data',
+  },
+  {
+    path: '/terms-of-service',
+    title: 'Terms of Service',
+    description: 'Terms for using the service',
+  },
 ];
 
 export const Route = createFileRoute('/llms.txt')({
