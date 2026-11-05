@@ -17,9 +17,8 @@ export type PageSeoInput = {
   image?: string;
   noindex?: boolean;
   /**
-   * True when the page has real translations for every project locale.
-   * Marketing pages with English-only copy should leave this false so we
-   * canonicalise to `en` and do not advertise a Chinese alternate.
+   * True when the page should advertise hreflang alternates for every
+   * project locale. With a single locale this is effectively a no-op.
    */
   localized?: boolean;
 };
@@ -102,7 +101,7 @@ export function pageHead(input: PageSeoInput): {
       { property: 'og:description', content: input.description },
       { property: 'og:url', content: canonical },
       { property: 'og:image', content: image },
-      { property: 'og:locale', content: locale === 'zh' ? 'zh_CN' : 'en_US' },
+      { property: 'og:locale', content: 'en_US' },
       { name: 'twitter:card', content: 'summary_large_image' },
       { name: 'twitter:title', content: input.title },
       { name: 'twitter:description', content: input.description },
@@ -119,16 +118,6 @@ export function pageHead(input: PageSeoInput): {
 }
 
 /** Locales to advertise in the sitemap for a given public path. */
-export function sitemapLocalesForPath(path: string): readonly string[] {
-  // Real zh MDX / Paraglide copy exists for these surfaces.
-  if (
-    path === '/blog' ||
-    path.startsWith('/blog/') ||
-    path === '/privacy-policy' ||
-    path === '/terms-of-service' ||
-    path === '/guest-post'
-  ) {
-    return locales;
-  }
-  return [baseLocale];
+export function sitemapLocalesForPath(_path: string): readonly string[] {
+  return locales;
 }

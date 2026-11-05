@@ -45,7 +45,7 @@ export const Route = createFileRoute('/api/<feature>')({
 
 ## Step 3: Create the Page
 
-Pages do client-side data fetching with **TanStack Query** over `@/lib/api-client` — never raw `fetch`. Route paths are **locale-free** (no `{-$locale}` segment; the `/zh` prefix is added by the router rewrite). Define the route with `createFileRoute` and a `component`:
+Pages do client-side data fetching with **TanStack Query** over `@/lib/api-client` — never raw `fetch`. Route paths are **locale-free** (no `{-$locale}` segment). Define the route with `createFileRoute` and a `component`:
 
 ```typescript
 // src/routes/settings/<feature>.tsx
@@ -98,10 +98,9 @@ npx shadcn@latest add table dialog badge
 
 ## Step 5: Add Translation Keys
 
-Add translation keys (flat, dot-joined) to **both** locale files:
+Add translation keys (flat, dot-joined) to `messages/en.json`:
 1. Add `settings.<feature>.*` keys to `messages/en.json`
-2. Add the same keys with Chinese values to `messages/zh.json`
-3. Reference them with `m["settings.<feature>.xxx"]()` from `@/paraglide/messages.js` in the component
+2. Reference them with `m["settings.<feature>.xxx"]()` from `@/paraglide/messages.js` in the component
 
 ## Step 6: Add Navigation Entry
 
@@ -135,7 +134,7 @@ Run `pnpm build` to verify the page compiles.
 - **Fetch with TanStack Query + `@/lib/api-client`** (`apiGet`/`apiPost`/…) — no raw `fetch`, and don't import server-only modules (`@/modules/*`, `@/core/db`) in components.
 - **Route paths are locale-free** — `createFileRoute("/settings/<feature>")`, no `{-$locale}` segment.
 - **Page layout is inherited** from `AppLayout` via the `settings/route.tsx` layout — sidebar, header, auth guard are automatic.
-- **Use `m["...key"]()`** from `@/paraglide/messages.js` for all user-facing text (add keys to both `messages/en.json` and `messages/zh.json`).
+- **Use `m["...key"]()`** from `@/paraglide/messages.js` for all user-facing text (add keys to `messages/en.json`).
 - **Use `Link` from `@/core/i18n/navigation`** — locale-aware navigation.
 - **Use semantic Tailwind classes** — `bg-card`, `text-muted-foreground`, `border-border`, not raw colors.
 - **Import icons from `lucide-react`** — `import { SomeIcon } from "lucide-react"`.

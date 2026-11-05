@@ -19,11 +19,11 @@ import { PhotoEditorWorkspace } from '@/components/photo-editor/workspace';
 const FAQS = [
   [
     'Is this AI photo editor really free?',
-    'Preparing a photo and prompt is free. Each standard 1K AI edit uses 10 credits. New accounts may receive welcome credits when the offer is enabled; one-time credit packs are also available.',
+    'Yes to start. You get 10 free credits without signing in (enough for one standard 1K edit). Sign in and you get 10 more. Each standard 1K edit uses 10 credits; one-time credit packs are available when you need more.',
   ],
   [
     'Can I use it without signing up?',
-    'You can select and preview a photo and write your prompt without an account. You must sign in before the photo is uploaded for AI generation or you can download an AI-generated result.',
+    'Yes. Upload a photo, write a prompt, and generate with your 10 guest credits — no account required. Sign in anytime for 10 more credits and to keep results in My Creations.',
   ],
   [
     'Does it work on iPhone or Android without an app?',
@@ -31,7 +31,7 @@ const FAQS = [
   ],
   [
     'What happens to my photos after editing?',
-    'Before generation, your selected photo stays in your browser. When you generate, it is uploaded for processing and the result is stored so you can access My Creations. We do not promise automatic deletion; see the Privacy Policy for data-handling information.',
+    'Before generation, your selected photo stays in your browser. When you generate, it is uploaded for processing and the result is stored so you can access My Creations after signing in. We do not promise automatic deletion; see the Privacy Policy for data-handling information.',
   ],
   [
     'How is AI photo editing different from Photoshop?',
@@ -45,7 +45,7 @@ const FAQS = [
 
 const HOME_TITLE = 'AI Photo Editor: Free AI Image Editor Online, No Sign-Up';
 const HOME_DESCRIPTION =
-  'Free AI photo editor online. Remove objects, retouch portraits, enhance photos, and restyle images with text prompts — no app to install.';
+  'Free AI photo editor online. Remove objects, retouch portraits, enhance photos, and restyle images with text prompts — No Sign-Up.';
 
 const structuredDataJsonLd = JSON.stringify({
   '@context': 'https://schema.org',
@@ -67,7 +67,8 @@ const structuredDataJsonLd = JSON.stringify({
         '@type': 'Offer',
         price: '0',
         priceCurrency: 'USD',
-        description: 'Prepare edits free; AI generation uses credits',
+        description:
+          '10 free credits without signing in; 10 more after sign-in. Each 1K edit uses 10 credits',
       },
     },
     {
@@ -141,43 +142,36 @@ function HomePage() {
     <div className="min-h-screen bg-[#f7f9fc] text-slate-900">
       <Header />
       <main>
-        <section className="relative overflow-hidden border-b border-slate-100 bg-gradient-to-b from-[#f1f6ff] via-[#f9fbff] to-[#f7f9fc] px-4 pt-14 pb-16 sm:px-6 sm:pt-20">
+        <section className="relative overflow-hidden border-b border-slate-100 bg-gradient-to-b from-[#f1f6ff] via-[#f9fbff] to-[#f7f9fc] px-4 pt-10 pb-12 sm:px-6 sm:pt-14 sm:pb-14">
           <div className="mx-auto max-w-[1320px]">
-            <div className="mb-10 text-center">
-              <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white/80 px-4 py-1.5 text-xs font-semibold tracking-[0.15em] text-blue-600 uppercase">
+            <div className="mb-5 text-center sm:mb-6">
+              <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white/80 px-4 py-1.5 text-xs font-semibold tracking-[0.15em] text-blue-600 uppercase">
                 <Sparkles className="size-3.5" /> AI-powered photo editing
               </p>
-              <h1 className="mx-auto max-w-4xl text-4xl font-bold tracking-[-0.045em] text-slate-950 sm:text-5xl lg:text-[3.5rem]">
+              <h1 className="mx-auto max-w-4xl text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl lg:text-[2.75rem]">
                 AI Photo Editor Online
               </h1>
-              <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
-                Upload a photo and tell the AI what to change in plain words.
-                Our AI photo editor can remove backgrounds, retouch portraits,
-                enhance blurry shots, erase objects, and swap skies. No
-                Photoshop or app to install — start in your browser on iPhone,
-                Android, Mac, or Windows.
-              </p>
-              <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-slate-500">
-                Choose your photo and write a prompt without signing in. Sign in
-                to generate a 1K edit using credits, then review and download
-                your result. Your original photo is not overwritten.
+              <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
+                Upload a photo and describe the edit in plain words — 10 free
+                credits without signing in, plus 10 more when you create an
+                account.
               </p>
             </div>
             <div id="editor">
               <PhotoEditorWorkspace />
             </div>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-6 text-xs font-medium text-slate-500">
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-slate-500">
               <span className="inline-flex items-center gap-2">
-                <CheckCircle2 className="size-4 text-blue-600" /> No design
-                skills needed
+                <CheckCircle2 className="size-4 text-blue-600" /> 10 free
+                credits to start
               </span>
               <span className="inline-flex items-center gap-2">
-                <CheckCircle2 className="size-4 text-blue-600" /> One simple
-                prompt
+                <CheckCircle2 className="size-4 text-blue-600" /> No app to
+                install
               </span>
               <span className="inline-flex items-center gap-2">
-                <CheckCircle2 className="size-4 text-blue-600" /> See and refine
-                your result
+                <CheckCircle2 className="size-4 text-blue-600" /> Original photo
+                kept intact
               </span>
             </div>
           </div>
@@ -193,13 +187,13 @@ function HomePage() {
             </h2>
             <p className="mt-4 max-w-3xl leading-8 text-slate-600">
               Choose a JPG, PNG or WebP photo and describe your edit in everyday
-              language. No desktop software is required. You can prepare the
-              image and prompt before signing in, then generate a change to the
-              background, portrait, lighting, or overall style.
+              language — remove backgrounds, retouch portraits, enhance blurry
+              shots, erase objects, or swap skies. No Photoshop or desktop app
+              needed on iPhone, Android, Mac, or Windows.
             </p>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-500">
-              AI generation requires sign-in and uses 10 credits for a standard
-              1K image. The upload limit is 10 MB. Review faces and details
+              Start with 10 free guest credits (one standard 1K edit). Sign in
+              for 10 more. Upload limit is 10 MB. Review faces and details
               before using generated photos.
             </p>
           </div>
@@ -251,7 +245,7 @@ function HomePage() {
                 [
                   '01',
                   'Upload your photo',
-                  'Choose a JPG, PNG or WebP image up to 10 MB. You can choose it before signing in.',
+                  'Choose a JPG, PNG or WebP image up to 10 MB. No account needed to start.',
                 ],
                 [
                   '02',
@@ -261,7 +255,7 @@ function HomePage() {
                 [
                   '03',
                   'Generate and download',
-                  'Sign in, generate a 1K edit using credits, inspect the result, and download or refine it.',
+                  'Generate a 1K edit with your free credits, inspect the result, then download or refine it. Sign in for 10 more credits and My Creations.',
                 ],
               ].map(([number, title, description]) => (
                 <div
@@ -377,8 +371,8 @@ function HomePage() {
                   More AI Photo Tools
                 </h2>
                 <p className="mt-3 max-w-xl text-slate-500">
-                  Open a task-focused editor. Preparing your edit is free; AI
-                  generation uses credits.
+                  Open a task-focused editor. Start with free credits; each
+                  standard 1K edit uses 10 credits.
                 </p>
               </div>
               <Link

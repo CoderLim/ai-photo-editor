@@ -1224,18 +1224,6 @@ export function getSettings(): Setting[] {
       defaultValue: 'true',
     },
     {
-      name: 'notify_language',
-      title: 'Message language',
-      type: 'select',
-      options: [
-        { label: '中文', value: 'zh' },
-        { label: 'English', value: 'en' },
-      ],
-      group: 'notify_settings',
-      tab: 'notify',
-      defaultValue: 'zh',
-    },
-    {
       name: 'notify_timezone',
       title: 'Time zone',
       type: 'text',

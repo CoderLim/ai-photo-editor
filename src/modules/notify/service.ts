@@ -30,12 +30,10 @@ import { getAllConfigs } from '@/modules/config/service';
 
 import {
   GUEST_POST_EVENT_LABELS,
-  GUEST_POST_TEMPLATES,
-  normalizeNotifyLanguage,
-  PAYMENT_TEMPLATES,
+  GUEST_POST_TEMPLATE,
+  PAYMENT_TEMPLATE,
   renderTemplate,
-  TICKET_TEMPLATES,
-  type NotifyLanguage,
+  TICKET_TEMPLATE,
   type PaymentTemplateVars,
   type TicketTemplateVars,
 } from './templates';
@@ -50,35 +48,18 @@ const PROVIDER_NAMES: Record<string, string> = {
 
 type IntervalUnit = 'day' | 'week' | 'month' | 'year';
 
-const INTERVAL_LABELS: Record<
-  NotifyLanguage,
-  Record<IntervalUnit, { single: string; unit: string }>
-> = {
-  zh: {
-    day: { single: '日付', unit: '天' },
-    week: { single: '周付', unit: '周' },
-    month: { single: '月付', unit: '个月' },
-    year: { single: '年付', unit: '年' },
-  },
-  en: {
+const INTERVAL_LABELS: Record<IntervalUnit, { single: string; unit: string }> =
+  {
     day: { single: 'Daily', unit: 'days' },
     week: { single: 'Weekly', unit: 'weeks' },
     month: { single: 'Monthly', unit: 'months' },
     year: { single: 'Yearly', unit: 'years' },
-  },
-};
+  };
 
 function formatChargeType(
   kind: 'first' | 'renew' | 'one-time',
-  chargeIndex: number | undefined,
-  language: NotifyLanguage
+  chargeIndex: number | undefined
 ) {
-  if (language === 'zh') {
-    if (kind === 'first') return '订阅首次扣费';
-    if (kind === 'renew')
-      return chargeIndex ? `订阅续费（第 ${chargeIndex} 次扣费）` : '订阅续费';
-    return '一次性付费';
-  }
   if (kind === 'first') return 'First subscription charge';
   if (kind === 'renew')
     return chargeIndex
@@ -89,16 +70,13 @@ function formatChargeType(
 
 function formatBillingCycle(
   interval: string | null | undefined,
-  intervalCount: number | null | undefined,
-  language: NotifyLanguage
+  intervalCount: number | null | undefined
 ) {
-  const labels = INTERVAL_LABELS[language][interval as IntervalUnit];
+  const labels = INTERVAL_LABELS[interval as IntervalUnit];
   if (!labels) return '';
   const count = intervalCount && intervalCount > 1 ? intervalCount : 1;
   if (count === 1) return labels.single;
-  return language === 'zh'
-    ? `每 ${count} ${labels.unit}`
-    : `Every ${count} ${labels.unit}`;
+  return `Every ${count} ${labels.unit}`;
 }
 
 // Currencies whose smallest unit is the whole unit (amounts aren't in cents).
@@ -208,10 +186,10 @@ function formatTime(date: Date | null | undefined, timeZone: string) {
   }
 }
 
-function formatCountry(code: string, language: NotifyLanguage) {
+function formatCountry(code: string) {
   if (!code) return '';
   try {
-    const name = new Intl.DisplayNames([language === 'zh' ? 'zh-CN' : 'en'], {
+    const name = new Intl.DisplayNames(['en'], {
       type: 'region',
     }).of(code);
     return name && name !== code ? `${name} (${code})` : code;
@@ -263,7 +241,6 @@ export function buildPaymentVars(params: {
   configs: Record<string, string>;
 }): PaymentTemplateVars {
   const { order: o, user: u, subscription: sub, chargeIndex, configs } = params;
-  const language = normalizeNotifyLanguage(configs.notify_language);
   const timeZone = configs.notify_timezone?.trim() || 'Asia/Shanghai';
 
   const chargeKind =
@@ -277,8 +254,7 @@ export function buildPaymentVars(params: {
       ? ''
       : formatBillingCycle(
           sub?.interval || o.paymentInterval,
-          sub?.intervalCount,
-          language
+          sub?.intervalCount
         );
 
   const currency = o.paymentCurrency || o.currency;
@@ -287,7 +263,7 @@ export function buildPaymentVars(params: {
   return {
     app_name: configs.app_name || envConfigs.app_name,
     provider: PROVIDER_NAMES[o.paymentProvider] || o.paymentProvider,
-    charge_type: formatChargeType(chargeKind, chargeIndex, language),
+    charge_type: formatChargeType(chargeKind, chargeIndex),
     charge_index: chargeIndex ? String(chargeIndex) : '',
     billing_cycle: billingCycle,
     payment_type: o.paymentType || '',
@@ -303,7 +279,7 @@ export function buildPaymentVars(params: {
     user_name: u?.name || '',
     registered_at: formatTime(u?.createdAt, timeZone),
     paid_at: formatTime(o.paidAt || new Date(), timeZone),
-    country: formatCountry(country, language),
+    country: formatCountry(country),
     country_code: country,
     utm_source: u?.utmSource || '',
     utm_campaign: u?.utmCampaign || '',
@@ -339,12 +315,8 @@ function listAmount(
   return formatMoney(o.amount, o.currency);
 }
 
-export function renderPaymentMessage(
-  vars: PaymentTemplateVars,
-  configs: Record<string, string>
-): string {
-  const language = normalizeNotifyLanguage(configs.notify_language);
-  return renderTemplate(PAYMENT_TEMPLATES[language], vars);
+export function renderPaymentMessage(vars: PaymentTemplateVars): string {
+  return renderTemplate(PAYMENT_TEMPLATE, vars);
 }
 
 // --- Events ---
@@ -405,7 +377,7 @@ export async function notifyPaymentSuccess(orderNo: string): Promise<void> {
       chargeIndex,
       configs,
     });
-    const text = renderPaymentMessage(vars, configs);
+    const text = renderPaymentMessage(vars);
     const results = await sendToChannels(channels, text, {
       event: 'payment.succeeded',
       data: { order_no: row.orderNo, ...vars },
@@ -469,17 +441,11 @@ export async function sendTestPaymentNotification(
     },
     configs,
   });
-  const language = normalizeNotifyLanguage(configs.notify_language);
-  const prefix = language === 'zh' ? '[测试] ' : '[Test] ';
-  return sendToChannels(
-    channels,
-    prefix + renderPaymentMessage(vars, configs),
-    {
-      event: 'payment.succeeded',
-      data: { order_no: 'TEST-ORDER', ...vars },
-      test: true,
-    }
-  );
+  return sendToChannels(channels, '[Test] ' + renderPaymentMessage(vars), {
+    event: 'payment.succeeded',
+    data: { order_no: 'TEST-ORDER', ...vars },
+    test: true,
+  });
 }
 
 // --- Tickets ---
@@ -488,12 +454,9 @@ type TicketAuthor = Pick<User, 'name' | 'email' | 'createdAt' | 'country'>;
 
 export type TicketEvent = 'created' | 'replied';
 
-const TICKET_EVENT_LABELS: Record<
-  NotifyLanguage,
-  Record<TicketEvent, string>
-> = {
-  zh: { created: '新工单', replied: '工单新回复' },
-  en: { created: 'New ticket', replied: 'New ticket reply' },
+const TICKET_EVENT_LABELS: Record<TicketEvent, string> = {
+  created: 'New ticket',
+  replied: 'New ticket reply',
 };
 
 export function buildTicketVars(params: {
@@ -507,12 +470,11 @@ export function buildTicketVars(params: {
   configs: Record<string, string>;
 }): TicketTemplateVars {
   const { ticket: t, user: u, configs } = params;
-  const language = normalizeNotifyLanguage(configs.notify_language);
   const timeZone = configs.notify_timezone?.trim() || 'Asia/Shanghai';
   const content = params.content.trim();
 
   return {
-    event: TICKET_EVENT_LABELS[language][params.event ?? 'created'],
+    event: TICKET_EVENT_LABELS[params.event ?? 'created'],
     app_name: configs.app_name || envConfigs.app_name,
     title: t.title,
     content:
@@ -528,17 +490,13 @@ export function buildTicketVars(params: {
       params.sentAt || t.createdAt || new Date(),
       timeZone
     ),
-    country: formatCountry((u?.country || '').toUpperCase(), language),
+    country: formatCountry((u?.country || '').toUpperCase()),
     admin_url: `${adminBase(configs)}/admin/tickets?id=${encodeURIComponent(t.id)}`,
   };
 }
 
-function renderTicketMessage(
-  vars: TicketTemplateVars,
-  configs: Record<string, string>
-) {
-  const language = normalizeNotifyLanguage(configs.notify_language);
-  return renderTemplate(TICKET_TEMPLATES[language], vars);
+function renderTicketMessage(vars: TicketTemplateVars) {
+  return renderTemplate(TICKET_TEMPLATE, vars);
 }
 
 /**
@@ -567,7 +525,7 @@ export async function notifyTicketEvent(params: {
       .limit(1);
 
     const vars = buildTicketVars({ ...params, user: author, configs });
-    const text = renderTicketMessage(vars, configs);
+    const text = renderTicketMessage(vars);
     const results = await sendToChannels(channels, text, {
       event: `ticket.${params.event}`,
       data: { ticket_id: params.ticket.id, ...vars },
@@ -602,11 +560,10 @@ function buildGuestPostVars(params: {
   configs: Record<string, string>;
 }) {
   const { guestPost: g, user: u, configs } = params;
-  const language = normalizeNotifyLanguage(configs.notify_language);
   const timeZone = configs.notify_timezone?.trim() || 'Asia/Shanghai';
   const base = adminBase(configs);
   return {
-    event: GUEST_POST_EVENT_LABELS[language][params.event],
+    event: GUEST_POST_EVENT_LABELS[params.event],
     app_name: configs.app_name || envConfigs.app_name,
     title: g.title,
     package: g.packageName,
@@ -616,7 +573,7 @@ function buildGuestPostVars(params: {
     user: formatUser(u?.name, u?.email || ''),
     registered_at: formatTime(u?.createdAt, timeZone),
     submitted_at: formatTime(g.submittedAt || new Date(), timeZone),
-    country: formatCountry((u?.country || '').toUpperCase(), language),
+    country: formatCountry((u?.country || '').toUpperCase()),
     preview_url: g.slug
       ? `${base}/blog/${encodeURIComponent(g.slug)}?preview=1`
       : '',
@@ -696,10 +653,9 @@ export async function notifyGuestPostSubmitted(
         : null,
       configs,
     });
-    const language = normalizeNotifyLanguage(configs.notify_language);
     const results = await sendToChannels(
       channels,
-      renderTemplate(GUEST_POST_TEMPLATES[language], vars),
+      renderTemplate(GUEST_POST_TEMPLATE, vars),
       {
         event: `guest_post.${event}`,
         data: { guest_post_id: guestPostId, ...vars },
@@ -727,14 +683,11 @@ export async function sendTestGuestPostNotification(
     throw new Error('No notification channel is configured');
   }
   const now = new Date();
-  const zh = normalizeNotifyLanguage(configs.notify_language) === 'zh';
   const vars = buildGuestPostVars({
     event: 'submitted',
     guestPost: {
       id: 'TEST-GUEST-POST',
-      title: zh
-        ? '10 个提升 SaaS 转化率的方法'
-        : '10 ways to lift SaaS conversion',
+      title: '10 ways to lift SaaS conversion',
       slug: 'test-guest-post',
       packageName: 'Premium',
       submittedAt: now,
@@ -748,11 +701,9 @@ export async function sendTestGuestPostNotification(
     },
     configs,
   });
-  const language = normalizeNotifyLanguage(configs.notify_language);
   return sendToChannels(
     channels,
-    (zh ? '[测试] ' : '[Test] ') +
-      renderTemplate(GUEST_POST_TEMPLATES[language], vars),
+    '[Test] ' + renderTemplate(GUEST_POST_TEMPLATE, vars),
     {
       event: 'guest_post.submitted',
       data: { guest_post_id: 'TEST-GUEST-POST', ...vars },
@@ -771,16 +722,14 @@ export async function sendTestTicketNotification(
   }
 
   const now = new Date();
-  const zh = normalizeNotifyLanguage(configs.notify_language) === 'zh';
   const vars = buildTicketVars({
     ticket: {
       id: 'TEST-TICKET',
-      title: zh ? '积分没有到账' : 'Credits not added after payment',
+      title: 'Credits not added after payment',
       createdAt: now,
     },
-    content: zh
-      ? '我刚刚购买了 Pro 套餐，但是积分一直没有到账，请帮忙看一下。'
-      : 'I just bought the Pro plan but my credits never showed up. Could you take a look?',
+    content:
+      'I just bought the Pro plan but my credits never showed up. Could you take a look?',
     attachments: 1,
     user: {
       name: 'Test User',
@@ -790,13 +739,9 @@ export async function sendTestTicketNotification(
     },
     configs,
   });
-  return sendToChannels(
-    channels,
-    (zh ? '[测试] ' : '[Test] ') + renderTicketMessage(vars, configs),
-    {
-      event: 'ticket.created',
-      data: { ticket_id: 'TEST-TICKET', ...vars },
-      test: true,
-    }
-  );
+  return sendToChannels(channels, '[Test] ' + renderTicketMessage(vars), {
+    event: 'ticket.created',
+    data: { ticket_id: 'TEST-TICKET', ...vars },
+    test: true,
+  });
 }

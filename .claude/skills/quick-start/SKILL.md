@@ -108,7 +108,7 @@ Ask the user for their admin email and password. If they don't provide one, just
 
 ### 0.5 Update translations
 
-Translations are flat, dot-keyed JSON in `messages/en.json` and `messages/zh.json` (one file per locale). Update **both**:
+Translations are flat, dot-keyed JSON in `messages/en.json`:
 - Set `common.metadata.title` and `common.metadata.description` to the app name and description.
 
 Decide which modules to keep based on user's features. Default: keep all. Only remove if the user explicitly doesn't need something.
@@ -234,7 +234,7 @@ Workflow:
    <Footer />
    ```
 
-4. **Rewrite the `landing.*` keys in `messages/en.json` and `messages/zh.json`** — the block translations (flat dot-keyed, e.g. `"landing.hero.headline"`).
+4. **Rewrite the `landing.*` keys in `messages/en.json`** — the block translations (flat dot-keyed, e.g. `"landing.hero.headline"`).
 
 5. **Generate visuals via `/generate-image`** — a landing page made of plain text and shadcn cards looks generic. For each block that benefits from imagery, generate one image and reference it from the block:
 
@@ -274,8 +274,8 @@ Based on the user's features, create dashboard pages:
 ### 3.4 Legal Pages
 
 Legal pages are MDX content files in `src/content/pages/`, rendered by per-slug route files in `(pages)/` (shared `-static-page.tsx` factory):
-- Privacy Policy already exists at `src/content/pages/privacy-policy.{en,zh}.mdx` — update content for the product
-- Terms of Service at `src/content/pages/terms-of-service.{en,zh}.mdx` — update content
+- Privacy Policy already exists at `src/content/pages/privacy-policy.en.mdx` — update content for the product
+- Terms of Service at `src/content/pages/terms-of-service.en.mdx` — update content
 - Add more if needed (e.g., refund policy) using `/new-static-page` pattern — add the MDX file plus a thin route file `src/routes/(pages)/<slug>.tsx` via `staticPageRouteOptions`
 
 ### 3.5 Module Wiring
@@ -359,7 +359,7 @@ Report:
 9. **Dashboard pages fetch via TanStack Query + `@/lib/api-client`** — no raw `fetch`, don't import server-only modules (`@/modules/*`, `@/core/db`) in components; use `m['...']()` from `@/paraglide/messages.js` for i18n.
 10. **`pnpm build` must pass** at every checkpoint.
 11. **shadcn/ui v4 (Base Nova)** — no `asChild` prop. Use `className={cn(buttonVariants())}` on Link.
-12. **i18n** — all user-facing text uses `m['ns.key']()` from `@/paraglide/messages.js`. Add each new key to **both** `messages/en.json` and `messages/zh.json` (flat dot-keyed; no per-namespace files, no path registration).
+12. **i18n** — all user-facing text uses `m['ns.key']()` from `@/paraglide/messages.js`. Add each new key to `messages/en.json` (flat dot-keyed; no per-namespace files, no path registration).
 13. **Legal pages** — MDX content in `src/content/pages/`, rendered by per-slug route files in `(pages)/` via the `-static-page.tsx` factory. Layout is shared.
 14. **Static pages** — use `/new-static-page` skill for additional content pages.
 15. **For complex landing pages** (Mode A/B with 8+ sections), use worktree agents to build sections in parallel.

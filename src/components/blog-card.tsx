@@ -27,7 +27,7 @@ export function BlogCard({
   return (
     <Link
       href={href}
-      className="group border-border bg-card hover:border-foreground/20 relative flex flex-col overflow-hidden rounded-2xl border transition-all hover:shadow-sm"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-all hover:border-blue-200 hover:shadow-md"
     >
       {image && (
         <img
@@ -41,19 +41,19 @@ export function BlogCard({
       )}
       <div className="flex flex-1 flex-col gap-3 p-6">
         {badge && (
-          <span className="text-muted-foreground border-border w-fit rounded-full border px-2 py-0.5 text-[11px] font-medium tracking-wide uppercase">
+          <span className="w-fit rounded-full border border-slate-200 px-2 py-0.5 text-[11px] font-medium tracking-wide text-slate-500 uppercase">
             {badge}
           </span>
         )}
-        <h3 className="leading-snug font-medium group-hover:underline group-hover:underline-offset-4">
+        <h3 className="leading-snug font-medium text-slate-900 group-hover:underline group-hover:underline-offset-4">
           {title}
         </h3>
         {description && (
-          <p className="text-muted-foreground line-clamp-3 text-sm leading-relaxed">
+          <p className="line-clamp-3 text-sm leading-relaxed text-slate-600">
             {description}
           </p>
         )}
-        <div className="text-muted-foreground mt-auto flex items-center gap-2 pt-2 text-xs">
+        <div className="mt-auto flex items-center gap-2 pt-2 text-xs text-slate-500">
           {date && (
             <span className="inline-flex items-center gap-1.5">
               <Calendar className="size-3.5" />

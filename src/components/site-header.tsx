@@ -8,7 +8,6 @@ import { Link } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
 import { cn } from '@/lib/utils';
 import { m } from '@/paraglide/messages.js';
-import { LocaleSelector } from '@/components/locale-selector';
 import { SiteUserMenu } from '@/components/site-user-menu';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { buttonVariants } from '@/components/ui/button';
@@ -83,7 +82,6 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
 
         {/* Desktop actions */}
         <div className="relative z-10 hidden items-center gap-1.5 md:flex">
-          <LocaleSelector />
           <ThemeToggle />
           {user ? (
             <SiteUserMenu
@@ -146,7 +144,6 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
             )}
           </nav>
           <div className="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3">
-            <LocaleSelector />
             <ThemeToggle />
             <div className="flex-1" />
             {user ? (

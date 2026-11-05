@@ -84,26 +84,15 @@ export default defineConfig({
         // API endpoints are never locale-prefixed.
         {
           pattern: '/api/:path(.*)?',
-          localized: [
-            ['en', '/api/:path(.*)?'],
-            ['zh', '/api/:path(.*)?'],
-          ],
+          localized: [['en', '/api/:path(.*)?']],
         },
-        // Bare locale homes match without a trailing-slash redirect.
         {
           pattern: '/',
-          localized: [
-            ['zh', '/zh'],
-            ['en', '/'],
-          ],
+          localized: [['en', '/']],
         },
-        // "as-needed" prefix: zh under /zh, en (default) unprefixed.
         {
           pattern: '/:path(.*)?',
-          localized: [
-            ['zh', '/zh/:path(.*)?'],
-            ['en', '/:path(.*)?'],
-          ],
+          localized: [['en', '/:path(.*)?']],
         },
       ],
     }),

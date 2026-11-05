@@ -400,7 +400,7 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
         <Button
           onClick={submit}
           disabled={loading}
-          className="mt-6 h-12 w-full rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+          className="mt-6 h-12 w-full gap-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
         >
           {loading ? (
             <LoaderCircle className="size-4 animate-spin" />
@@ -413,7 +413,7 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
               ? 'Generating...'
               : 'Generate Edit'}
           {!loading && (
-            <span className="ml-auto rounded-md bg-white/15 px-2 py-1 text-xs">
+            <span className="rounded-md bg-white/15 px-2 py-1 text-xs">
               {EDIT_CREDITS} credits
             </span>
           )}

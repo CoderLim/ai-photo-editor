@@ -8,7 +8,7 @@ import type { SQL } from 'drizzle-orm';
  *
  * Register the source's `kind` in src/config/events.ts too (no `client`
  * flag) for its dot colour, and add `admin.user_detail.timeline_<kind>` to
- * messages/{en,zh}.json for its label.
+ * messages/en.json for its label.
  *
  * Example:
  *

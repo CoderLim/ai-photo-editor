@@ -9,7 +9,7 @@
  *
  * - Themes: palettes live in `src/styles/globals.css` under
  *   `[data-theme='<id>']`. To add one, append it here, add its CSS block, and
- *   add `common.themes.<id>` to messages/{en,zh}.json.
+ *   add `common.themes.<id>` to messages/en.json.
  * - Fonts: `stack` becomes `--font-sans` on <html>. Self-hosted fonts are
  *   imported in `src/routes/__root.tsx`; @font-face files only download when
  *   a font is actually used. Labels: `common.fonts.<id>`.
