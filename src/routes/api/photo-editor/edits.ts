@@ -116,7 +116,7 @@ async function GET({ request }: { request: Request }) {
   if (!user) return respErr('Unauthorized', { status: 401 });
   const tasks = await getTasks({ userId: user.id, mediaType: 'image', limit: 30 });
   return respData({
-    items: tasks.filter((t) => t.id.startsWith('edit_')).map((t) => {
+    items: (tasks as Array<typeof aiTask.$inferSelect>).filter((t) => t.id.startsWith('edit_')).map((t) => {
       let result: any = {};
       let opts: any = {};
       try { result = JSON.parse(t.taskResult || '{}'); } catch { /* ignore */ }
