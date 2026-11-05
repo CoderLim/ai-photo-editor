@@ -13,6 +13,7 @@ const STATIC_PATHS = [
   '/guest-post',
   '/privacy-policy',
   '/terms-of-service',
+  '/acceptable-use-policy',
 ];
 
 type Entry = {

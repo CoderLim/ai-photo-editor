@@ -13,7 +13,11 @@ import {
 import { toast } from 'sonner';
 
 import { useSession } from '@/core/auth/client';
-import { EDIT_CREDITS, type ToolConfig } from '@/modules/photo-editor/config';
+import {
+  EDIT_CREDITS,
+  PHOTO_EDIT_MODEL_LABEL,
+  type ToolConfig,
+} from '@/modules/photo-editor/config';
 import { Button } from '@/components/ui/button';
 
 type Draft = { file: File; prompt: string };
@@ -419,7 +423,7 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
           )}
         </Button>
         <p className="mt-3 text-center text-xs leading-relaxed text-slate-500">
-          Default: 1K · original aspect ratio · no model settings required
+          Model: {PHOTO_EDIT_MODEL_LABEL} · 1K · original aspect ratio
         </p>
       </div>
 

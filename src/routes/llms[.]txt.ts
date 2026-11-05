@@ -31,6 +31,12 @@ const STATIC_PAGES: { path: string; title: string; description: string }[] = [
     title: 'Terms of Service',
     description: 'Terms for using the service',
   },
+  {
+    path: '/acceptable-use-policy',
+    title: 'Acceptable Use Policy',
+    description:
+      'Prohibited content categories, reporting, and moderation for AI image edits',
+  },
 ];
 
 export const Route = createFileRoute('/llms.txt')({

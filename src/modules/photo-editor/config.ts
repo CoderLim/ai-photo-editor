@@ -1,6 +1,8 @@
 export const EDIT_CREDITS = 10;
 export const REPLICATE_EDIT_MODEL = 'google/nano-banana-2.1';
 export const FAL_EDIT_MODEL = 'google/nano-banana-2.1/edit';
+/** Public display name for the underlying image model (compliance / UI). */
+export const PHOTO_EDIT_MODEL_LABEL = 'Nano Banana (Gemini)';
 
 export type ToolConfig = {
   slug: string;

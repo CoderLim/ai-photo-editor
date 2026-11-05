@@ -12,6 +12,15 @@ export function Footer() {
             Edit photos with natural-language prompts. Practical AI tools for
             everyday creative work.
           </p>
+          <p className="mt-4 text-sm">
+            <span className="text-slate-500">Support: </span>
+            <a
+              href="mailto:support@getaiphotoeditor.com"
+              className="font-medium text-slate-900 hover:text-blue-600"
+            >
+              support@getaiphotoeditor.com
+            </a>
+          </p>
         </div>
         <div>
           <p className="mb-4 text-sm font-semibold text-slate-900">Product</p>
@@ -53,6 +62,15 @@ export function Footer() {
             <Link href="/terms-of-service" className="hover:text-blue-600">
               Terms of Service
             </Link>
+            <Link href="/acceptable-use-policy" className="hover:text-blue-600">
+              Acceptable Use
+            </Link>
+            <a
+              href="mailto:support@getaiphotoeditor.com"
+              className="hover:text-blue-600"
+            >
+              Contact
+            </a>
           </div>
         </div>
       </div>
