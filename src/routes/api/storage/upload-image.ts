@@ -4,7 +4,6 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import { getAuth } from '@/core/auth';
 import { issueUploadToken } from '@/modules/photo-editor/upload-token';
-import { envConfigs } from '@/config';
 import { getStorage } from '@/modules/storage/service';
 import { enforceMinIntervalRateLimit } from '@/lib/rate-limit';
 import { respData, respErr } from '@/lib/resp';
@@ -25,14 +24,11 @@ const extFromMime = (mimeType: string) => {
   return map[mimeType] || '';
 };
 
-// Cap for the no-storage local-disk fallback (dev). Configurable via INLINE_IMAGE_MAX_KB.
+// Single per-file cap for both R2 and the local-disk fallback.
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 // Per request: bounds memory (formData() buffers the whole body) and storage use.
 const MAX_FILES_PER_REQUEST = 10;
 const MAX_REQUEST_BYTES = 20 * 1024 * 1024;
-
-const INLINE_MAX_BYTES =
-  (Number(envConfigs.inline_image_max_kb) || 10240) * 1024;
 
 async function POST({ request }: { request: Request }) {
   const limited = enforceMinIntervalRateLimit(request, {
@@ -106,12 +102,6 @@ async function POST({ request }: { request: Request }) {
             'Storage is not configured. Set up R2 in Admin → Settings → Storage.'
           );
         }
-        if (body.length > INLINE_MAX_BYTES) {
-          const limitKb = Math.round(INLINE_MAX_BYTES / 1024);
-          return respErr(
-            `Image too large (${(body.length / 1024).toFixed(0)}KB > ${limitKb}KB). Configure storage or use a smaller image.`
-          );
-        }
         const dir = path.join(process.cwd(), 'public', 'uploads');
         await mkdir(dir, { recursive: true });
         await writeFile(path.join(dir, objectKey), body);
@@ -157,10 +147,12 @@ async function POST({ request }: { request: Request }) {
       });
     }
 
-    const authorizedResults = await Promise.all(uploadResults.map(async (r) => ({
-      ...r,
-      token: await issueUploadToken(session.user.id, r.url),
-    })));
+    const authorizedResults = await Promise.all(
+      uploadResults.map(async (r) => ({
+        ...r,
+        token: await issueUploadToken(session.user.id, r.url),
+      }))
+    );
     return respData({
       urls: authorizedResults.map((r) => r.url),
       results: authorizedResults,
