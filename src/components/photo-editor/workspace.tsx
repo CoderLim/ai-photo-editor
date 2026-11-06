@@ -118,6 +118,7 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
   const [dragging, setDragging] = useState(false);
   const [qualityOpen, setQualityOpen] = useState(false);
   const [exampleId, setExampleId] = useState<ExampleId>('remove-object');
+  const [examplePaused, setExamplePaused] = useState(false);
   const qualityMenuRef = useRef<HTMLDivElement | null>(null);
   const example =
     QUICK_PROMPTS.find((item) => item.id === exampleId) ?? QUICK_PROMPTS[0];
@@ -155,6 +156,17 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
       img.src = item.image;
     }
   }, []);
+
+  useEffect(() => {
+    if (preview || examplePaused) return;
+    const timer = window.setInterval(() => {
+      setExampleId((current) => {
+        const index = QUICK_PROMPTS.findIndex((item) => item.id === current);
+        return QUICK_PROMPTS[(index + 1) % QUICK_PROMPTS.length].id;
+      });
+    }, 4000);
+    return () => window.clearInterval(timer);
+  }, [preview, examplePaused, exampleId]);
 
   useEffect(() => {
     if (!qualityOpen) return;
@@ -588,7 +600,13 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
         </p>
       </div>
 
-      <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_22px_50px_-24px_rgba(15,23,42,.55)]">
+      <div
+        className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_22px_50px_-24px_rgba(15,23,42,.55)]"
+        onMouseEnter={() => {
+          if (!preview) setExamplePaused(true);
+        }}
+        onMouseLeave={() => setExamplePaused(false)}
+      >
         <div className="flex h-11 shrink-0 items-center justify-between border-b border-slate-100 px-4">
           <div className="flex items-center gap-2">
             <span className="size-2 rounded-full bg-blue-500" />
@@ -680,6 +698,34 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
                 : 'Upload your photo to replace this example.'}
           </p>
           <div className="flex items-center gap-2">
+            {!preview && (
+              <div
+                className="flex items-center gap-1.5"
+                role="tablist"
+                aria-label="Example edits"
+              >
+                {QUICK_PROMPTS.map((item) => {
+                  const current = item.id === example.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={current}
+                      aria-label={item.caption}
+                      data-example-dot={item.id}
+                      onClick={() => setExampleId(item.id)}
+                      className={cn(
+                        'h-1.5 rounded-full transition-all',
+                        current
+                          ? 'w-4 bg-blue-600'
+                          : 'w-1.5 bg-slate-300 hover:bg-slate-400'
+                      )}
+                    />
+                  );
+                })}
+              </div>
+            )}
             {result && (
               <>
                 <Button
