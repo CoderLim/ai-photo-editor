@@ -355,7 +355,7 @@ function HomePage() {
               {PHOTO_TOOLS.map((tool, i) => (
                 <Link
                   key={tool.slug}
-                  href="#editor"
+                  href={tool.slug === "remove-background" ? "/ai-background-remover" : "#editor"}
                   className="group overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg"
                 >
                   <span
