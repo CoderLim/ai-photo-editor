@@ -78,6 +78,12 @@ export async function claimGuestTrial(params: {
       guard({ table: guestTrialIpQuota, column: 'id', where: eq(guestTrialIpQuota.id, key),
         require: or(isNull(guestTrialIpQuota.previousAt), lte(guestTrialIpQuota.previousAt, cutoff))!,
         message: 'GUEST_TRIAL_RATE_LIMITED' }),
+      // Sliding two-slot state machine, evaluated inside the same DB batch:
+      // 0 claims: both timestamps NULL
+      // 1 claim: latestAt set, previousAt NULL
+      // 2 claims: both timestamps set within the window
+      // A third claim fails the guard above. The second claim MUST copy the
+      // previous latestAt into previousAt before writing its own latestAt.
       q.update(guestTrialIpQuota).set({
         previousAt: sql`case when ${gt(guestTrialIpQuota.latestAt, cutoff)} then ${guestTrialIpQuota.latestAt} else null end`,
         latestAt: now,
