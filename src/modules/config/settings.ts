@@ -77,12 +77,6 @@ export function getSettingGroups(): SettingGroup[] {
 
     // Users
     {
-      name: 'credit',
-      title: 'Credits',
-      description: 'Initial credits for new users',
-      tab: 'user',
-    },
-    {
       name: 'user_role',
       title: 'User Roles',
       description: 'Default role for new users',
@@ -470,41 +464,11 @@ export function getSettings(): Setting[] {
     // ─── Users / Credits ─────────────────────────────────────────────
     {
       name: 'initial_credits_enabled',
-      title: 'Grant credits on signup',
-      type: 'switch',
-      group: 'credit',
-      tab: 'user',
-    },
-    {
-      name: 'initial_credits_amount',
-      title: 'Credits amount',
-      type: 'number',
-      placeholder: '20',
-      tip: 'New verified accounts receive this many welcome credits (product default: 20).',
-      group: 'credit',
-      tab: 'user',
-    },
-    {
-      name: 'initial_credits_valid_days',
-      title: 'Valid days',
-      type: 'number',
-      placeholder: '365',
-      group: 'credit',
-      tab: 'user',
-    },
-    {
-      name: 'initial_credits_description',
-      title: 'Description',
-      type: 'text',
-      placeholder: 'Welcome bonus',
-      group: 'credit',
-      tab: 'user',
-    },
+      title:    // The legacy initial_credits_* admin settings are no longer presented.
+    // Trial and one-time signup rewards are a fixed 10 credits each, with
+    // anonymous rollout gated by ANONYMOUS_TRIAL_ENABLED.
 
-    // ─── Auth / Email ────────────────────────────────────────────────
-    {
-      name: 'email_auth_enabled',
-      title: 'Enable email auth',
+ble email auth',
       type: 'switch',
       group: 'email_auth',
       tab: 'auth',
