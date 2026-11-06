@@ -143,7 +143,7 @@ Better Auth onLinkAccount(anonymousUser, newUser)
 | ACCOUNT_LINK_IN_PROGRESS | 409 | 禁止重复提交并刷新状态 |
 | RATE_LIMITED | 429 | 按 Retry-After 处理 |
 
-并发时服务端账本是最终权威。跨账户关联前后需防止同一个业务请求由于 `edit_`md5(userId:requestId)` 依赖 userId 而误创建第二个供应商任务；应为关联中的任务维护原始请求关联或延迟重复提交。
+并发时服务端账本是最终权威。跨账户关联前后需防止同一个业务请求由于 `edit_${md5(userId + ':' + requestId)}` 依赖 userId 而误创建第二个供应商任务；应为关联中的任务维护原始请求关联或延迟重复提交。
 
 ## 8. 前端交互
 
