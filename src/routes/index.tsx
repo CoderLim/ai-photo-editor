@@ -143,12 +143,13 @@ function HomePage() {
       <main>
         <section className="relative overflow-x-clip border-b border-slate-100 bg-gradient-to-b from-[#f1f6ff] via-[#f9fbff] to-[#f7f9fc] px-4 pt-3 pb-8 sm:px-6 sm:pt-4 sm:pb-10">
           <div className="mx-auto max-w-[1320px]">
-            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-0.5">
-              <h1 className="text-2xl font-bold tracking-[-0.035em] text-slate-950 sm:text-[1.7rem] sm:leading-none">
+            <div className="mb-2 text-center sm:mb-2.5">
+              <h1 className="text-[1.65rem] font-bold tracking-[-0.035em] text-slate-950 sm:text-[2rem] sm:leading-none">
                 AI Photo Editor Online
               </h1>
-              <p className="text-sm leading-5 text-slate-600">
-                10 free credits. Start without signing up.
+              <p className="mt-1 text-sm leading-5 text-slate-600">
+                Upload a photo and describe the edit — 10 free credits, no
+                signup.
               </p>
             </div>
             <div id="editor">
