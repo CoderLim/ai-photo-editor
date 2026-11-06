@@ -11,7 +11,10 @@ import { baseLocale } from '@/paraglide/runtime.js';
  * fetched through the server functions in ./server.ts and merged with the
  * local posts via the pure helpers below.
  */
-export const BLOG_POST_SLUGS = ['how-to-edit-photos-with-ai'] as const;
+export const BLOG_POST_SLUGS = [
+  'how-to-edit-photos-with-ai',
+  'what-is-chatgpt-images-2-6',
+] as const;
 
 export type BlogPostMeta = {
   title: string;
