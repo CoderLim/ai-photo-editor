@@ -10,6 +10,7 @@ const STATIC_PATHS = [
   '/pricing',
   '/blog',
   '/tools',
+  '/ai-background-remover',
   '/guest-post',
   '/privacy-policy',
   '/terms-of-service',
