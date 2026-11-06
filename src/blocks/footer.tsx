@@ -42,6 +42,9 @@ export function Footer() {
         <div>
           <p className="mb-4 text-sm font-semibold text-slate-900">Resources</p>
           <div className="flex flex-col gap-3 text-sm">
+            <Link href="/ai-background-remover" className="hover:text-blue-600">
+              AI Background Remover
+            </Link>
             <Link href="/#editor" className="hover:text-blue-600">
               Object Remover
             </Link>
