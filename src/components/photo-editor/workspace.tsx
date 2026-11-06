@@ -14,13 +14,16 @@ import { toast } from 'sonner';
 
 import { useSession } from '@/core/auth/client';
 import {
-  EDIT_CREDITS,
+  DEFAULT_PHOTO_EDIT_QUALITY,
+  isPhotoEditQuality,
   PHOTO_EDIT_MODEL_LABEL,
+  PHOTO_EDIT_QUALITIES,
+  type PhotoEditQuality,
   type ToolConfig,
 } from '@/modules/photo-editor/config';
 import { Button } from '@/components/ui/button';
 
-type Draft = { file: File; prompt: string };
+type Draft = { file: File; prompt: string; quality?: PhotoEditQuality };
 const QUICK_PROMPTS = [
   {
     label: 'Remove Object',
@@ -40,7 +43,7 @@ const QUICK_PROMPTS = [
   },
 ];
 
-function saveDraft(file: File, prompt: string) {
+function saveDraft(file: File, prompt: string, quality: PhotoEditQuality) {
   if (typeof indexedDB === 'undefined') return;
   const req = indexedDB.open('getaiphotoeditor-draft', 1);
   req.onupgradeneeded = () => {
@@ -49,7 +52,10 @@ function saveDraft(file: File, prompt: string) {
   };
   req.onsuccess = () => {
     const tx = req.result.transaction('files', 'readwrite');
-    tx.objectStore('files').put({ file, prompt } satisfies Draft, 'current');
+    tx.objectStore('files').put(
+      { file, prompt, quality } satisfies Draft,
+      'current'
+    );
     tx.oncomplete = () => req.result.close();
     tx.onerror = () => req.result.close();
   };
@@ -77,6 +83,9 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState('');
   const [prompt, setPrompt] = useState(tool?.examplePrompt || '');
+  const [quality, setQuality] = useState<PhotoEditQuality>(
+    DEFAULT_PHOTO_EDIT_QUALITY
+  );
   const [upload, setUpload] = useState<{ url: string; token: string } | null>(
     null
   );
@@ -106,6 +115,7 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
           previewRef.current = restoredUrl;
           setPreview(restoredUrl);
           if (!tool) setPrompt(draft.prompt || '');
+          if (isPhotoEditQuality(draft.quality)) setQuality(draft.quality);
         }
       };
       tx.oncomplete = () => request.result.close();
@@ -183,14 +193,14 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
     setJobId(null);
     setStatus('idle');
     requestId.current = null;
-    saveDraft(selected, prompt);
+    saveDraft(selected, prompt, quality);
   };
 
   const submit = async () => {
     if (!preview) return toast.error('Upload a photo first.');
     if (!prompt.trim()) return toast.error('Describe your edit first.');
     if (!session?.user) {
-      if (file) saveDraft(file, prompt);
+      if (file) saveDraft(file, prompt, quality);
       toast.message('Sign in to generate — new accounts get free credits.');
       window.setTimeout(() => {
         window.location.href =
@@ -235,6 +245,7 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
             sourceJobId,
             prompt,
             tool: tool?.slug || 'general',
+            quality,
             requestId: requestId.current,
           }),
         })
@@ -273,6 +284,9 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
   };
 
   const loading = status === 'submitting' || status === 'pending';
+  const selectedQuality = PHOTO_EDIT_QUALITIES.find(
+    (item) => item.id === quality
+  )!;
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)] lg:items-stretch">
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_45px_-32px_rgba(15,23,42,.28)] sm:p-7">
@@ -405,6 +419,54 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
             ))}
           </div>
         </div>
+        <fieldset className="mt-5" disabled={loading}>
+          <legend className="mb-2 text-sm font-semibold text-slate-800">
+            Quality
+          </legend>
+          <div className="grid gap-2">
+            {PHOTO_EDIT_QUALITIES.map((option) => {
+              const selected = quality === option.id;
+              return (
+                <label
+                  key={option.id}
+                  className={
+                    'flex cursor-pointer items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors ' +
+                    (selected
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-slate-200 bg-white hover:border-blue-200') +
+                    (loading ? ' cursor-not-allowed opacity-70' : '')
+                  }
+                >
+                  <input
+                    type="radio"
+                    name="photo-edit-quality"
+                    value={option.id}
+                    checked={selected}
+                    onChange={() => {
+                      setQuality(option.id);
+                      requestId.current = null;
+                      if (file) saveDraft(file, prompt, option.id);
+                    }}
+                    className="mt-1 accent-blue-600"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-semibold text-slate-900">
+                        {option.label}
+                      </span>
+                      <span className="shrink-0 text-xs font-medium text-slate-500">
+                        {option.credits} credits
+                      </span>
+                    </span>
+                    <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">
+                      {option.description}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
         <Button
           onClick={submit}
           disabled={loading}
@@ -421,13 +483,17 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
               ? 'Generating...'
               : 'Generate Edit'}
           {!loading && (
-            <span className="rounded-md bg-white/15 px-2 py-1 text-xs">
-              {EDIT_CREDITS} credits
+            <span
+              className="rounded-md bg-white/15 px-2 py-1 text-xs"
+              aria-live="polite"
+            >
+              {selectedQuality.credits} credits
             </span>
           )}
         </Button>
         <p className="mt-3 text-center text-xs leading-relaxed text-slate-500">
-          Model: {PHOTO_EDIT_MODEL_LABEL} · 1K · original aspect ratio
+          Model: {PHOTO_EDIT_MODEL_LABEL} · {selectedQuality.label} · original
+          aspect ratio
         </p>
       </div>
 

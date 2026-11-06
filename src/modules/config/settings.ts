@@ -1082,7 +1082,7 @@ export function getSettings(): Setting[] {
       group: 'replicate',
       tab: 'ai',
       defaultValue: 'replicate',
-      tip: 'Manually choose the provider. Do not re-run already submitted jobs when switching.',
+      tip: 'GPT Image 2.6 on either provider (fal: openai/gpt-image-2.6/flare/edit, Replicate: openai/gpt-image-2.6-flare). Do not re-run already submitted jobs when switching.',
     },
 
     {

@@ -15,6 +15,27 @@ import {
 const defaultUuid: UuidFunction = () => crypto.randomUUID();
 
 /**
+ * fal queue application ids that are the full path, including the subpath.
+ * Truncating `openai/gpt-image-2.6/flare/edit` to `openai/gpt-image-2.6`
+ * polls the wrong app. Two-segment ids and legacy subpaths such as
+ * `fal-ai/flux/schnell` still use the owner/app prefix.
+ * The Nano Banana id stays so edits submitted before the model switch can finish.
+ */
+const FAL_FULL_QUEUE_MODELS = new Set([
+  'google/nano-banana-2.1/edit',
+  'openai/gpt-image-2.6/flare/edit',
+  'openai/gpt-image-2.6/sunburst/edit',
+]);
+
+export function falQueueModel(model?: string): string {
+  if (!model) return '';
+  if (FAL_FULL_QUEUE_MODELS.has(model)) return model;
+  const parts = model.split('/');
+  if (parts.length <= 2) return model;
+  return `${parts[0]}/${parts[1]}`;
+}
+
+/**
  * Fal configs
  * @docs https://fal.ai/
  */
@@ -282,16 +303,7 @@ export class FalProvider implements AIProvider {
   }
 
   private getQueryModel(model?: string): string {
-    if (!model) {
-      return '';
-    }
-    // This edit endpoint is a three-part path on fal queue.
-    if (model === 'google/nano-banana-2.1/edit') return model;
-    const parts = model.split('/');
-    if (parts.length <= 2) {
-      return model;
-    }
-    return `${parts[0]}/${parts[1]}`;
+    return falQueueModel(model);
   }
 
   private formatInput({

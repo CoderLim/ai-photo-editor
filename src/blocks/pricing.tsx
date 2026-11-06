@@ -5,6 +5,7 @@ import { Check, LoaderCircle, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useSession } from '@/core/auth/client';
+import { EDIT_CREDITS } from '@/modules/photo-editor/config';
 import { apiPost } from '@/lib/api-client';
 import { getLocale } from '@/paraglide/runtime.js';
 
@@ -120,7 +121,8 @@ export function Pricing({
               <div className="space-y-3 text-sm text-slate-600">
                 <p className="flex items-start gap-2">
                   <Check className="mt-0.5 size-4 shrink-0 text-blue-600" />
-                  {pack.edits} standard 1K edits (10 credits each)
+                  {pack.edits} medium-quality edits ({EDIT_CREDITS} credits).
+                  Credits vary by quality.
                 </p>
                 <p className="flex items-start gap-2">
                   <Check className="mt-0.5 size-4 shrink-0 text-blue-600" />
@@ -151,8 +153,10 @@ export function Pricing({
           ))}
         </div>
         <p className="mt-8 text-center text-xs leading-relaxed text-slate-500">
-          One standard 1K edit uses 10 credits. Credits are added after payment
-          is verified. Generated results may vary with your prompt.
+          Credits depend on quality. A medium (standard) edit uses{' '}
+          {EDIT_CREDITS} credits; low uses fewer and higher qualities use more.
+          Credits are added after payment is verified. Generated results may
+          vary with your prompt.
         </p>
       </div>
     </section>
