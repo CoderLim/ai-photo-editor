@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowRight, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
 import { useSession } from '@/core/auth/client';
 import { Link } from '@/core/i18n/navigation';
@@ -9,6 +9,7 @@ import { envConfigs } from '@/config';
 import { currentPathWithQuery } from '@/lib/redirect';
 import { cn } from '@/lib/utils';
 import { m } from '@/paraglide/messages.js';
+import { HeaderCredits } from '@/components/header-credits';
 import { SiteUserMenu } from '@/components/site-user-menu';
 import { buttonVariants } from '@/components/ui/button';
 
@@ -88,6 +89,7 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
 
         {/* Desktop actions */}
         <div className="relative z-10 hidden items-center gap-1.5 md:flex">
+          <HeaderCredits />
           {user ? (
             <SiteUserMenu
               name={user.name || 'User'}
@@ -98,12 +100,11 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
             <Link
               href={authHref('/sign-in')}
               className={cn(
-                buttonVariants({ size: 'sm' }),
-                'ml-1.5 gap-1.5 rounded-lg bg-blue-600 px-3.5 text-white hover:bg-blue-700'
+                buttonVariants({ size: 'lg' }),
+                'ml-1.5 h-10 rounded-lg bg-blue-600 px-5 text-sm font-medium text-white hover:bg-blue-700'
               )}
             >
-              {m['common.nav.get_started']()}
-              <ArrowRight className="size-3.5" />
+              {m['common.nav.sign_in']()}
             </Link>
           )}
         </div>
@@ -149,6 +150,7 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
             )}
           </nav>
           <div className="mt-3 flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+            <HeaderCredits />
             {user ? (
               <SiteUserMenu
                 name={user.name || 'User'}
@@ -159,12 +161,12 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
               <Link
                 href={authHref('/sign-in')}
                 className={cn(
-                  buttonVariants({ size: 'sm' }),
-                  'gap-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700'
+                  buttonVariants({ size: 'lg' }),
+                  'h-10 rounded-lg bg-blue-600 px-5 text-sm font-medium text-white hover:bg-blue-700'
                 )}
                 onClick={() => setMobileOpen(false)}
               >
-                {m['common.nav.get_started']()}
+                {m['common.nav.sign_in']()}
               </Link>
             )}
           </div>

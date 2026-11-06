@@ -14,8 +14,8 @@ import { pageHead } from '@/lib/seo';
 import { Footer } from '@/blocks/footer';
 import { Header } from '@/blocks/header';
 import { Pricing } from '@/blocks/pricing';
-import { PhotoEditorWorkspace } from '@/components/photo-editor/workspace';
 import { CoreBenefits } from '@/components/photo-editor/core-benefits';
+import { PhotoEditorWorkspace } from '@/components/photo-editor/workspace';
 
 const FAQS = [
   [
@@ -122,18 +122,22 @@ const USE_CASES = [
   [
     'E-commerce and Product Sellers',
     'Prepare cleaner product backgrounds and more consistent-looking listing images with a simple description.',
+    '/images/ai-photo-editor/who-uses/ecommerce.png',
   ],
   [
     'Social Creators',
     'Refresh profile photos, social posts, and thumbnails without installing another app.',
+    '/images/ai-photo-editor/who-uses/social-creators.png',
   ],
   [
     'Photographers',
     'Experiment with object cleanup, skin retouching, and creative lighting, then review every detail.',
+    '/images/ai-photo-editor/who-uses/photographers.png',
   ],
   [
     'Real Estate',
     'Explore brighter interiors and sky changes. Keep listing images accurate and disclose material changes as required.',
+    '/images/ai-photo-editor/who-uses/real-estate.png',
   ],
 ] as const;
 
@@ -142,9 +146,9 @@ function HomePage() {
     <div className="min-h-screen bg-[#f7f9fc] text-slate-900">
       <Header />
       <main>
-        <section className="relative overflow-x-clip border-b border-slate-100 bg-gradient-to-b from-[#f1f6ff] via-[#f9fbff] to-[#f7f9fc] px-4 pt-3 pb-8 sm:px-6 sm:pt-4 sm:pb-10">
+        <section className="relative overflow-x-clip border-b border-slate-100 bg-gradient-to-b from-[#f1f6ff] via-[#f9fbff] to-[#f7f9fc] px-4 pt-6 pb-8 sm:px-6 sm:pt-8 sm:pb-10">
           <div className="mx-auto max-w-[1320px]">
-            <div className="mb-2 text-center sm:mb-2.5">
+            <div className="mb-5 text-center sm:mb-6">
               <h1 className="text-[1.65rem] font-bold tracking-[-0.035em] text-slate-950 sm:text-[2rem] sm:leading-none">
                 AI Photo Editor Online
               </h1>
@@ -258,11 +262,20 @@ function HomePage() {
             Who Uses It
           </h2>
           <div className="mt-9 grid gap-5 md:grid-cols-2">
-            {USE_CASES.map(([title, description]) => (
+            {USE_CASES.map(([title, description, image]) => (
               <article
                 key={title}
-                className="rounded-2xl border border-slate-200 bg-white p-7"
+                className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6"
               >
+                <img
+                  src={image}
+                  alt={`AI photo editing for ${title}`}
+                  width={1448}
+                  height={1086}
+                  loading="lazy"
+                  decoding="async"
+                  className="mb-5 aspect-[1448/1086] w-full rounded-xl bg-slate-100 object-cover"
+                />
                 <h3 className="text-lg font-semibold">{title}</h3>
                 <p className="mt-3 text-sm leading-7 text-slate-600">
                   {description}

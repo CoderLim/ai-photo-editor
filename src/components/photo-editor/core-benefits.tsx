@@ -1,78 +1,61 @@
-import {
-  Layers3,
-  MessageSquareText,
-  RefreshCcw,
-  ScanLine,
-  WandSparkles,
-  type LucideIcon,
-} from 'lucide-react';
-
 type Benefit = {
   id: string;
-  category: string;
   title: string;
   description: string;
   image: string;
   beforeAlt: string;
   afterAlt: string;
-  icon: LucideIcon;
 };
 
 const BENEFITS: Benefit[] = [
   {
     id: 'preserve-subject',
-    category: 'SUBJECT CONSISTENCY',
     title: 'Change What You Want, Keep What Matters',
     description:
       "Change the background or other details while keeping the main subject's shape, colors, and defining features as close to the original as possible.",
-    image: '/images/ai-photo-editor/core-benefits/handbag-background-compare.jpg',
-    beforeAlt: 'Handbag on a wooden table in a home setting, before changing the background',
+    image:
+      '/images/ai-photo-editor/core-benefits/handbag-background-compare.jpg',
+    beforeAlt:
+      'Handbag on a wooden table in a home setting, before changing the background',
     afterAlt: 'Same beige handbag against a clean studio background',
-    icon: Layers3,
   },
   {
     id: 'precision-editing',
-    category: 'PRECISION EDITING',
     title: 'Edit Small Details, Not the Whole Photo',
     description:
       'Fix scuffs, smooth wrinkles, or adjust specific details without unnecessarily changing everything else.',
     image: '/images/ai-photo-editor/core-benefits/shoe-repair-compare.jpg',
     beforeAlt: 'Leather sneaker with visible scuff marks on the toe',
     afterAlt: 'Same leather sneaker with the scuff marks cleaned up',
-    icon: ScanLine,
   },
   {
     id: 'natural-language',
-    category: 'NATURAL LANGUAGE',
     title: 'Just Describe It, AI Handles the Rest',
     description:
       'Skip complicated selections and layers. Simply describe the change in everyday language and see the edit take shape.',
     image: '/images/ai-photo-editor/core-benefits/balcony-cleanup-compare.jpg',
     beforeAlt: 'Balcony with a bucket, mop and cleaning supplies',
     afterAlt: 'Same balcony after unwanted cleaning supplies were removed',
-    icon: MessageSquareText,
   },
   {
     id: 'creative-transformation',
-    category: 'CREATIVE TRANSFORMATION',
     title: 'Give Your Photos a Whole New Look',
     description:
       'Explore new backgrounds, lighting, colors, and styles while keeping your original subject recognizable.',
     image: '/images/ai-photo-editor/core-benefits/cafe-golden-hour-compare.jpg',
     beforeAlt: 'Cafe storefront in soft overcast daylight',
     afterAlt: 'Same cafe storefront with warm golden-hour lighting',
-    icon: WandSparkles,
   },
   {
     id: 'iterative-editing',
-    category: 'ITERATIVE EDITING',
     title: 'Refine Your Edits, Step by Step',
     description:
       'Keep improving your result with follow-up edits, from cleanup to lighting and finishing touches.',
-    image: '/images/ai-photo-editor/core-benefits/home-office-refresh-compare.jpg',
+    image:
+      '/images/ai-photo-editor/core-benefits/home-office-refresh-compare.jpg',
     beforeAlt: 'Cluttered home office before editing and refining details',
-    afterAlt: 'Same home office tidied up with warmer lighting and refined styling',
-    icon: RefreshCcw,
+    afterAlt:
+      'Same home office tidied up with warmer lighting and refined styling',
   },
 ];
 
@@ -131,7 +114,6 @@ export function CoreBenefits() {
       </div>
       <div className="space-y-4 sm:space-y-5">
         {BENEFITS.map((benefit, index) => {
-          const Icon = benefit.icon;
           const picture = (
             <div className="grid min-w-0 grid-cols-2 gap-2.5 sm:gap-3">
               <ComparisonPanel
@@ -148,13 +130,7 @@ export function CoreBenefits() {
           );
           const copy = (
             <div className="flex min-w-0 flex-col justify-center">
-              <div className="mb-3 flex size-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                <Icon aria-hidden="true" className="size-6" />
-              </div>
-              <p className="text-xs font-bold tracking-wide text-blue-600">
-                {String(index + 1).padStart(2, '0')} · {benefit.category}
-              </p>
-              <h3 className="mt-2 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">
+              <h3 className="text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">
                 {benefit.title}
               </h3>
               <p className="mt-3 max-w-xl leading-7 text-slate-600">
