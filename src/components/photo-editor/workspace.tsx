@@ -118,7 +118,6 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
   const [dragging, setDragging] = useState(false);
   const [qualityOpen, setQualityOpen] = useState(false);
   const [exampleId, setExampleId] = useState<ExampleId>('remove-object');
-  const [chipActive, setChipActive] = useState(false);
   const qualityMenuRef = useRef<HTMLDivElement | null>(null);
   const example =
     QUICK_PROMPTS.find((item) => item.id === exampleId) ?? QUICK_PROMPTS[0];
@@ -437,38 +436,27 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
             maxLength={2000}
             onChange={(e) => {
               setPrompt(e.target.value);
-              setChipActive(false);
               requestId.current = null;
             }}
             placeholder="What would you like to change? e.g. Remove the person in the background while keeping the main subject unchanged."
             className="w-full resize-y rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm leading-relaxed text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
           />
           <div className="mt-2 flex flex-nowrap gap-1.5 overflow-x-auto">
-            {QUICK_PROMPTS.map((item) => {
-              const active = chipActive && exampleId === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => {
-                    setPrompt(item.text);
-                    setExampleId(item.id);
-                    setChipActive(true);
-                    requestId.current = null;
-                    if (file) saveDraft(file, item.text, quality);
-                  }}
-                  className={cn(
-                    'shrink-0 rounded-full border px-2.5 py-1.5 text-xs leading-none font-medium whitespace-nowrap transition-colors',
-                    active
-                      ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
-                      : 'border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700'
-                  )}
-                >
-                  {item.label}
-                </button>
-              );
-            })}
+            {QUICK_PROMPTS.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => {
+                  setPrompt(item.text);
+                  setExampleId(item.id);
+                  requestId.current = null;
+                  if (file) saveDraft(file, item.text, quality);
+                }}
+                className="shrink-0 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-xs leading-none font-medium whitespace-nowrap text-slate-600 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
         </div>
         <div className="relative mt-3.5" ref={qualityMenuRef}>
