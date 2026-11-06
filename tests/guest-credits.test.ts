@@ -107,3 +107,39 @@ test('second guest link into the same old account cannot import free credits', a
   const taskRows = await db().select().from(aiTask).where(eq(aiTask.userId, 'registered1'));
   assert.ok(taskRows.length >= 2);
 });
+
+test('Better Auth upgrades a guest to a new signup and transfers the free balance', async () => {
+  const { getAuth } = await import('../src/core/auth');
+  const auth = getAuth();
+  const anon = await auth.handler(new Request('http://localhost:3000/api/auth/sign-in/anonymous', {
+    method: 'POST',
+    headers: { origin: 'http://localhost:3000', 'content-type': 'application/json' },
+    body: '{}',
+  }));
+  assert.equal(anon.status, 200, anon.statusText);
+  const anonymousBody = await anon.clone().json();
+  const guestId = anonymousBody.user.id as string;
+  const cookie = (anon.headers.getSetCookie?.() || [])
+    .map((line: string) => line.split(';')[0]?.trim())
+    .filter(Boolean).join('; ');
+  assert.ok(cookie.includes('session_token'));
+  assert.equal((await claim(guestId, '198.51.100.8')).granted, true);
+  const signup = await auth.handler(new Request('http://localhost:3000/api/auth/sign-up/email', {
+    method: 'POST',
+    headers: {
+      origin: 'http://localhost:3000',
+      'content-type': 'application/json',
+      cookie,
+    },
+    body: JSON.stringify({
+      name: 'Linked User', email: 'linked-user@example.test', password: 'secure-test-password',
+    }),
+  }));
+  const body = await signup.json();
+  assert.equal(signup.status, 200, JSON.stringify(body));
+  assert.notEqual(body.user.id, guestId);
+  assert.equal(await getBalance(body.user.id), 20);
+  const [guestRow] = await db().select().from(user).where(eq(user.id, guestId));
+  assert.equal(guestRow.linkedUserId, body.user.id);
+  assert.equal(await getBalance(guestId), 0);
+});
