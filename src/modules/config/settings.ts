@@ -77,6 +77,12 @@ export function getSettingGroups(): SettingGroup[] {
 
     // Users
     {
+      name: 'credit',
+      title: 'Credits',
+      description: 'Initial credits for new users',
+      tab: 'user',
+    },
+    {
       name: 'user_role',
       title: 'User Roles',
       description: 'Default role for new users',
@@ -464,11 +470,41 @@ export function getSettings(): Setting[] {
     // ─── Users / Credits ─────────────────────────────────────────────
     {
       name: 'initial_credits_enabled',
-      title:    // The legacy initial_credits_* admin settings are no longer presented.
-    // Trial and one-time signup rewards are a fixed 10 credits each, with
-    // anonymous rollout gated by ANONYMOUS_TRIAL_ENABLED.
+      title: 'Legacy signup credits (inactive)',
+      type: 'switch',
+      group: 'credit',
+      tab: 'user',
+    },
+    {
+      name: 'initial_credits_amount',
+      title: 'Legacy credits amount (inactive)',
+      type: 'number',
+      placeholder: '20',
+      tip: 'Legacy option; the photo editor now grants 10 fixed credits once per new registered account. This toggle does not change the promotion.',
+      group: 'credit',
+      tab: 'user',
+    },
+    {
+      name: 'initial_credits_valid_days',
+      title: 'Legacy credit validity (inactive)',
+      type: 'number',
+      placeholder: '365',
+      group: 'credit',
+      tab: 'user',
+    },
+    {
+      name: 'initial_credits_description',
+      title: 'Legacy credit description (inactive)',
+      type: 'text',
+      placeholder: 'Welcome bonus',
+      group: 'credit',
+      tab: 'user',
+    },
 
-ble email auth',
+    // ─── Auth / Email ────────────────────────────────────────────────
+    {
+      name: 'email_auth_enabled',
+      title: 'Enable email auth',
       type: 'switch',
       group: 'email_auth',
       tab: 'auth',
