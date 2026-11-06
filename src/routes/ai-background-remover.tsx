@@ -1,23 +1,116 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { ArrowRight, CheckCircle2, ImagePlus, Layers3, Scissors, ShieldCheck } from 'lucide-react';
+import {
+  ArrowRight,
+  CheckCircle2,
+  Layers3,
+  Scissors,
+  ShieldCheck,
+  Sparkles,
+} from 'lucide-react';
 
-import { Footer } from '@/blocks/footer';
-import { Header } from '@/blocks/header';
 import { Link } from '@/core/i18n/navigation';
-import { pageHead } from '@/lib/seo';
+import { envConfigs } from '@/config';
 import {
   BACKGROUND_REMOVAL_CREDITS,
   getPhotoTool,
 } from '@/modules/photo-editor/config';
+import { absoluteUrl, pageHead } from '@/lib/seo';
+import { Footer } from '@/blocks/footer';
+import { Header } from '@/blocks/header';
 import { PhotoEditorWorkspace } from '@/components/photo-editor/workspace';
+
+const TITLE = 'AI Background Remover: Transparent PNG Online';
+const DESCRIPTION = `Remove photo backgrounds online with Bria RMBG 2.0 and download a transparent PNG. ${BACKGROUND_REMOVAL_CREDITS} credits per image. Start with 10 guest credits, no sign-up.`;
 
 const TOOL = getPhotoTool('remove-background')!;
 
+const CAPABILITIES = [
+  {
+    icon: Layers3,
+    title: 'Create a transparent PNG cutout',
+    description:
+      'Download a PNG with a real alpha channel. Preview it on the checkerboard before you save, so you can see which areas are transparent.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Keep the original subject',
+    description:
+      'The model separates foreground from background instead of redrawing the person or product. Hair, glass and sheer fabric can still need a closer look.',
+  },
+  {
+    icon: Scissors,
+    title: 'Remove backgrounds in one step',
+    description: `No prompt is required. Upload a photo and click Remove Background. Each cutout costs ${BACKGROUND_REMOVAL_CREDITS} credits.`,
+  },
+] as const;
+
+const USE_CASES = [
+  {
+    title: 'Product photos',
+    description:
+      'Create transparent product cutouts for catalogs, marketplaces and marketing graphics.',
+  },
+  {
+    title: 'Portraits and profile pictures',
+    description:
+      'Isolate a person from a busy background without redrawing their face or clothing.',
+  },
+  {
+    title: 'Designs and presentations',
+    description:
+      'Place a transparent PNG over your own layouts, thumbnails or slides.',
+  },
+] as const;
+
+const WHY_USE = [
+  {
+    icon: Sparkles,
+    title: 'Built on Bria RMBG 2.0',
+    description:
+      'This page uses Bria RMBG 2.0, a dedicated background-removal model that returns a real transparent PNG. It is not the GPT Image 2.6 editor used for prompt-based edits elsewhere on the site.',
+  },
+  {
+    icon: CheckCircle2,
+    title: 'Two cutouts from your guest credits',
+    description: `You start with 10 guest credits, and each background removal costs ${BACKGROUND_REMOVAL_CREDITS} credits, enough for two cutouts. Sign in for 10 more. No account is required to try.`,
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Review the cutout before you use it',
+    description:
+      'Compare the original and the result on a checkerboard. Fine hair, sheer materials, reflective edges and crowded scenes can still need a second pass.',
+  },
+] as const;
+
+const STEPS = [
+  {
+    number: '01',
+    title: 'Upload your photo',
+    description: 'Choose a JPG, PNG or WebP image up to 10 MB.',
+  },
+  {
+    number: '02',
+    title: 'Remove the background',
+    description:
+      'Click Remove Background. No prompt is needed; the model isolates the main subject automatically.',
+  },
+  {
+    number: '03',
+    title: 'Inspect and download a transparent PNG',
+    description:
+      'Preview the cutout on the checkerboard, then download the PNG.',
+  },
+] as const;
+
 const FAQS = [
   {
-    question: 'Can I remove a photo background without signing up?',
+    question: 'What AI model does this background remover use?',
     answer:
-      'Yes. You can start with 10 guest credits without creating an account. Each background removal costs 4 credits. Sign in to receive 10 more credits.',
+      'This page uses Bria RMBG 2.0 to separate the subject from the background and produce a transparent PNG. That is a dedicated cutout model, not GPT Image 2.6, and it does not generate a new background.',
+  },
+  {
+    question: 'Can I remove a photo background without signing up?',
+    answer: `Yes. You can start with 10 guest credits without creating an account. Each background removal costs ${BACKGROUND_REMOVAL_CREDITS} credits, enough for two cutouts. Sign in to receive 10 more credits.`,
   },
   {
     question: 'Will the removed background be transparent?',
@@ -27,12 +120,17 @@ const FAQS = [
   {
     question: 'Does the tool change the person or product?',
     answer:
-      'The background removal model separates the foreground from the original pixels rather than generating a different subject. Fine edges can still be imperfect, so check hair, fabric, and shadows.',
+      'The background removal model separates the foreground from the original pixels rather than generating a different subject. Fine edges can still be imperfect, so check hair, fabric and shadows.',
+  },
+  {
+    question: 'Is this the same as changing a photo background?',
+    answer:
+      'No. This tool removes the background and leaves transparency so you can place the subject on another design. To describe a new scene instead of a cutout, use the AI photo editor.',
   },
   {
     question: 'Which photo formats are supported?',
     answer:
-      'Upload JPG, PNG, or WebP files up to 10 MB. Download the processed result as a PNG with transparency.',
+      'Upload JPG, PNG or WebP files up to 10 MB. Download the processed result as a PNG with transparency.',
   },
   {
     question: 'What happens if background removal fails?',
@@ -46,21 +144,50 @@ const FAQS = [
   },
 ] as const;
 
-const JSON_LD = JSON.stringify({
+const EDITOR_LINK_FAQ = 'Is this the same as changing a photo background?';
+const EDITOR_LINK_LABEL = 'AI photo editor';
+
+function FaqAnswer({ question, answer }: { question: string; answer: string }) {
+  if (question !== EDITOR_LINK_FAQ) return answer;
+  const index = answer.lastIndexOf(EDITOR_LINK_LABEL);
+  if (index < 0) return answer;
+  return (
+    <>
+      {answer.slice(0, index)}
+      <Link href="/" className="font-semibold text-blue-600 hover:underline">
+        {EDITOR_LINK_LABEL}
+      </Link>
+      {answer.slice(index + EDITOR_LINK_LABEL.length)}
+    </>
+  );
+}
+
+const jsonLd = JSON.stringify({
   '@context': 'https://schema.org',
   '@graph': [
     {
       '@type': 'SoftwareApplication',
-      name: 'AI Background Remover — GetAIPhotoEditor',
+      name: 'AI Background Remover',
       applicationCategory: 'MultimediaApplication',
       operatingSystem: 'Web',
-      url: 'https://getaiphotoeditor.com/ai-background-remover',
-      description: 'Remove image backgrounds and download transparent PNG cutouts online.',
+      url: absoluteUrl('/ai-background-remover'),
+      image: absoluteUrl('/images/ai-photo-editor/remove-background.jpg'),
+      description: DESCRIPTION,
+      featureList: [
+        'Transparent PNG cutouts',
+        'Foreground segmentation',
+        'Bria RMBG 2.0 background removal',
+      ],
       offers: {
         '@type': 'Offer',
         price: '0',
         priceCurrency: 'USD',
-        description: 'Start with 10 guest credits; ' + BACKGROUND_REMOVAL_CREDITS + ' credits per background removal.',
+        description: `10 guest credits; ${BACKGROUND_REMOVAL_CREDITS} credits per background removal`,
+      },
+      provider: {
+        '@type': 'Organization',
+        name: envConfigs.app_name,
+        url: envConfigs.app_url,
       },
     },
     {
@@ -71,157 +198,275 @@ const JSON_LD = JSON.stringify({
         acceptedAnswer: { '@type': 'Answer', text: answer },
       })),
     },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Home',
+          item: absoluteUrl('/'),
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'AI Tools',
+          item: absoluteUrl('/tools'),
+        },
+        {
+          '@type': 'ListItem',
+          position: 3,
+          name: 'AI Background Remover',
+          item: absoluteUrl('/ai-background-remover'),
+        },
+      ],
+    },
   ],
 });
-
-const USE_CASES = [
-  {
-    icon: ImagePlus,
-    title: 'Product photos',
-    description:
-      'Create transparent product cutouts for catalogs, marketplaces, and marketing graphics.',
-  },
-  {
-    icon: Scissors,
-    title: 'Portraits & profile pictures',
-    description:
-      'Isolate a person from a busy background without redrawing their face or clothing.',
-  },
-  {
-    icon: Layers3,
-    title: 'Designs & presentations',
-    description:
-      'Place a transparent PNG over your own layouts, thumbnails, or slides.',
-  },
-];
 
 function BackgroundRemoverPage() {
   return (
     <div className="min-h-screen bg-[#f7f9fc] text-slate-900">
       <Header />
       <main>
-        <section className="border-b border-slate-100 bg-gradient-to-b from-[#f0f6ff] via-[#fafcff] to-[#f7f9fc] px-4 pt-10 pb-14 sm:px-6 sm:pt-14">
+        <section className="border-b border-slate-200 bg-gradient-to-b from-[#edf4ff] via-[#f8fbff] to-[#f7f9fc] px-4 pt-9 pb-12 sm:px-6 sm:pt-12">
           <div className="mx-auto max-w-[1320px]">
-            <div className="mx-auto mb-8 max-w-3xl text-center">
-              <p className="mb-3 text-xs font-bold tracking-[0.16em] text-blue-600 uppercase">
-                Online background remover
+            <div className="mx-auto mb-7 max-w-3xl text-center">
+              <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white/90 px-3 py-1.5 text-xs font-semibold text-blue-700">
+                <Sparkles className="size-3.5" />
+                Powered by Bria RMBG 2.0
               </p>
-              <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-5xl">
-                AI Background Remover
+              <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl lg:text-[2.75rem]">
+                AI Background Remover Online
               </h1>
               <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
-                Remove photo backgrounds in one click. Keep the main subject and
-                download a transparent PNG — no manual masking or design software.
+                Upload a photo and remove the background in one step. Keep the
+                original subject and download a transparent PNG you can place on
+                another design.
               </p>
             </div>
             <div id="remover" className="scroll-mt-24">
               <PhotoEditorWorkspace tool={TOOL} />
             </div>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-slate-600">
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-slate-600">
               <span className="inline-flex items-center gap-2">
-                <CheckCircle2 className="size-4 text-blue-600" /> Transparent PNG output
+                <CheckCircle2 className="size-4 text-blue-600" />
+                Transparent PNG output
               </span>
               <span className="inline-flex items-center gap-2">
-                <CheckCircle2 className="size-4 text-blue-600" /> {BACKGROUND_REMOVAL_CREDITS} credits per image
+                <CheckCircle2 className="size-4 text-blue-600" />
+                {BACKGROUND_REMOVAL_CREDITS} credits per image
               </span>
               <span className="inline-flex items-center gap-2">
-                <CheckCircle2 className="size-4 text-blue-600" /> 10 guest credits to start
+                <CheckCircle2 className="size-4 text-blue-600" />
+                10 guest credits to start
               </span>
             </div>
           </div>
         </section>
 
         <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-          <div className="max-w-2xl">
-            <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
-              How it works
-            </p>
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              Remove the background in three steps
-            </h2>
-          </div>
-          <div className="mt-10 grid gap-5 md:grid-cols-3">
-            {TOOL.steps.map((step, i) => (
-              <div key={step} className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm">
-                <span className="text-sm font-bold text-blue-600">0{i + 1}</span>
-                <h3 className="mt-4 text-base font-semibold">{['Upload your image', 'Remove the background', 'Download transparent PNG'][i]}</h3>
-                <p className="mt-3 text-sm leading-7 text-slate-600">{step}</p>
-              </div>
-            ))}
+          <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
+            Background removal
+          </p>
+          <h2 className="max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
+            What Can This AI Background Remover Do?
+          </h2>
+          <p className="mt-4 max-w-2xl leading-7 text-slate-600">
+            This tool isolates the main subject and leaves a transparent
+            background. It uses Bria RMBG 2.0 for foreground segmentation, so
+            the person or product stays the original pixels rather than a newly
+            generated version.
+          </p>
+          <div className="mt-9 grid gap-5 md:grid-cols-3">
+            {CAPABILITIES.map((item) => {
+              const Icon = item.icon;
+              return (
+                <article
+                  key={item.title}
+                  className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                >
+                  <span className="inline-flex size-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                    <Icon className="size-5" />
+                  </span>
+                  <h3 className="mt-5 text-lg font-semibold">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">
+                    {item.description}
+                  </p>
+                </article>
+              );
+            })}
           </div>
         </section>
 
-        <section className="border-y border-slate-200 bg-white px-4 py-16 sm:px-6 sm:py-20">
+        <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+          <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
+            Everyday use cases
+          </p>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Remove Backgrounds from Products, Portraits and Designs
+          </h2>
+          <div className="mt-8 grid gap-5 md:grid-cols-3">
+            {USE_CASES.map((item) => (
+              <article
+                key={item.title}
+                className="rounded-2xl border border-slate-200 bg-white p-6"
+              >
+                <h3 className="text-lg font-semibold">{item.title}</h3>
+                <p className="mt-3 text-sm leading-7 text-slate-600">
+                  {item.description}
+                </p>
+              </article>
+            ))}
+          </div>
+          <div className="mt-8 flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4">
+            <ShieldCheck className="mt-0.5 size-5 shrink-0 text-blue-600" />
+            <p className="text-sm leading-7 text-slate-600">
+              Keep the original subject. This tool uses foreground segmentation,
+              not generative background replacement. Inspect delicate edges such
+              as loose hair, glass, transparent fabrics and shadows before using
+              the cutout professionally.
+            </p>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+          <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
+            Why use it
+          </p>
+          <h2 className="max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
+            Why Use This AI Background Remover
+          </h2>
+          <div className="mt-9 grid gap-5 md:grid-cols-3">
+            {WHY_USE.map((item) => {
+              const Icon = item.icon;
+              return (
+                <article
+                  key={item.title}
+                  className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                >
+                  <span className="inline-flex size-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                    <Icon className="size-5" />
+                  </span>
+                  <h3 className="mt-5 text-lg font-semibold">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">
+                    {item.description}
+                  </p>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="border-t border-slate-200 bg-white px-4 py-16 sm:px-6 sm:py-20">
           <div className="mx-auto max-w-6xl">
-            <div className="max-w-2xl">
-              <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
-                Made for your photos
-              </p>
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                One transparent cutout, many uses
-              </h2>
-              <p className="mt-4 leading-7 text-slate-600">
-                Remove backgrounds from portraits, products, and everyday photos.
-                Download a PNG cutout you can place on another design.
-              </p>
+            <div className="flex flex-wrap items-center justify-between gap-5">
+              <div>
+                <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
+                  Three simple steps
+                </p>
+                <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                  How to Remove a Photo Background with AI
+                </h2>
+              </div>
+              <a
+                href="#remover"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700"
+              >
+                Remove my background <ArrowRight className="size-4" />
+              </a>
             </div>
             <div className="mt-9 grid gap-5 md:grid-cols-3">
-              {USE_CASES.map(({ icon: Icon, title, description }) => (
-                <article key={title} className="rounded-2xl border border-slate-200 bg-slate-50 p-7">
-                  <div className="mb-5 inline-flex rounded-xl bg-blue-100 p-3 text-blue-600">
-                    <Icon className="size-6" />
-                  </div>
-                  <h3 className="text-lg font-semibold">{title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-slate-600">{description}</p>
+              {STEPS.map((step) => (
+                <article
+                  key={step.number}
+                  className="rounded-2xl border border-slate-100 bg-slate-50 p-6"
+                >
+                  <p className="text-sm font-bold text-blue-600">
+                    {step.number}
+                  </p>
+                  <h3 className="mt-4 text-lg font-semibold">{step.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">
+                    {step.description}
+                  </p>
                 </article>
               ))}
             </div>
-            <div className="mt-10 rounded-2xl border border-blue-100 bg-blue-50/60 p-6">
-              <div className="flex items-start gap-3">
-                <ShieldCheck className="mt-0.5 size-6 shrink-0 text-blue-600" />
-                <p className="text-sm leading-7 text-slate-700">
-                  <strong>Keep the original subject.</strong> This tool uses foreground
-                  segmentation, not a generative background replacement. Inspect
-                  delicate edges such as loose hair, glass, transparent fabrics, and
-                  shadows before using the cutout professionally.
-                </p>
-              </div>
+          </div>
+        </section>
+
+        <section
+          id="faq"
+          className="border-t border-slate-200 bg-white px-4 py-16 sm:px-6 sm:py-20"
+        >
+          <div className="mx-auto max-w-4xl">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              AI Background Remover FAQ
+            </h2>
+            <div className="mt-6">
+              {FAQS.map(({ question, answer }) => (
+                <div key={question} className="border-b border-slate-200 py-6">
+                  <h3 className="text-lg font-semibold">{question}</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">
+                    <FaqAnswer question={question} answer={answer} />
+                  </p>
+                </div>
+              ))}
             </div>
+            <p className="mt-6 text-sm text-slate-600">
+              Read our{' '}
+              <Link
+                href="/privacy-policy"
+                className="font-semibold text-blue-600 hover:underline"
+              >
+                Privacy Policy
+              </Link>{' '}
+              for details about image handling.
+            </p>
           </div>
         </section>
 
-        <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-20">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            AI Background Remover FAQs
-          </h2>
-          <div className="mt-7 divide-y divide-slate-200 border-t border-slate-200">
-            {FAQS.map(({ question, answer }) => (
-              <div key={question} className="py-6">
-                <h3 className="font-semibold text-slate-900">{question}</h3>
-                <p className="mt-3 text-sm leading-7 text-slate-600">{answer}</p>
-              </div>
-            ))}
-          </div>
-          <p className="mt-5 text-sm text-slate-600">
-            Read our{' '}
-            <Link href="/privacy-policy" className="font-semibold text-blue-600 hover:underline">
-              Privacy Policy
-            </Link>{' '}
-            for details about image handling.
-          </p>
-        </section>
-
-        <section className="bg-[#eaf2ff] px-4 py-14 text-center sm:px-6">
-          <div className="mx-auto max-w-3xl">
-            <h2 className="text-3xl font-bold tracking-tight">Ready to remove the background?</h2>
-            <p className="mt-3 text-slate-600">Start with your 10 guest credits. No account required to try.</p>
-            <a href="#remover" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700">
+        <section className="px-4 py-14 sm:px-6">
+          <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-5 rounded-2xl bg-slate-900 p-8 text-white sm:flex-row sm:items-center sm:p-10">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">
+                Ready to remove the background?
+              </h2>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">
+                Start with 10 guest credits. Each cutout costs{' '}
+                {BACKGROUND_REMOVAL_CREDITS} credits, and no account is required
+                to try.
+              </p>
+            </div>
+            <a
+              href="#remover"
+              className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-500"
+            >
               Remove Background <ArrowRight className="size-4" />
             </a>
           </div>
+          <p className="mx-auto mt-5 max-w-6xl text-center text-sm text-slate-500">
+            Looking for a different edit? Open the{' '}
+            <Link
+              href="/"
+              className="font-semibold text-blue-600 hover:underline"
+            >
+              AI photo editor
+            </Link>{' '}
+            or browse{' '}
+            <Link
+              href="/tools"
+              className="font-semibold text-blue-600 hover:underline"
+            >
+              AI photo editing tools
+            </Link>
+            .
+          </p>
         </section>
-
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON_LD }} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLd }}
+        />
       </main>
       <Footer />
     </div>
@@ -231,10 +476,10 @@ function BackgroundRemoverPage() {
 export const Route = createFileRoute('/ai-background-remover')({
   head: () =>
     pageHead({
-      title: 'AI Background Remover — Transparent PNG Online | GetAIPhotoEditor',
-      description:
-        'Remove image backgrounds online with AI. Keep people and products intact and download a transparent PNG. 10 guest credits to start, no signup.',
+      title: TITLE,
+      description: DESCRIPTION,
       path: '/ai-background-remover',
+      image: '/images/ai-photo-editor/remove-background.jpg',
     }),
   component: BackgroundRemoverPage,
 });
