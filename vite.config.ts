@@ -5,6 +5,7 @@ import mdx from '@mdx-js/rollup';
 import tailwindcss from '@tailwindcss/vite';
 import viteReact from '@vitejs/plugin-react';
 import { nitro } from 'nitro/vite';
+import remarkGfm from 'remark-gfm';
 import { defineConfig } from 'vite';
 
 import { loadEnvFiles } from './src/lib/env.ts';
@@ -70,6 +71,8 @@ export default defineConfig({
       enforce: 'pre',
       ...mdx({
         providerImportSource: '@mdx-js/react',
+        // Legal pages (and other MDX) use GitHub-style pipe tables.
+        remarkPlugins: [remarkGfm],
         exclude: /\/\.claude\//,
       }),
     },

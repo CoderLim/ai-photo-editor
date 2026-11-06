@@ -329,6 +329,12 @@
   * {
     @apply border-border outline-ring/50;
   }
+  /* Sticky marketing header is h-16 (~64px). 6rem keeps hash targets
+     below it with a little slack. scroll-margin on the same targets would
+     stack with this and double the offset. */
+  html {
+    scroll-padding-top: 6rem;
+  }
   body {
     @apply bg-background text-foreground;
   }
