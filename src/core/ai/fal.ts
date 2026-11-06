@@ -18,14 +18,15 @@ const defaultUuid: UuidFunction = () => crypto.randomUUID();
  * fal queue application ids that are the full path, including the subpath.
  * Truncating `openai/gpt-image-2.6/flare/edit` to `openai/gpt-image-2.6`
  * polls the wrong app. Two-segment ids and legacy subpaths such as
- * `fal-ai/flux/schnell` still use the owner/app prefix.
+ * `fal-ai/flux/schnell` or `fal-ai/bria/background/remove` still use the
+ * owner/app prefix (`fal-ai/flux`, `fal-ai/bria`); polling with the endpoint
+ * path returns HTTP 405.
  * The Nano Banana id stays so edits submitted before the model switch can finish.
  */
 const FAL_FULL_QUEUE_MODELS = new Set([
   'google/nano-banana-2.1/edit',
   'openai/gpt-image-2.6/flare/edit',
   'openai/gpt-image-2.6/sunburst/edit',
-  'fal-ai/bria/background/remove',
 ]);
 
 export function falQueueModel(model?: string): string {

@@ -132,7 +132,8 @@ test('provider input uses GPT Image 2.6 fields, not Nano Banana resolution', () 
 
 test('fal queue keeps the four-part GPT Image edit id', () => {
   assert.equal(falQueueModel(FAL_EDIT_MODEL), FAL_EDIT_MODEL);
-  assert.equal(falQueueModel(FAL_BACKGROUND_REMOVAL_MODEL), FAL_BACKGROUND_REMOVAL_MODEL);
+  // Bria endpoint path is for submit only; status/result use owner/app.
+  assert.equal(falQueueModel(FAL_BACKGROUND_REMOVAL_MODEL), 'fal-ai/bria');
   assert.equal(
     falQueueModel('openai/gpt-image-2.6/sunburst/edit'),
     'openai/gpt-image-2.6/sunburst/edit'
@@ -319,8 +320,15 @@ test('edit API charges the server quality price and ignores client amounts', asy
       credits: 0,
       costCredits: 0,
     });
-    assert.equal(backgroundResult.payload.code, 0, JSON.stringify(backgroundResult.payload));
-    assert.equal(backgroundResult.payload.data.credits, BACKGROUND_REMOVAL_CREDITS);
+    assert.equal(
+      backgroundResult.payload.code,
+      0,
+      JSON.stringify(backgroundResult.payload)
+    );
+    assert.equal(
+      backgroundResult.payload.data.credits,
+      BACKGROUND_REMOVAL_CREDITS
+    );
     balance -= BACKGROUND_REMOVAL_CREDITS;
     assert.equal(await getBalance(userId), balance);
     const backgroundCall = calls.at(-1)!;
@@ -333,7 +341,10 @@ test('edit API charges the server quality price and ignores client amounts', asy
     assert.equal(backgroundTask.provider, 'fal');
     assert.equal(backgroundTask.model, FAL_BACKGROUND_REMOVAL_MODEL);
     assert.equal(backgroundTask.costCredits, BACKGROUND_REMOVAL_CREDITS);
-    assert.equal(JSON.parse(backgroundTask.options || '{}').tool, 'remove-background');
+    assert.equal(
+      JSON.parse(backgroundTask.options || '{}').tool,
+      'remove-background'
+    );
 
     const first = await post({
       requestId: 'request-replay-0001',
