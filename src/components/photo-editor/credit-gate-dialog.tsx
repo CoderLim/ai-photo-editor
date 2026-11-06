@@ -3,7 +3,7 @@
 import { Gift, Wallet } from 'lucide-react';
 import { Link } from '@/core/i18n/navigation';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 
 export type CreditGate = 'signup' | 'purchase' | null;
 
@@ -32,9 +32,7 @@ export function CreditGateDialog({
               <strong className="block text-2xl text-blue-700">+10 Credits</strong>
               <span className="text-xs text-blue-700">Free welcome bonus · once per account</span>
             </div>
-            <Button asChild className="w-full rounded-lg bg-blue-600 hover:bg-blue-700">
-              <Link href={go('/sign-up')}>Sign Up for Free</Link>
-            </Button>
+            <Link href={go('/sign-up')} className={buttonVariants({ className: 'w-full rounded-lg bg-blue-600 text-white hover:bg-blue-700' })}>Sign Up for Free</Link>
             <p className="text-center text-xs text-slate-500">
               Already have an account? <Link href={go('/sign-in')} className="font-semibold text-blue-600">Sign in</Link>
             </p>
@@ -50,9 +48,7 @@ export function CreditGateDialog({
                 Get more credits to keep editing your photos.
               </DialogDescription>
             </DialogHeader>
-            <Button asChild className="w-full rounded-lg bg-blue-600 hover:bg-blue-700">
-              <Link href="/pricing">Get More Credits</Link>
-            </Button>
+            <Link href="/pricing" className={buttonVariants({ className: 'w-full rounded-lg bg-blue-600 text-white hover:bg-blue-700' })}>Get More Credits</Link>
             <p className="text-center text-xs text-slate-500">One-time credit packs, no subscription required.</p>
           </>
         ) : null}
