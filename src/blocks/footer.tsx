@@ -48,7 +48,7 @@ export function Footer() {
             <Link href="/#editor" className="hover:text-blue-600">
               Background Changer
             </Link>
-            <Link href="/#editor" className="hover:text-blue-600">
+            <Link href="/ai-photo-enhancer" className="hover:text-blue-600">
               Photo Enhancer
             </Link>
           </div>
