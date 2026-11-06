@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 
 import { authClient, useSession } from '@/core/auth/client';
 import {
+  BACKGROUND_REMOVAL_CREDITS,
   DEFAULT_PHOTO_EDIT_QUALITY,
   isPhotoEditQuality,
   PHOTO_EDIT_MODEL_LABEL,
@@ -102,6 +103,7 @@ async function dataOrThrow(response: Response) {
 export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
+  const isBackgroundRemover = tool?.slug === 'remove-background';
   const [creditGate, setCreditGate] = useState<CreditGate>(null);
   const [creditBalance, setCreditBalance] = useState<number | null>(null);
   const refreshHeaderCredits = (balance: number) => {
@@ -320,9 +322,9 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
       }
 
       const credits = await dataOrThrow(await fetch('/api/credits'));
-      const cost = PHOTO_EDIT_QUALITIES.find(
-        (item) => item.id === quality
-      )!.credits;
+      const cost = isBackgroundRemover
+        ? BACKGROUND_REMOVAL_CREDITS
+        : PHOTO_EDIT_QUALITIES.find((item) => item.id === quality)!.credits;
       refreshHeaderCredits(credits.balance);
       if (credits.balance < cost) {
         showCreditGate(guest ? 'signup' : 'purchase');
@@ -408,6 +410,9 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
   const selectedQuality = PHOTO_EDIT_QUALITIES.find(
     (item) => item.id === quality
   )!;
+  const shownCost = isBackgroundRemover
+    ? BACKGROUND_REMOVAL_CREDITS
+    : selectedQuality.credits;
   return (
     <>
       <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-stretch">
@@ -492,6 +497,8 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
               )}
             </div>
           </div>
+          {!isBackgroundRemover ? (
+            <>
           <div>
             <div className="mb-2 flex items-center justify-between">
               <label
@@ -633,6 +640,14 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
               </ul>
             )}
           </div>
+            </>
+          ) : (
+            <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4 text-sm leading-6 text-slate-600">
+              <p className="font-semibold text-slate-900">One-click background removal</p>
+              <p className="mt-1">Isolate the main subject from your photo without changing its appearance.</p>
+              <p className="mt-2 font-medium text-blue-700">Transparent PNG · {BACKGROUND_REMOVAL_CREDITS} credits per image</p>
+            </div>
+          )}
           <Button
             onClick={submit}
             disabled={loading}
@@ -647,13 +662,15 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
               ? 'Submitting edit...'
               : status === 'pending'
                 ? 'Generating...'
-                : 'Generate Edit'}
+                : isBackgroundRemover
+                  ? 'Remove Background'
+                  : 'Generate Edit'}
             {!loading && (
               <span
                 className="rounded-md bg-white/15 px-2 py-1 text-xs"
                 aria-live="polite"
               >
-                {selectedQuality.credits} credits
+                {shownCost} credits
               </span>
             )}
           </Button>
@@ -663,8 +680,9 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
               : creditBalance !== null
                 ? String(creditBalance) + ' credits available · '
                 : ''}
-            Model: {PHOTO_EDIT_MODEL_LABEL} · {selectedQuality.label} · original
-            aspect ratio
+            {isBackgroundRemover
+              ? 'Model: Bria RMBG 2.0 · transparent PNG'
+              : `Model: ${PHOTO_EDIT_MODEL_LABEL} · ${selectedQuality.label} · original aspect ratio`}
           </p>
         </div>
 
@@ -682,7 +700,7 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
                 Workspace
               </span>
             </div>
-            {!preview && (
+            {!preview && !isBackgroundRemover && (
               <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
                 Example · {example.caption}
               </span>
@@ -718,16 +736,33 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
           </div>
           <div className="relative min-h-[280px] flex-1">
             {preview ? (
-              <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(ellipse_at_top,#f8fafc,#eef2f7)] p-5 sm:p-7">
+              <div
+                className={cn(
+                  "absolute inset-0 flex items-center justify-center p-5 sm:p-7",
+                  isBackgroundRemover && result && !showOriginal
+                    ? "bg-[conic-gradient(#e2e8f0_25%,white_0_50%,#e2e8f0_0_75%,white_0)] bg-[length:24px_24px]"
+                    : "bg-[radial-gradient(ellipse_at_top,#f8fafc,#eef2f7)]"
+                )}
+              >
                 <img
                   src={result && !showOriginal ? result : preview}
                   alt={
                     result && !showOriginal
-                      ? 'AI edited photo'
+                      ? isBackgroundRemover
+                        ? 'Photo with a transparent background'
+                        : 'AI edited photo'
                       : 'Original photo'
                   }
                   className="max-h-full max-w-full rounded-lg object-contain shadow-lg"
                 />
+              </div>
+            ) : isBackgroundRemover ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-[conic-gradient(#e2e8f0_25%,white_0_50%,#e2e8f0_0_75%,white_0)] bg-[length:24px_24px] p-8 text-center">
+                <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-md">
+                  <ImagePlus className="size-9 text-blue-600" />
+                </div>
+                <p className="rounded-xl bg-white/95 px-4 py-2 text-base font-semibold text-slate-900 shadow-sm">Your transparent PNG preview</p>
+                <p className="mt-3 max-w-xs rounded-lg bg-white/90 px-3 py-2 text-sm text-slate-600">Upload an image to remove its background. Checkered areas represent transparency.</p>
               </div>
             ) : (
               <div className="absolute inset-0 overflow-hidden bg-slate-950">
@@ -762,13 +797,19 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
           <div className="flex h-12 shrink-0 items-center justify-between gap-3 border-t border-slate-100 px-4">
             <p className="text-xs text-slate-500">
               {result
-                ? 'Edit complete — review every detail.'
+                ? isBackgroundRemover
+                  ? 'Done — inspect edges before downloading.'
+                  : 'Edit complete — review every detail.'
                 : preview
-                  ? 'Ready to generate your first edit.'
-                  : 'Upload your photo to replace this example.'}
+                  ? isBackgroundRemover
+                    ? 'Ready to remove the background.'
+                    : 'Ready to generate your first edit.'
+                  : isBackgroundRemover
+                    ? 'Upload your image to start.'
+                    : 'Upload your photo to replace this example.'}
             </p>
             <div className="flex items-center gap-2">
-              {!preview && (
+              {!preview && !isBackgroundRemover && (
                 <div
                   className="flex items-center gap-1.5"
                   role="tablist"
@@ -802,23 +843,23 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
               )}
               {result && (
                 <>
-                  <Button
+                  {!isBackgroundRemover && <Button
                     variant="outline"
                     onClick={editAgain}
                     className="rounded-lg"
                   >
                     <RotateCcw className="size-4" />
                     Edit Again
-                  </Button>
+                  </Button>}
                   <a
-                    href={result}
+                    href={isBackgroundRemover && jobId ? `/api/photo-editor/edits/${jobId}/download` : result}
                     download
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex h-9 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
                   >
                     <Download className="size-4" />
-                    Download
+                    {isBackgroundRemover ? 'Download PNG' : 'Download'}
                   </a>
                 </>
               )}
