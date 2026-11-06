@@ -28,20 +28,20 @@ import { Button } from '@/components/ui/button';
 type Draft = { file: File; prompt: string; quality?: PhotoEditQuality };
 const QUICK_PROMPTS = [
   {
-    id: 'remove-object',
-    label: 'Remove Object',
-    caption: 'Object removal',
-    image: '/images/ai-photo-editor/remove-object.jpg',
-    alt: 'Before and after removing a trash bin from a beach photo',
-    text: 'Remove the unwanted object from the background. Reconstruct the area naturally and keep everything else unchanged.',
-  },
-  {
     id: 'change-background',
     label: 'Change Background',
     caption: 'Background change',
     image: '/images/ai-photo-editor/remove-background.jpg',
     alt: 'Before and after placing a portrait on a beach background',
     text: 'Replace the background with a clean professional studio backdrop while preserving the original subject and details.',
+  },
+  {
+    id: 'remove-object',
+    label: 'Remove Object',
+    caption: 'Object removal',
+    image: '/images/ai-photo-editor/remove-object.jpg',
+    alt: 'Before and after removing a trash bin from a beach photo',
+    text: 'Remove the unwanted object from the background. Reconstruct the area naturally and keep everything else unchanged.',
   },
   {
     id: 'enhance-photo',
@@ -117,7 +117,7 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
   const [showOriginal, setShowOriginal] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [qualityOpen, setQualityOpen] = useState(false);
-  const [exampleId, setExampleId] = useState<ExampleId>('remove-object');
+  const [exampleId, setExampleId] = useState<ExampleId>('change-background');
   const [examplePaused, setExamplePaused] = useState(false);
   const qualityMenuRef = useRef<HTMLDivElement | null>(null);
   const example =
