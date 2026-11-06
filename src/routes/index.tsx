@@ -141,19 +141,14 @@ function HomePage() {
     <div className="min-h-screen bg-[#f7f9fc] text-slate-900">
       <Header />
       <main>
-        <section className="relative overflow-x-clip border-b border-slate-100 bg-gradient-to-b from-[#f1f6ff] via-[#f9fbff] to-[#f7f9fc] px-4 pt-10 pb-12 sm:px-6 sm:pt-14 sm:pb-14">
+        <section className="relative overflow-x-clip border-b border-slate-100 bg-gradient-to-b from-[#f1f6ff] via-[#f9fbff] to-[#f7f9fc] px-4 pt-3 pb-8 sm:px-6 sm:pt-4 sm:pb-10">
           <div className="mx-auto max-w-[1320px]">
-            <div className="mb-5 text-center sm:mb-6">
-              <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white/80 px-4 py-1.5 text-xs font-semibold tracking-[0.15em] text-blue-600 uppercase">
-                <Sparkles className="size-3.5" /> AI-powered photo editing
-              </p>
-              <h1 className="mx-auto max-w-4xl text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl lg:text-[2.75rem]">
+            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-0.5">
+              <h1 className="text-2xl font-bold tracking-[-0.035em] text-slate-950 sm:text-[1.7rem] sm:leading-none">
                 AI Photo Editor Online
               </h1>
-              <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
-                Upload a photo and describe the edit in plain words — 10 free
-                credits without signing in, plus 10 more when you create an
-                account.
+              <p className="text-sm leading-5 text-slate-600">
+                10 free credits. Start without signing up.
               </p>
             </div>
             <div id="editor">
