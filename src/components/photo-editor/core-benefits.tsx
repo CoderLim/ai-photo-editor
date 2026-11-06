@@ -13,6 +13,8 @@ type Benefit = {
   title: string;
   description: string;
   image: string;
+  beforeImage?: string;
+  afterImage?: string;
   beforeAlt: string;
   afterAlt: string;
   icon: LucideIcon;
@@ -26,6 +28,8 @@ const BENEFITS: Benefit[] = [
     description:
       "Change the background or other details while keeping the main subject's shape, colors, and defining features as close to the original as possible.",
     image: '/images/ai-photo-editor/core-benefits/product-background.jpg',
+    beforeImage: '/images/ai-photo-editor/core-benefits/product-before.jpg',
+    afterImage: '/images/ai-photo-editor/core-benefits/product-after.jpg',
     beforeAlt: 'Original photo before a targeted background change',
     afterAlt: 'Edited background with the main subject preserved',
     icon: Layers3,
@@ -85,10 +89,12 @@ function ComparisonPanel({
   image,
   side,
   alt,
+  separate = false,
 }: {
   image: string;
   side: 'before' | 'after';
   alt: string;
+  separate?: boolean;
 }) {
   return (
     <div className="relative aspect-[5/4] min-w-0 overflow-hidden rounded-xl bg-slate-100">
@@ -99,7 +105,11 @@ function ComparisonPanel({
         decoding="async"
         width={1672}
         height={941}
-        className={`absolute top-0 h-full w-[200%] max-w-none object-cover ${side === 'before' ? 'left-0 object-left' : 'right-0 object-right'}`}
+        className={
+          separate
+            ? 'h-full w-full object-cover'
+            : `absolute top-0 h-full w-[200%] max-w-none object-cover ${side === 'before' ? 'left-0 object-left' : 'right-0 object-right'}`
+        }
       />
       <span
         className={`absolute bottom-2 left-2 rounded-full px-3 py-1 text-xs font-semibold text-white shadow-sm ${side === 'before' ? 'bg-slate-900/70' : 'bg-blue-600'}`}
@@ -135,12 +145,14 @@ export function CoreBenefits() {
           const picture = (
             <div className="grid min-w-0 grid-cols-2 gap-2.5 sm:gap-3">
               <ComparisonPanel
-                image={benefit.image}
+                image={benefit.beforeImage ?? benefit.image}
+                separate={!!benefit.beforeImage}
                 side="before"
                 alt={benefit.beforeAlt}
               />
               <ComparisonPanel
-                image={benefit.image}
+                image={benefit.afterImage ?? benefit.image}
+                separate={!!benefit.afterImage}
                 side="after"
                 alt={benefit.afterAlt}
               />
