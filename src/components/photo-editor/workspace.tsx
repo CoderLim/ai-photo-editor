@@ -443,7 +443,7 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
             placeholder="What would you like to change? e.g. Remove the person in the background while keeping the main subject unchanged."
             className="w-full resize-y rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm leading-relaxed text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
           />
-          <div className="mt-2 grid grid-cols-2 gap-1.5">
+          <div className="mt-2 flex flex-nowrap gap-1.5 overflow-x-auto">
             {QUICK_PROMPTS.map((item) => {
               const active = chipActive && exampleId === item.id;
               return (
@@ -459,7 +459,7 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
                     if (file) saveDraft(file, item.text, quality);
                   }}
                   className={cn(
-                    'rounded-full border px-2.5 py-1.5 text-center text-xs leading-none font-medium transition-colors',
+                    'shrink-0 rounded-full border px-2.5 py-1.5 text-xs leading-none font-medium whitespace-nowrap transition-colors',
                     active
                       ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
                       : 'border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700'
