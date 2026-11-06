@@ -619,8 +619,8 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
           )}
         </Button>
         <p className="mt-2 text-center text-xs leading-relaxed text-slate-500">
-          {creditBalance === null && !session?.user
-            ? 'Try AI editing with 10 free credits · '
+          {!session?.user
+            ? '10 free trial credits · '
             : creditBalance !== null
               ? String(creditBalance) + ' credits available · '
               : ''}
