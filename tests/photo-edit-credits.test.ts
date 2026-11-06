@@ -265,8 +265,8 @@ test('edit API charges the server quality price and ignores client amounts', asy
       requestId: 'request-high-poor',
       quality: 'high',
     });
-    assert.equal(tooPoor.status, 400);
-    assert.match(tooPoor.payload.message, /insufficient credits/i);
+    assert.equal(tooPoor.status, 402);
+    assert.equal(tooPoor.payload.message, 'CREDITS_INSUFFICIENT');
     assert.equal(await getBalance(userId), 12);
     assert.equal(calls.length, 0);
 
