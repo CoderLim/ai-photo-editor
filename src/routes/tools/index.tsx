@@ -39,7 +39,7 @@ function ToolsPage() {
           {PHOTO_TOOLS.map((tool) => (
             <Link
               key={tool.slug}
-              href="/#editor"
+              href={tool.slug === "remove-background" ? "/ai-background-remover" : "/#editor"}
               className="group rounded-2xl border border-slate-200 bg-white p-7 hover:border-blue-300 hover:shadow-lg"
             >
               <WandSparkles className="mb-6 size-8 text-blue-600" />
