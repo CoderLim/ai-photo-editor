@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router';
 
 import { getPhotoTool } from '@/modules/photo-editor/config';
 
-/** Phase 1: tool detail pages redirect to the homepage editor hero. */
+/** Keep legacy tool links working; the enhancer has its own landing page. */
 export const Route = createFileRoute('/tools/$slug')({
   beforeLoad: ({ params }) => {
     if (params.slug === 'enhance-photo') {
