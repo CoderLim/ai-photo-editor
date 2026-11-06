@@ -31,6 +31,9 @@ export const user = table(
     email: varchar191('email').notNull().unique(),
     emailVerified: boolean('email_verified').default(false).notNull(),
     image: text('image'),
+    isAnonymous: boolean('is_anonymous').notNull().default(false),
+    // Set before migrating guest credits/tasks; rejects late anonymous submissions.
+    linkedUserId: varchar191('linked_user_id'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
     utmSource: varchar('utm_source', { length: 100 }).notNull().default(''),
@@ -284,6 +287,22 @@ export const subscription = table(
     index('idx_subscription_created_at').on(table.createdAt),
   ]
 );
+
+/** Idempotency ledger for free grants and one guest→account migration. */
+export const freeCreditClaim = table('free_credit_claim', {
+  id: varchar191('id').primaryKey(),
+  userId: varchar191('user_id').notNull(),
+  kind: varchar('kind', { length: 32 }).notNull(),
+  sourceGuestId: varchar191('source_guest_id'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+/** Persistent two-timestamp sliding 24-hour IP allowance, not a per-isolate Map. */
+export const guestTrialIpQuota = table('guest_trial_ip_quota', {
+  id: varchar191('id').primaryKey(), // HMAC-SHA256 hex of the trusted public IP
+  latestAt: timestamp('latest_at'),
+  previousAt: timestamp('previous_at'),
+});
 
 export const credit = table(
   'credit',
