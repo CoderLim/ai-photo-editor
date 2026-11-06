@@ -19,7 +19,7 @@ import { PhotoEditorWorkspace } from '@/components/photo-editor/workspace';
 
 const TITLE = 'AI Photo Enhancer: Improve Photo Quality Online';
 const DESCRIPTION =
-  'Enhance photos online with GPT Image 2.6. Improve lighting, clarity and colors from a prompt. Start with 10 free credits, no sign-up.';
+  'Enhance photos online. Improve lighting, clarity and colors from a prompt. Start with 10 free credits, no sign-up.';
 
 const ENHANCEMENTS = [
   {
@@ -60,20 +60,12 @@ const USE_CASES = [
   },
 ] as const;
 
-const WHY_USE: readonly {
-  icon: typeof Sparkles;
-  title: string;
-  description: string;
-  linkHref?: string;
-  linkLabel?: string;
-}[] = [
+const WHY_USE = [
   {
     icon: Sparkles,
-    title: 'Edits through GPT Image 2.6',
+    title: 'Describe the improvement in everyday language',
     description:
-      'Describe the improvement in everyday language: clearer details, softer light, or more natural color. The same GPT Image 2.6 model runs in the editor on this page.',
-    linkHref: '/blog/what-is-chatgpt-images-2-6',
-    linkLabel: 'What Is ChatGPT Images 2.6',
+      'Ask for clearer details, softer light, or more natural color. Upload a photo, generate an enhancement, and review it before you download.',
   },
   {
     icon: CheckCircle2,
@@ -87,7 +79,7 @@ const WHY_USE: readonly {
     description:
       'This page improves lighting, clarity and color. It is not a 2x, 4x or 4K upscaler, and output resolution follows the model and quality setting you choose. Your original file stays available so you can check the change.',
   },
-];
+] as const;
 
 const STEPS = [
   {
@@ -111,8 +103,8 @@ const STEPS = [
 
 const FAQS = [
   [
-    'What AI model does this photo enhancer use?',
-    'This page uses GPT Image 2.6 for prompt-based photo enhancement. That is the image model inside this editor, not the ChatGPT Images 2.6 interface in ChatGPT.',
+    'How does this AI photo enhancer work?',
+    'This page improves lighting, clarity and color from a prompt. Results are generative, so small details can change. Always compare the output with your original. The underlying model may be updated over time.',
   ],
   [
     'Can AI enhance a blurry photo?',
@@ -155,7 +147,6 @@ const jsonLd = JSON.stringify({
         'Improve apparent sharpness',
         'Balance lighting',
         'Refine colors',
-        'GPT Image 2.6 photo enhancement',
       ],
       offers: {
         '@type': 'Offer',
@@ -215,7 +206,7 @@ function PhotoEnhancerPage() {
             <div className="mx-auto mb-7 max-w-3xl text-center">
               <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white/90 px-3 py-1.5 text-xs font-semibold text-blue-700">
                 <Sparkles className="size-3.5" />
-                Powered by GPT Image 2.6
+                Prompt-based photo enhancement
               </p>
               <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl lg:text-[2.75rem]">
                 AI Photo Enhancer Online
@@ -240,7 +231,7 @@ function PhotoEnhancerPage() {
               </span>
               <span className="inline-flex items-center gap-2">
                 <CheckCircle2 className="size-4 text-blue-600" />
-                GPT Image 2.6
+                Compare with the original
               </span>
             </div>
           </div>
@@ -255,8 +246,8 @@ function PhotoEnhancerPage() {
           </h2>
           <p className="mt-4 max-w-2xl leading-7 text-slate-600">
             Ask for clearer details, more balanced light, or more natural color.
-            The editor uses GPT Image 2.6, so results are generative: inspect
-            faces and fine details against the original.
+            Results are generative: inspect faces and fine details against the
+            original.
           </p>
           <div className="mt-9 grid gap-5 md:grid-cols-3">
             {ENHANCEMENTS.map((item) => {
@@ -332,16 +323,6 @@ function PhotoEnhancerPage() {
                   <p className="mt-3 text-sm leading-7 text-slate-600">
                     {item.description}
                   </p>
-                  {item.linkHref ? (
-                    <p className="mt-3 text-sm leading-7">
-                      <Link
-                        href={item.linkHref}
-                        className="font-semibold text-blue-600 hover:underline"
-                      >
-                        {item.linkLabel}
-                      </Link>
-                    </p>
-                  ) : null}
                 </article>
               );
             })}
@@ -411,15 +392,7 @@ function PhotoEnhancerPage() {
               >
                 Privacy Policy
               </Link>{' '}
-              for more on photo processing and storage. Read more about the
-              model in{' '}
-              <Link
-                href="/blog/what-is-chatgpt-images-2-6"
-                className="font-semibold text-blue-600 hover:underline"
-              >
-                What Is ChatGPT Images 2.6
-              </Link>
-              .
+              for more on photo processing and storage.
             </p>
           </div>
         </section>
