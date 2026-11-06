@@ -401,7 +401,7 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
     setUpload(null);
     setSourceJobId(jobId);
     setJobId(null);
-    setPrompt('');
+    setPrompt(tool?.examplePrompt || '');
     setStatus('idle');
     requestId.current = null;
   };
