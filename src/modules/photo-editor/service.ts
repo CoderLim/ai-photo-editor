@@ -4,21 +4,25 @@ import { getStorage } from '@/modules/storage/service';
 
 import {
   FAL_EDIT_MODEL,
+  FAL_BACKGROUND_REMOVAL_MODEL,
   REPLICATE_EDIT_MODEL,
   type PhotoEditQuality,
 } from './config';
 
 export async function createPhotoProvider(
-  provider: string
+  provider: string,
+  task: 'edit' | 'remove-background' = 'edit'
 ): Promise<{ instance: AIProvider; model: string }> {
   const configs = await getAllConfigs();
   if (provider === 'fal') {
     if (!configs.fal_api_key) throw new Error('fal API key is not configured');
     return {
       instance: new FalProvider({ apiKey: configs.fal_api_key }),
-      model: FAL_EDIT_MODEL,
+      model: task === 'remove-background' ? FAL_BACKGROUND_REMOVAL_MODEL : FAL_EDIT_MODEL,
     };
   }
+  if (task === 'remove-background')
+    throw new Error('Background removal requires fal');
   if (provider !== 'replicate') throw new Error('Unsupported image provider');
   if (!configs.replicate_api_token)
     throw new Error('Replicate API token is not configured');
