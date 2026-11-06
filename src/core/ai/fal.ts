@@ -25,6 +25,7 @@ const FAL_FULL_QUEUE_MODELS = new Set([
   'google/nano-banana-2.1/edit',
   'openai/gpt-image-2.6/flare/edit',
   'openai/gpt-image-2.6/sunburst/edit',
+  'fal-ai/bria/background/remove',
 ]);
 
 export function falQueueModel(model?: string): string {
@@ -203,7 +204,9 @@ export class FalProvider implements AIProvider {
         }));
       }
     } else {
-      if (data.images && Array.isArray(data.images)) {
+      if (data.image?.url) {
+        images = [{ id: '', createTime: new Date(), imageUrl: data.image.url }];
+      } else if (data.images && Array.isArray(data.images)) {
         images = data.images.map((image: any) => ({
           id: '',
           createTime: new Date(),
@@ -324,6 +327,10 @@ export class FalProvider implements AIProvider {
     }
 
     input = { ...input, ...options };
+
+    // RMBG runs pure segmentation. Supplying a prompt would switch fal to the
+    // more expensive guided-removal tier, without improving the default cutout.
+    if (model === 'fal-ai/bria/background/remove') delete input.prompt;
 
     if (options.image_input && Array.isArray(options.image_input)) {
       if (['fal-ai/kling-video/o1/video-to-video/edit'].includes(model)) {
