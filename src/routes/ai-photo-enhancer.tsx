@@ -17,9 +17,9 @@ import { Footer } from '@/blocks/footer';
 import { Header } from '@/blocks/header';
 import { PhotoEditorWorkspace } from '@/components/photo-editor/workspace';
 
-const TITLE = 'AI Photo Enhancer Online – Improve Photo Quality with AI';
+const TITLE = 'AI Photo Enhancer: Improve Photo Quality Online';
 const DESCRIPTION =
-  'Enhance photos online with AI. Improve lighting, clarity and colors with a simple prompt. Start with 10 free credits and no sign-up required.';
+  'Enhance photos online with GPT Image 2.6. Improve lighting, clarity and colors from a prompt. Start with 10 free credits, no sign-up.';
 
 const ENHANCEMENTS = [
   {
@@ -60,6 +60,35 @@ const USE_CASES = [
   },
 ] as const;
 
+const WHY_USE: readonly {
+  icon: typeof Sparkles;
+  title: string;
+  description: string;
+  linkHref?: string;
+  linkLabel?: string;
+}[] = [
+  {
+    icon: Sparkles,
+    title: 'Edits through GPT Image 2.6',
+    description:
+      'Describe the improvement in everyday language: clearer details, softer light, or more natural color. The same GPT Image 2.6 model runs in the editor on this page.',
+    linkHref: '/blog/what-is-chatgpt-images-2-6',
+    linkLabel: 'What Is ChatGPT Images 2.6',
+  },
+  {
+    icon: CheckCircle2,
+    title: 'One medium-quality enhancement to start',
+    description:
+      'You get 10 guest credits, enough for one medium-quality enhancement. Sign in for 10 more. Compare the original and the result, then download or refine the prompt.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Quality improvements you can review',
+    description:
+      'This page improves lighting, clarity and color. It is not a 2x, 4x or 4K upscaler, and output resolution follows the model and quality setting you choose. Your original file stays available so you can check the change.',
+  },
+];
+
 const STEPS = [
   {
     number: '01',
@@ -81,6 +110,10 @@ const STEPS = [
 ] as const;
 
 const FAQS = [
+  [
+    'What AI model does this photo enhancer use?',
+    'This page uses GPT Image 2.6 for prompt-based photo enhancement. That is the image model inside this editor, not the ChatGPT Images 2.6 interface in ChatGPT.',
+  ],
   [
     'Can AI enhance a blurry photo?',
     'AI can sometimes make a slightly blurry image look clearer, but it cannot reliably recover details that were never captured. Very blurry faces, text or fine patterns may be changed or invented.',
@@ -116,7 +149,14 @@ const jsonLd = JSON.stringify({
       applicationCategory: 'MultimediaApplication',
       operatingSystem: 'Web',
       url: absoluteUrl('/ai-photo-enhancer'),
+      image: absoluteUrl('/images/ai-photo-editor/enhance-photo.jpg'),
       description: DESCRIPTION,
+      featureList: [
+        'Improve apparent sharpness',
+        'Balance lighting',
+        'Refine colors',
+        'GPT Image 2.6 photo enhancement',
+      ],
       offers: {
         '@type': 'Offer',
         price: '0',
@@ -137,6 +177,29 @@ const jsonLd = JSON.stringify({
         acceptedAnswer: { '@type': 'Answer', text: answer },
       })),
     },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Home',
+          item: absoluteUrl('/'),
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'AI Tools',
+          item: absoluteUrl('/tools'),
+        },
+        {
+          '@type': 'ListItem',
+          position: 3,
+          name: 'AI Photo Enhancer',
+          item: absoluteUrl('/ai-photo-enhancer'),
+        },
+      ],
+    },
   ],
 });
 
@@ -152,15 +215,15 @@ function PhotoEnhancerPage() {
             <div className="mx-auto mb-7 max-w-3xl text-center">
               <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white/90 px-3 py-1.5 text-xs font-semibold text-blue-700">
                 <Sparkles className="size-3.5" />
-                AI Photo Enhancer
+                Powered by GPT Image 2.6
               </p>
               <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl lg:text-[2.75rem]">
-                Enhance Photo Quality Online with AI
+                AI Photo Enhancer Online
               </h1>
               <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
-                Improve clarity, lighting and colors with one simple prompt.
-                Keep your original photo intact and review every detail before
-                downloading your enhanced image.
+                Improve lighting, clarity and colors with a simple prompt.
+                Upload your photo, generate an enhancement, and compare it with
+                the original before you download.
               </p>
             </div>
             <div id="enhancer" className="scroll-mt-24">
@@ -177,7 +240,7 @@ function PhotoEnhancerPage() {
               </span>
               <span className="inline-flex items-center gap-2">
                 <CheckCircle2 className="size-4 text-blue-600" />
-                No app installation
+                GPT Image 2.6
               </span>
             </div>
           </div>
@@ -191,9 +254,9 @@ function PhotoEnhancerPage() {
             What Can an AI Photo Enhancer Improve?
           </h2>
           <p className="mt-4 max-w-2xl leading-7 text-slate-600">
-            From flat lighting to dull colors, make targeted visual improvements
-            with a plain-language instruction rather than complex editing
-            controls.
+            Ask for clearer details, more balanced light, or more natural color.
+            The editor uses GPT Image 2.6, so results are generative: inspect
+            faces and fine details against the original.
           </p>
           <div className="mt-9 grid gap-5 md:grid-cols-3">
             {ENHANCEMENTS.map((item) => {
@@ -216,7 +279,76 @@ function PhotoEnhancerPage() {
           </div>
         </section>
 
-        <section className="border-y border-slate-200 bg-white px-4 py-16 sm:px-6 sm:py-20">
+        <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+          <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
+            Everyday use cases
+          </p>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Enhance Portraits, Products and Everyday Photos
+          </h2>
+          <div className="mt-8 grid gap-5 md:grid-cols-3">
+            {USE_CASES.map((item) => (
+              <article
+                key={item.title}
+                className="rounded-2xl border border-slate-200 bg-white p-6"
+              >
+                <h3 className="text-lg font-semibold">{item.title}</h3>
+                <p className="mt-3 text-sm leading-7 text-slate-600">
+                  {item.description}
+                </p>
+              </article>
+            ))}
+          </div>
+          <div className="mt-8 flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4">
+            <ShieldCheck className="mt-0.5 size-5 shrink-0 text-blue-600" />
+            <p className="text-sm leading-7 text-slate-600">
+              Generative enhancement is not lossless restoration. Photos with
+              very strong blur, missing pixels or illegible text can gain
+              plausible-looking but inaccurate details. Check faces, labels and
+              important objects against the original.
+            </p>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+          <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
+            Why use it
+          </p>
+          <h2 className="max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
+            Why Use This AI Photo Enhancer
+          </h2>
+          <div className="mt-9 grid gap-5 md:grid-cols-3">
+            {WHY_USE.map((item) => {
+              const Icon = item.icon;
+              return (
+                <article
+                  key={item.title}
+                  className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                >
+                  <span className="inline-flex size-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                    <Icon className="size-5" />
+                  </span>
+                  <h3 className="mt-5 text-lg font-semibold">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">
+                    {item.description}
+                  </p>
+                  {item.linkHref ? (
+                    <p className="mt-3 text-sm leading-7">
+                      <Link
+                        href={item.linkHref}
+                        className="font-semibold text-blue-600 hover:underline"
+                      >
+                        {item.linkLabel}
+                      </Link>
+                    </p>
+                  ) : null}
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="border-t border-slate-200 bg-white px-4 py-16 sm:px-6 sm:py-20">
           <div className="mx-auto max-w-6xl">
             <div className="flex flex-wrap items-center justify-between gap-5">
               <div>
@@ -253,37 +385,6 @@ function PhotoEnhancerPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-          <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
-            Everyday use cases
-          </p>
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Enhance Portraits, Products and Everyday Photos
-          </h2>
-          <div className="mt-8 grid gap-5 md:grid-cols-3">
-            {USE_CASES.map((item) => (
-              <article
-                key={item.title}
-                className="rounded-2xl border border-slate-200 bg-white p-6"
-              >
-                <h3 className="text-lg font-semibold">{item.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-slate-600">
-                  {item.description}
-                </p>
-              </article>
-            ))}
-          </div>
-          <div className="mt-8 flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4">
-            <ShieldCheck className="mt-0.5 size-5 shrink-0 text-blue-600" />
-            <p className="text-sm leading-7 text-slate-600">
-              Generative enhancement is not lossless restoration. Photos with
-              very strong blur, missing pixels or illegible text can gain
-              plausible-looking but inaccurate details. Check faces, labels and
-              important objects against the original.
-            </p>
-          </div>
-        </section>
-
         <section
           id="faq"
           className="border-t border-slate-200 bg-white px-4 py-16 sm:px-6 sm:py-20"
@@ -304,10 +405,21 @@ function PhotoEnhancerPage() {
             </div>
             <p className="mt-6 text-sm text-slate-600">
               See our{' '}
-              <Link href="/privacy-policy" className="font-semibold text-blue-600 hover:underline">
+              <Link
+                href="/privacy-policy"
+                className="font-semibold text-blue-600 hover:underline"
+              >
                 Privacy Policy
               </Link>{' '}
-              for more on photo processing and storage.
+              for more on photo processing and storage. Read more about the
+              model in{' '}
+              <Link
+                href="/blog/what-is-chatgpt-images-2-6"
+                className="font-semibold text-blue-600 hover:underline"
+              >
+                What Is ChatGPT Images 2.6
+              </Link>
+              .
             </p>
           </div>
         </section>
@@ -319,8 +431,8 @@ function PhotoEnhancerPage() {
                 Ready to improve your photo?
               </h2>
               <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">
-                Upload a photo, refine the prompt and preview your AI-enhanced
-                result. A medium-quality edit costs {EDIT_CREDITS} credits.
+                Upload a photo, use or edit the enhancement prompt, and preview
+                the result. A medium-quality edit costs {EDIT_CREDITS} credits.
               </p>
             </div>
             <a
@@ -331,8 +443,18 @@ function PhotoEnhancerPage() {
             </a>
           </div>
           <p className="mx-auto mt-5 max-w-6xl text-center text-sm text-slate-500">
-            Looking for a different edit? Explore the{' '}
-            <Link href="/tools" className="font-semibold text-blue-600 hover:underline">
+            Looking for a different edit? Open the{' '}
+            <Link
+              href="/"
+              className="font-semibold text-blue-600 hover:underline"
+            >
+              AI photo editor
+            </Link>{' '}
+            or browse{' '}
+            <Link
+              href="/tools"
+              className="font-semibold text-blue-600 hover:underline"
+            >
               AI photo editing tools
             </Link>
             .
