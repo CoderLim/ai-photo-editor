@@ -2,6 +2,10 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import { getAuth } from '@/core/auth';
 import { getBalance, getHistory } from '@/modules/credits/service';
+import {
+  GUEST_TRIAL_CREDITS,
+  guestTrialEnabled,
+} from '@/modules/guest-credits/service';
 import { respData, respErr } from '@/lib/resp';
 
 async function GET({ request }: { request: Request }) {
@@ -10,7 +14,13 @@ async function GET({ request }: { request: Request }) {
     const session = await auth.api.getSession({ headers: request.headers });
 
     if (!session?.user) {
-      return respData({ balance: 0, history: [], accountType: 'visitor', trialCredits: 10 });
+      return respData({
+        balance: 0,
+        history: [],
+        accountType: 'visitor',
+        // Only advertise trial allotment when anonymous grants are actually on.
+        ...(guestTrialEnabled() ? { trialCredits: GUEST_TRIAL_CREDITS } : {}),
+      });
     }
 
     const [balance, history] = await Promise.all([
@@ -18,7 +28,11 @@ async function GET({ request }: { request: Request }) {
       getHistory(session.user.id),
     ]);
 
-    return respData({ balance, history, accountType: session.user.isAnonymous ? 'guest' : 'registered' });
+    return respData({
+      balance,
+      history,
+      accountType: session.user.isAnonymous ? 'guest' : 'registered',
+    });
   } catch (error: any) {
     return respErr(error.message || 'Failed to get credits');
   }

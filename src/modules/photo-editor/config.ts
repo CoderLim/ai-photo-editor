@@ -151,7 +151,7 @@ export const PHOTO_TOOLS: ToolConfig[] = [
       'Generative enhancement can change small details. It is not lossless reconstruction.',
     steps: [
       'Upload your photo.',
-      'Choose the enhancement prompt or customize it.',
+      'Choose a quality level and generate the enhancement.',
       'Compare the output carefully before downloading.',
     ],
   },

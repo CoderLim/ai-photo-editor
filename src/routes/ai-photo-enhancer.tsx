@@ -11,11 +11,11 @@ import {
 
 import { Link } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
-import { EDIT_CREDITS, getPhotoTool } from '@/modules/photo-editor/config';
+import { EDIT_CREDITS } from '@/modules/photo-editor/config';
 import { absoluteUrl, pageHead } from '@/lib/seo';
 import { Footer } from '@/blocks/footer';
 import { Header } from '@/blocks/header';
-import { PhotoEditorWorkspace } from '@/components/photo-editor/workspace';
+import { EnhancerWorkspace } from '@/components/photo-editor/enhancer-workspace';
 
 const TITLE = 'AI Photo Enhancer: Improve Photo Quality Online';
 const DESCRIPTION =
@@ -63,15 +63,15 @@ const USE_CASES = [
 const WHY_USE = [
   {
     icon: Sparkles,
-    title: 'Describe the improvement in everyday language',
+    title: 'Built-in photo enhancement',
     description:
-      'Ask for clearer details, softer light, or more natural color. Upload a photo, generate an enhancement, and review it before you download.',
+      'A built-in enhancement improves clarity, lighting and color. Upload a photo, generate, and review it before you download.',
   },
   {
     icon: CheckCircle2,
     title: 'One medium-quality enhancement to start',
     description:
-      'You get 10 guest credits, enough for one medium-quality enhancement. Sign in for 10 more. Compare the original and the result, then download or refine the prompt.',
+      'You get 10 guest credits, enough for one medium-quality enhancement. Sign in for 10 more. Compare the original and the result, then download or enhance again.',
   },
   {
     icon: ShieldCheck,
@@ -89,9 +89,9 @@ const STEPS = [
   },
   {
     number: '02',
-    title: 'Describe the improvement',
+    title: 'Choose quality and generate',
     description:
-      'Start with our photo enhancement prompt, or ask for clearer details, softer lighting or natural color correction.',
+      'Pick a quality level. A built-in enhancement prompt improves lighting, clarity and color automatically.',
   },
   {
     number: '03',
@@ -194,8 +194,6 @@ const jsonLd = JSON.stringify({
   ],
 });
 
-const enhancerTool = getPhotoTool('enhance-photo');
-
 function PhotoEnhancerPage() {
   return (
     <div className="min-h-screen bg-[#f7f9fc] text-slate-900">
@@ -212,13 +210,13 @@ function PhotoEnhancerPage() {
                 AI Photo Enhancer Online
               </h1>
               <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
-                Improve lighting, clarity and colors with a simple prompt.
-                Upload your photo, generate an enhancement, and compare it with
-                the original before you download.
+                Improve lighting, clarity and colors automatically. Upload your
+                photo, generate an enhancement, and compare it with the original
+                before you download.
               </p>
             </div>
             <div id="enhancer" className="scroll-mt-24">
-              <PhotoEditorWorkspace tool={enhancerTool} />
+              <EnhancerWorkspace />
             </div>
             <div className="mt-5 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-slate-600">
               <span className="inline-flex items-center gap-2">
@@ -398,14 +396,14 @@ function PhotoEnhancerPage() {
         </section>
 
         <section className="px-4 py-14 sm:px-6">
-          <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-5 rounded-2xl bg-slate-900 p-8 text-white sm:flex-row sm:items-center sm:p-10">
+          <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-5 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm sm:flex-row sm:items-center sm:p-10">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight">
+              <h2 className="text-2xl font-bold tracking-tight text-slate-950">
                 Ready to improve your photo?
               </h2>
-              <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">
-                Upload a photo, use or edit the enhancement prompt, and preview
-                the result. A medium-quality edit costs {EDIT_CREDITS} credits.
+              <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
+                Upload a photo, choose a quality level, and preview the enhanced
+                result. A medium-quality edit costs {EDIT_CREDITS} credits.
               </p>
             </div>
             <a

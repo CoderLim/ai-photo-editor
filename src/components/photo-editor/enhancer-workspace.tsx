@@ -1,0 +1,208 @@
+import { Download, LoaderCircle, RotateCcw, Sparkles } from 'lucide-react';
+
+import {
+  getPhotoTool,
+  PHOTO_EDIT_MODEL_LABEL,
+} from '@/modules/photo-editor/config';
+import { CreditGateDialog } from '@/components/photo-editor/credit-gate-dialog';
+import { ImageUploadField } from '@/components/photo-editor/image-upload-field';
+import { QualitySelector } from '@/components/photo-editor/quality-selector';
+import { usePhotoEditSession } from '@/components/photo-editor/use-photo-edit-session';
+import { Button } from '@/components/ui/button';
+
+const ENHANCE_EXAMPLE = {
+  image: '/images/ai-photo-editor/enhance-photo.jpg',
+  alt: 'Before and after sharpening a soft mountain lake into a clear landscape',
+  caption: 'Clarity and color',
+} as const;
+
+const enhancerTool = getPhotoTool('enhance-photo');
+
+/** Dedicated enhancer generate shell — shared pieces only, no homepage carousel/prompt. */
+export function EnhancerWorkspace() {
+  const edit = usePhotoEditSession({
+    fixedPrompt: enhancerTool?.examplePrompt,
+    toolSlug: 'enhance-photo',
+    restoreDraftPrompt: false,
+  });
+
+  return (
+    <>
+      <div className="grid gap-4 lg:grid-cols-[minmax(260px,0.68fr)_minmax(0,1.32fr)] lg:items-start">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_16px_40px_-28px_rgba(15,23,42,.4)] sm:p-4 lg:sticky lg:top-20">
+          <ImageUploadField
+            preview={edit.result ? undefined : edit.preview}
+            fileName={edit.file?.name}
+            showPreviewThumb={Boolean(edit.preview && !edit.result)}
+            onFile={edit.chooseFile}
+          />
+          <QualitySelector
+            className="mt-3"
+            value={edit.quality}
+            disabled={edit.loading}
+            onChange={edit.changeQuality}
+          />
+          <Button
+            onClick={edit.submit}
+            disabled={edit.loading}
+            className="mt-3 h-11 w-full gap-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+          >
+            {edit.loading ? (
+              <LoaderCircle className="size-4 animate-spin" />
+            ) : (
+              <Sparkles className="size-4" />
+            )}
+            {edit.status === 'submitting'
+              ? 'Submitting edit...'
+              : edit.status === 'pending'
+                ? 'Generating...'
+                : 'Generate Edit'}
+            {!edit.loading && (
+              <span
+                className="rounded-md bg-white/15 px-2 py-1 text-xs"
+                aria-live="polite"
+              >
+                {edit.selectedQuality.credits} credits
+              </span>
+            )}
+          </Button>
+          <p className="mt-2 text-center text-[11px] leading-relaxed text-slate-500">
+            {!edit.session?.user
+              ? '10 free trial credits · '
+              : edit.creditBalance !== null
+                ? String(edit.creditBalance) + ' credits available · '
+                : ''}
+            {PHOTO_EDIT_MODEL_LABEL} · {edit.selectedQuality.label}
+          </p>
+        </div>
+
+        <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_22px_50px_-24px_rgba(15,23,42,.55)]">
+          <div className="flex h-11 shrink-0 items-center justify-between border-b border-slate-100 px-4">
+            <div className="flex items-center gap-2">
+              <span className="size-2 rounded-full bg-blue-500" />
+              <span className="text-sm font-semibold text-slate-900">
+                Workspace
+              </span>
+            </div>
+            {!edit.preview && (
+              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
+                Example · {ENHANCE_EXAMPLE.caption}
+              </span>
+            )}
+            {edit.result && (
+              <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-1 text-xs">
+                <button
+                  type="button"
+                  onClick={() => edit.setShowOriginal(true)}
+                  className={
+                    'rounded-md px-3 py-1.5 ' +
+                    (edit.showOriginal
+                      ? 'bg-white font-semibold shadow-sm'
+                      : 'text-slate-500')
+                  }
+                >
+                  Original
+                </button>
+                <button
+                  type="button"
+                  onClick={() => edit.setShowOriginal(false)}
+                  className={
+                    'rounded-md px-3 py-1.5 ' +
+                    (!edit.showOriginal
+                      ? 'bg-white font-semibold shadow-sm'
+                      : 'text-slate-500')
+                  }
+                >
+                  Edited
+                </button>
+              </div>
+            )}
+          </div>
+          <div className="relative min-h-[min(70vh,560px)] flex-1 lg:min-h-[520px]">
+            {edit.preview ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(ellipse_at_top,#f8fafc,#eef2f7)] p-3 sm:p-4">
+                <img
+                  src={
+                    edit.result && !edit.showOriginal
+                      ? edit.result
+                      : edit.preview
+                  }
+                  alt={
+                    edit.result && !edit.showOriginal
+                      ? 'AI enhanced photo'
+                      : 'Original photo'
+                  }
+                  className="max-h-full max-w-full rounded-lg object-contain shadow-lg"
+                />
+              </div>
+            ) : (
+              <div className="absolute inset-0 overflow-hidden bg-slate-950">
+                <img
+                  src={ENHANCE_EXAMPLE.image}
+                  alt={ENHANCE_EXAMPLE.alt}
+                  width={1672}
+                  height={941}
+                  className="size-full object-cover object-center"
+                />
+                <div className="pointer-events-none absolute inset-x-0 top-3 flex justify-between px-3">
+                  <span className="rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-semibold tracking-[0.14em] text-white uppercase backdrop-blur-sm">
+                    Before
+                  </span>
+                  <span className="rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-semibold tracking-[0.14em] text-white uppercase backdrop-blur-sm">
+                    After
+                  </span>
+                </div>
+              </div>
+            )}
+            {edit.loading && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/85 backdrop-blur-sm">
+                <LoaderCircle className="mb-4 size-9 animate-spin text-blue-600" />
+                <p className="font-medium text-slate-900">
+                  Enhancing your photo
+                </p>
+                <p className="mt-1 text-sm text-slate-500">
+                  You can leave this page. Check My Creations later.
+                </p>
+              </div>
+            )}
+          </div>
+          <div className="flex h-12 shrink-0 items-center justify-between gap-3 border-t border-slate-100 px-4">
+            <p className="text-xs text-slate-500">
+              {edit.result
+                ? 'Enhancement complete — review every detail.'
+                : edit.preview
+                  ? 'Ready to generate your first enhancement.'
+                  : 'Upload your photo to replace this example.'}
+            </p>
+            {edit.result && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={edit.editAgain}
+                  className="rounded-lg"
+                >
+                  <RotateCcw className="size-4" />
+                  Edit Again
+                </Button>
+                <a
+                  href={edit.result}
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-9 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  <Download className="size-4" />
+                  Download
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      <CreditGateDialog
+        mode={edit.creditGate}
+        onClose={() => edit.setCreditGate(null)}
+      />
+    </>
+  );
+}
