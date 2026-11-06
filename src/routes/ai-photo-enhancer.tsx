@@ -17,9 +17,9 @@ import { Footer } from '@/blocks/footer';
 import { Header } from '@/blocks/header';
 import { EnhancerWorkspace } from '@/components/photo-editor/enhancer-workspace';
 
-const TITLE = 'AI Photo Enhancer: Improve Photo Quality Online';
+const TITLE = 'AI Photo Enhancer: Free Photo Enhancer Online, No Sign-Up';
 const DESCRIPTION =
-  'Enhance photos online. Improve lighting, clarity and colors from a prompt. Start with 10 free credits, no sign-up.';
+  'Free AI photo enhancer online. Improve lighting, clarity and colors from a prompt. Start with 10 free credits, no sign-up.';
 
 const ENHANCEMENTS = [
   {
@@ -27,18 +27,21 @@ const ENHANCEMENTS = [
     title: 'Improve apparent sharpness',
     description:
       'Bring out definition in slightly soft photos and ask for clearer-looking details, without an exaggerated sharpened effect.',
+    image: '/images/ai-photo-editor/enhancer/improve-sharpness.webp',
   },
   {
     icon: SunMedium,
     title: 'Balance lighting',
     description:
       'Brighten dim photos, soften harsh contrast and make the subject easier to see while keeping the mood of the original.',
+    image: '/images/ai-photo-editor/enhancer/balance-lighting.webp',
   },
   {
     icon: Palette,
     title: 'Refine colors naturally',
     description:
       'Correct dull or uneven colors, adjust white balance and keep skin tones and product colors as faithful as possible.',
+    image: '/images/ai-photo-editor/enhancer/refine-colors.webp',
   },
 ] as const;
 
@@ -47,16 +50,19 @@ const USE_CASES = [
     title: 'Portraits and headshots',
     description:
       'Make lighting more flattering and improve clarity while asking AI to preserve the person’s identity, expression and natural skin texture.',
+    image: '/images/ai-photo-editor/enhancer/portrait-headshots.webp',
   },
   {
     title: 'Product photos',
     description:
       'Improve visual clarity, exposure and color for listings without intentionally changing the shape, branding or design of the product.',
+    image: '/images/ai-photo-editor/enhancer/product-photos.webp',
   },
   {
     title: 'Travel and everyday photos',
     description:
       'Give landscapes, indoor scenes and casual snapshots a cleaner, more balanced look without rebuilding the whole scene.',
+    image: '/images/ai-photo-editor/enhancer/travel-photos.webp',
   },
 ] as const;
 
@@ -253,12 +259,21 @@ function PhotoEnhancerPage() {
               return (
                 <article
                   key={item.title}
-                  className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                  className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
                 >
+                  <img
+                    src={item.image}
+                    alt={`Before and after: ${item.title}`}
+                    width={1106}
+                    height={812}
+                    loading="lazy"
+                    decoding="async"
+                    className="mb-5 aspect-[1106/812] w-full rounded-xl bg-slate-100 object-cover"
+                  />
                   <span className="inline-flex size-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                     <Icon className="size-5" />
                   </span>
-                  <h3 className="mt-5 text-lg font-semibold">{item.title}</h3>
+                  <h3 className="mt-4 text-lg font-semibold">{item.title}</h3>
                   <p className="mt-3 text-sm leading-7 text-slate-600">
                     {item.description}
                   </p>
@@ -279,8 +294,17 @@ function PhotoEnhancerPage() {
             {USE_CASES.map((item) => (
               <article
                 key={item.title}
-                className="rounded-2xl border border-slate-200 bg-white p-6"
+                className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 sm:p-6"
               >
+                <img
+                  src={item.image}
+                  alt={`Before and after AI enhancement for ${item.title}`}
+                  width={1106}
+                  height={812}
+                  loading="lazy"
+                  decoding="async"
+                  className="mb-5 aspect-[1106/812] w-full rounded-xl bg-slate-100 object-cover"
+                />
                 <h3 className="text-lg font-semibold">{item.title}</h3>
                 <p className="mt-3 text-sm leading-7 text-slate-600">
                   {item.description}
