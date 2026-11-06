@@ -59,6 +59,40 @@ test('claim is idempotent and sliding IP limit blocks third guest without a part
   assert.equal(claimRows.filter((row: any) => row.kind === 'guest_trial').length, 2);
 });
 
+test('concurrent claims from one public IP never grant more than two trial credits', async () => {
+  const ip = '198.51.100.77';
+  const ids = Array.from({ length: 16 }, (_, i) => 'concurrentGuest' + i);
+  for (const id of ids) await addUser(id, true);
+
+  // Different anonymous users race for the same global two-claim IP quota.
+  // Assert persisted results, not only response status: some SQLite drivers
+  // may surface a transient writer contention error under heavy concurrency.
+  const outcomes = await Promise.allSettled(ids.map((id) => claim(id, ip)));
+  const granted = outcomes.filter((outcome) =>
+    outcome.status === 'fulfilled' && outcome.value.granted
+  ).length;
+  const balances = await Promise.all(ids.map((id) => getBalance(id)));
+  const minted = balances.filter((value) => value === 10).length;
+  assert.ok(granted <= 2, 'only two simultaneous claims may succeed');
+  assert.equal(minted, granted, 'every response must match the committed credit ledger');
+  assert.ok(balances.every((value) => value === 0 || value === 10));
+  const ledger = (await db().select().from(freeCreditClaim))
+    .filter((row: any) => row.kind === 'guest_trial' && ids.includes(row.userId));
+  assert.equal(ledger.length, granted, 'no orphan claims or partial grants');
+
+  // Ensure the remaining capacity is consumed, then confirm a new guest fails.
+  for (let i = 0; i < 2 - granted; i++) {
+    const next = 'concurrentFill' + i;
+    await addUser(next, true);
+    assert.equal((await claim(next, ip)).granted, true);
+  }
+  await addUser('concurrentThird', true);
+  await assert.rejects(() => claim('concurrentThird', ip),
+    (error: any) => error instanceof GuestTrialLimitError &&
+      error.message === 'GUEST_TRIAL_RATE_LIMITED');
+  assert.equal(await getBalance('concurrentThird'), 0);
+});
+
 test('registered sign-up bonus is once only, not for an anonymous identity', async () => {
   await addUser('registered1', false);
   await addUser('registered2', false);
