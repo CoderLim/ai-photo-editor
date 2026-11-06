@@ -54,7 +54,9 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
                 {(envConfigs.app_name || 'A').charAt(0)}
               </span>
             )}
-            {envConfigs.app_name}
+            {envConfigs.app_name === 'GetAIPhotoEditor'
+              ? 'Get AI Photo Editor'
+              : envConfigs.app_name}
           </span>
         </Link>
 

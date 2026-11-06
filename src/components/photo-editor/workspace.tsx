@@ -10,7 +10,6 @@ import {
   RotateCcw,
   Sparkles,
   UploadCloud,
-  WandSparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -29,22 +28,39 @@ import { Button } from '@/components/ui/button';
 type Draft = { file: File; prompt: string; quality?: PhotoEditQuality };
 const QUICK_PROMPTS = [
   {
-    label: 'Remove Object',
-    text: 'Remove the unwanted object from the background. Reconstruct the area naturally and keep everything else unchanged.',
-  },
-  {
+    id: 'change-background',
     label: 'Change Background',
+    caption: 'Background change',
+    image: '/images/ai-photo-editor/remove-background.jpg',
+    alt: 'Before and after placing a portrait on a beach background',
     text: 'Replace the background with a clean professional studio backdrop while preserving the original subject and details.',
   },
   {
+    id: 'remove-object',
+    label: 'Remove Object',
+    caption: 'Object removal',
+    image: '/images/ai-photo-editor/remove-object.jpg',
+    alt: 'Before and after removing a trash bin from a beach photo',
+    text: 'Remove the unwanted object from the background. Reconstruct the area naturally and keep everything else unchanged.',
+  },
+  {
+    id: 'enhance-photo',
     label: 'Enhance Photo',
+    caption: 'Clarity and color',
+    image: '/images/ai-photo-editor/enhance-photo.jpg',
+    alt: 'Before and after sharpening a soft mountain lake into a clear landscape',
     text: 'Improve lighting, sharpness and colors naturally without changing the subject.',
   },
   {
+    id: 'change-style',
     label: 'Change Style',
+    caption: 'Style change',
+    image: '/images/ai-photo-editor/restyle-photo.jpg',
+    alt: 'Before and after restyling a portrait with cinematic sunset colors',
     text: 'Give this photo a cinematic look with refined lighting and colors. Preserve the main subject and composition.',
   },
-];
+] as const;
+type ExampleId = (typeof QUICK_PROMPTS)[number]['id'];
 
 function saveDraft(file: File, prompt: string, quality: PhotoEditQuality) {
   if (typeof indexedDB === 'undefined') return;
@@ -101,7 +117,11 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
   const [showOriginal, setShowOriginal] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [qualityOpen, setQualityOpen] = useState(false);
+  const [exampleId, setExampleId] = useState<ExampleId>('change-background');
+  const [examplePaused, setExamplePaused] = useState(false);
   const qualityMenuRef = useRef<HTMLDivElement | null>(null);
+  const example =
+    QUICK_PROMPTS.find((item) => item.id === exampleId) ?? QUICK_PROMPTS[0];
 
   useEffect(() => {
     const request = indexedDB.open('getaiphotoeditor-draft', 1);
@@ -129,6 +149,24 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
       if (previewRef.current) URL.revokeObjectURL(previewRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    for (const item of QUICK_PROMPTS) {
+      const img = new Image();
+      img.src = item.image;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (preview || examplePaused) return;
+    const timer = window.setInterval(() => {
+      setExampleId((current) => {
+        const index = QUICK_PROMPTS.findIndex((item) => item.id === current);
+        return QUICK_PROMPTS[(index + 1) % QUICK_PROMPTS.length].id;
+      });
+    }, 4000);
+    return () => window.clearInterval(timer);
+  }, [preview, examplePaused, exampleId]);
 
   useEffect(() => {
     if (!qualityOpen) return;
@@ -311,20 +349,9 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
     (item) => item.id === quality
   )!;
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)] lg:items-stretch">
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_45px_-32px_rgba(15,23,42,.28)] sm:p-7">
-        <div className="mb-6 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <WandSparkles className="size-5 text-blue-600" />
-            <h2 className="font-semibold tracking-tight text-slate-900">
-              AI Photo Editor
-            </h2>
-          </div>
-          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
-            Image editing
-          </span>
-        </div>
-        <div className="mb-5">
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-stretch">
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_16px_40px_-28px_rgba(15,23,42,.4)] sm:p-5">
+        <div className="mb-3.5">
           <div className="mb-2 flex items-center justify-between">
             <label
               htmlFor="photo-file"
@@ -365,10 +392,10 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
               chooseFile(e.dataTransfer.files?.[0]);
             }}
             className={
-              'relative flex min-h-40 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed px-5 py-6 text-center transition-colors ' +
+              'relative flex min-h-[6.75rem] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed px-4 py-3 text-center transition-colors ' +
               (dragging
                 ? 'border-blue-500 bg-blue-50'
-                : 'border-slate-200 bg-slate-50 hover:border-blue-400 hover:bg-blue-50/40')
+                : 'border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50/50')
             }
           >
             {preview && !result ? (
@@ -416,7 +443,7 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
           </div>
           <textarea
             id="photo-prompt"
-            rows={4}
+            rows={3}
             value={prompt}
             maxLength={2000}
             onChange={(e) => {
@@ -424,25 +451,27 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
               requestId.current = null;
             }}
             placeholder="What would you like to change? e.g. Remove the person in the background while keeping the main subject unchanged."
-            className="w-full resize-y rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm leading-relaxed text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            className="w-full resize-y rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm leading-relaxed text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
           />
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="mt-2 flex flex-nowrap gap-1.5 overflow-x-auto">
             {QUICK_PROMPTS.map((item) => (
               <button
-                key={item.label}
+                key={item.id}
                 type="button"
                 onClick={() => {
                   setPrompt(item.text);
+                  setExampleId(item.id);
                   requestId.current = null;
+                  if (file) saveDraft(file, item.text, quality);
                 }}
-                className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                className="shrink-0 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-xs leading-none font-medium whitespace-nowrap text-slate-600 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
               >
                 {item.label}
               </button>
             ))}
           </div>
         </div>
-        <div className="relative mt-5" ref={qualityMenuRef}>
+        <div className="relative mt-3.5" ref={qualityMenuRef}>
           <label
             htmlFor="photo-edit-quality"
             className="mb-2 block text-sm font-semibold text-slate-800"
@@ -544,7 +573,7 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
         <Button
           onClick={submit}
           disabled={loading}
-          className="mt-6 h-12 w-full gap-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+          className="mt-3.5 h-11 w-full gap-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
         >
           {loading ? (
             <LoaderCircle className="size-4 animate-spin" />
@@ -565,20 +594,31 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
             </span>
           )}
         </Button>
-        <p className="mt-3 text-center text-xs leading-relaxed text-slate-500">
+        <p className="mt-2 text-center text-xs leading-relaxed text-slate-500">
           Model: {PHOTO_EDIT_MODEL_LABEL} · {selectedQuality.label} · original
           aspect ratio
         </p>
       </div>
 
-      <div className="flex min-h-[440px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_12px_45px_-32px_rgba(15,23,42,.28)]">
-        <div className="flex min-h-16 items-center justify-between border-b border-slate-100 px-5">
+      <div
+        className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_22px_50px_-24px_rgba(15,23,42,.55)]"
+        onMouseEnter={() => {
+          if (!preview) setExamplePaused(true);
+        }}
+        onMouseLeave={() => setExamplePaused(false)}
+      >
+        <div className="flex h-11 shrink-0 items-center justify-between border-b border-slate-100 px-4">
           <div className="flex items-center gap-2">
             <span className="size-2 rounded-full bg-blue-500" />
             <span className="text-sm font-semibold text-slate-900">
               Workspace
             </span>
           </div>
+          {!preview && (
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
+              Example · {example.caption}
+            </span>
+          )}
           {result && (
             <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-1 text-xs">
               <button
@@ -608,30 +648,35 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
             </div>
           )}
         </div>
-        <div className="relative flex min-h-[355px] flex-1 items-center justify-center bg-[radial-gradient(ellipse_at_top,#f8fafc,#eef2f7)] p-6 sm:p-9">
+        <div className="relative min-h-[280px] flex-1">
           {preview ? (
-            <img
-              src={result && !showOriginal ? result : preview}
-              alt={
-                result && !showOriginal ? 'AI edited photo' : 'Original photo'
-              }
-              className="max-h-[460px] max-w-full rounded-lg object-contain shadow-lg"
-            />
+            <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(ellipse_at_top,#f8fafc,#eef2f7)] p-5 sm:p-7">
+              <img
+                src={result && !showOriginal ? result : preview}
+                alt={
+                  result && !showOriginal ? 'AI edited photo' : 'Original photo'
+                }
+                className="max-h-full max-w-full rounded-lg object-contain shadow-lg"
+              />
+            </div>
           ) : (
-            <div className="max-w-sm text-center">
-              <div className="mx-auto mb-5 flex size-24 items-center justify-center rounded-3xl border border-white bg-white/80 shadow-xl shadow-slate-200">
-                <ImagePlus
-                  className="size-10 text-blue-400"
-                  strokeWidth={1.3}
-                />
+            <div className="absolute inset-0 overflow-hidden bg-slate-950">
+              <img
+                src={example.image}
+                alt={example.alt}
+                width={1672}
+                height={941}
+                data-example-id={example.id}
+                className="size-full object-cover object-center"
+              />
+              <div className="pointer-events-none absolute inset-x-0 top-3 flex justify-between px-3">
+                <span className="rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-semibold tracking-[0.14em] text-white uppercase backdrop-blur-sm">
+                  Before
+                </span>
+                <span className="rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-semibold tracking-[0.14em] text-white uppercase backdrop-blur-sm">
+                  After
+                </span>
               </div>
-              <h3 className="text-lg font-semibold text-slate-800">
-                Your image, reimagined
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                Upload your photo to see it here. Every edit happens in this
-                workspace, with an easy before-and-after comparison.
-              </p>
             </div>
           )}
           {loading && (
@@ -644,15 +689,47 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
             </div>
           )}
         </div>
-        <div className="flex min-h-18 items-center justify-between gap-3 border-t border-slate-100 px-5 py-4">
+        <div className="flex h-12 shrink-0 items-center justify-between gap-3 border-t border-slate-100 px-4">
           <p className="text-xs text-slate-500">
             {result
               ? 'Edit complete — review every detail.'
               : preview
                 ? 'Ready to generate your first edit.'
-                : 'Upload a photo to get started.'}
+                : 'Upload your photo to replace this example.'}
           </p>
           <div className="flex items-center gap-2">
+            {!preview && (
+              <div
+                className="flex items-center gap-1.5"
+                role="tablist"
+                aria-label="Example edits"
+              >
+                {QUICK_PROMPTS.map((item) => {
+                  const current = item.id === example.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={current}
+                      aria-label={item.caption}
+                      data-example-dot={item.id}
+                      onClick={() => setExampleId(item.id)}
+                      className="group flex size-4 items-center justify-center"
+                    >
+                      <span
+                        className={cn(
+                          'pointer-events-none rounded-full',
+                          current
+                            ? 'h-1.5 w-4 bg-blue-600'
+                            : 'size-1.5 bg-slate-300 group-hover:bg-slate-400'
+                        )}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
             {result && (
               <>
                 <Button
