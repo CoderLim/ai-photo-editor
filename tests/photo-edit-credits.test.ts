@@ -30,7 +30,7 @@ execFileSync(
 );
 
 const { db } = await import('../src/core/db');
-const { aiTask, config } = await import('../src/config/db/schema');
+const { aiTask, config, credit } = await import('../src/config/db/schema');
 const { getAuth } = await import('../src/core/auth');
 const { falQueueModel } = await import('../src/core/ai/fal');
 const { getBalance, grant } = await import('../src/modules/credits/service');
@@ -177,6 +177,9 @@ test('edit API charges the server quality price and ignores client amounts', asy
   const signupBody = await signup.text();
   assert.equal(signup.status, 200, signupBody);
   const userId = JSON.parse(signupBody).user.id as string;
+  // This test isolates server-selected edit prices from the separate,
+  // newly enabled one-time 10-credit sign-up promotion.
+  await db().delete(credit).where(eq(credit.userId, userId));
   const lines: string[] = signup.headers.getSetCookie?.() ?? [];
   const cookie = lines
     .map((line) => line.split(';')[0]?.trim())
