@@ -10,7 +10,7 @@ async function GET({ request }: { request: Request }) {
     const session = await auth.api.getSession({ headers: request.headers });
 
     if (!session?.user) {
-      return respErr('Unauthorized');
+      return respData({ balance: 0, history: [], accountType: 'visitor', trialCredits: 10 });
     }
 
     const [balance, history] = await Promise.all([
@@ -18,7 +18,7 @@ async function GET({ request }: { request: Request }) {
       getHistory(session.user.id),
     ]);
 
-    return respData({ balance, history });
+    return respData({ balance, history, accountType: session.user.isAnonymous ? 'guest' : 'registered' });
   } catch (error: any) {
     return respErr(error.message || 'Failed to get credits');
   }
