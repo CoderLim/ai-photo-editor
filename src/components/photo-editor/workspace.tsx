@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import {
+  Check,
+  ChevronDown,
   Download,
   ImagePlus,
   LoaderCircle,
@@ -21,6 +23,7 @@ import {
   type PhotoEditQuality,
   type ToolConfig,
 } from '@/modules/photo-editor/config';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 type Draft = { file: File; prompt: string; quality?: PhotoEditQuality };
@@ -97,6 +100,8 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
   const [result, setResult] = useState('');
   const [showOriginal, setShowOriginal] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [qualityOpen, setQualityOpen] = useState(false);
+  const qualityMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const request = indexedDB.open('getaiphotoeditor-draft', 1);
@@ -124,6 +129,24 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
       if (previewRef.current) URL.revokeObjectURL(previewRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (!qualityOpen) return;
+    const onPointerDown = (event: MouseEvent) => {
+      if (!qualityMenuRef.current?.contains(event.target as Node)) {
+        setQualityOpen(false);
+      }
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setQualityOpen(false);
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [qualityOpen]);
 
   useEffect(() => {
     // Open a previous generated image through My Creations.
@@ -419,54 +442,105 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
             ))}
           </div>
         </div>
-        <fieldset className="mt-5" disabled={loading}>
-          <legend className="mb-2 text-sm font-semibold text-slate-800">
+        <div className="relative mt-5" ref={qualityMenuRef}>
+          <label
+            htmlFor="photo-edit-quality"
+            className="mb-2 block text-sm font-semibold text-slate-800"
+          >
             Quality
-          </legend>
-          <div className="grid gap-2">
-            {PHOTO_EDIT_QUALITIES.map((option) => {
-              const selected = quality === option.id;
-              return (
-                <label
-                  key={option.id}
-                  className={
-                    'flex cursor-pointer items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors ' +
-                    (selected
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-slate-200 bg-white hover:border-blue-200') +
-                    (loading ? ' cursor-not-allowed opacity-70' : '')
-                  }
-                >
-                  <input
-                    type="radio"
-                    name="photo-edit-quality"
-                    value={option.id}
-                    checked={selected}
-                    onChange={() => {
-                      setQuality(option.id);
-                      requestId.current = null;
-                      if (file) saveDraft(file, prompt, option.id);
-                    }}
-                    className="mt-1 accent-blue-600"
-                  />
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-center justify-between gap-3">
-                      <span className="text-sm font-semibold text-slate-900">
-                        {option.label}
+          </label>
+          <button
+            id="photo-edit-quality"
+            type="button"
+            disabled={loading}
+            aria-haspopup="listbox"
+            aria-expanded={qualityOpen}
+            onClick={() => setQualityOpen((open) => !open)}
+            className={cn(
+              'flex w-full items-center gap-3 rounded-xl border bg-white px-3.5 py-2.5 text-left transition-colors',
+              qualityOpen
+                ? 'border-blue-500 ring-2 ring-blue-100'
+                : 'border-slate-200 hover:border-blue-200 hover:bg-slate-50',
+              loading && 'cursor-not-allowed opacity-70'
+            )}
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-slate-900">
+                {selectedQuality.label}
+              </span>
+              <span className="mt-0.5 block truncate text-xs text-slate-500">
+                {selectedQuality.description}
+              </span>
+            </span>
+            <span className="shrink-0 rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
+              {selectedQuality.credits} credits
+            </span>
+            <ChevronDown
+              className={cn(
+                'size-4 shrink-0 text-slate-400 transition-transform',
+                qualityOpen && 'rotate-180'
+              )}
+            />
+          </button>
+          {qualityOpen && (
+            <ul
+              role="listbox"
+              aria-labelledby="photo-edit-quality"
+              className="mt-2 space-y-1 rounded-xl border border-slate-200 bg-white p-1.5 shadow-[0_12px_28px_-18px_rgba(15,23,42,.35)] ring-1 ring-slate-900/5"
+            >
+              {PHOTO_EDIT_QUALITIES.map((option) => {
+                const selected = quality === option.id;
+                return (
+                  <li key={option.id} role="option" aria-selected={selected}>
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={() => {
+                        setQuality(option.id);
+                        requestId.current = null;
+                        if (file) saveDraft(file, prompt, option.id);
+                        setQualityOpen(false);
+                      }}
+                      className={cn(
+                        'flex w-full items-start gap-2 rounded-lg px-2.5 py-2.5 text-left transition-colors',
+                        selected
+                          ? 'bg-blue-50'
+                          : 'hover:bg-slate-50 focus-visible:bg-slate-50'
+                      )}
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center justify-between gap-3">
+                          <span className="text-sm font-semibold text-slate-900">
+                            {option.label}
+                          </span>
+                          <span
+                            className={cn(
+                              'shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium',
+                              selected
+                                ? 'bg-blue-100 text-blue-700'
+                                : 'bg-slate-100 text-slate-600'
+                            )}
+                          >
+                            {option.credits} credits
+                          </span>
+                        </span>
+                        <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">
+                          {option.description}
+                        </span>
                       </span>
-                      <span className="shrink-0 text-xs font-medium text-slate-500">
-                        {option.credits} credits
-                      </span>
-                    </span>
-                    <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">
-                      {option.description}
-                    </span>
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-        </fieldset>
+                      <Check
+                        className={cn(
+                          'mt-0.5 size-4 shrink-0 text-blue-600',
+                          selected ? 'opacity-100' : 'opacity-0'
+                        )}
+                      />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
         <Button
           onClick={submit}
           disabled={loading}
