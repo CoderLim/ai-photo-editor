@@ -2,11 +2,14 @@ import { createFileRoute, redirect } from '@tanstack/react-router';
 
 import { getPhotoTool } from '@/modules/photo-editor/config';
 
-/** Keep legacy tool links working; the enhancer has its own landing page. */
+/** Keep legacy tool links working; dedicated tools have their own landing pages. */
 export const Route = createFileRoute('/tools/$slug')({
   beforeLoad: ({ params }) => {
     if (params.slug === 'enhance-photo') {
       throw redirect({ to: '/ai-photo-enhancer' });
+    }
+    if (params.slug === 'remove-background') {
+      throw redirect({ to: '/ai-background-remover' });
     }
     if (!getPhotoTool(params.slug)) {
       throw redirect({ to: '/' });

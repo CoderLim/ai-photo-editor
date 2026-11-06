@@ -62,6 +62,10 @@ export const EDIT_CREDITS = PHOTO_EDIT_QUALITIES.find(
 
 export const REPLICATE_EDIT_MODEL = 'openai/gpt-image-2.6-flare';
 export const FAL_EDIT_MODEL = 'openai/gpt-image-2.6/flare/edit';
+/** Dedicated segmentation model: real alpha-channel PNG rather than a generated backdrop. */
+export const FAL_BACKGROUND_REMOVAL_MODEL = 'fal-ai/bria/background/remove';
+/** Fixed server-side cost (model charges about $0.018 per unprompted image). */
+export const BACKGROUND_REMOVAL_CREDITS = 4;
 /** Public display name for the underlying image model (compliance / UI). */
 export const PHOTO_EDIT_MODEL_LABEL = 'GPT Image 2.6';
 
@@ -104,6 +108,22 @@ export type ToolConfig = {
 };
 
 export const PHOTO_TOOLS: ToolConfig[] = [
+  {
+    slug: 'remove-background',
+    title: 'AI Background Remover',
+    heading: 'Remove Image Backgrounds Online',
+    description:
+      'Remove the background from a portrait or product photo and download a transparent PNG cutout. No manual masking needed.',
+    category: 'Remove & Clean Up',
+    examplePrompt: 'Remove the background and preserve the original subject.',
+    limitations:
+      'Fine hair, sheer materials, reflective edges and crowded scenes can need a second pass or manual cleanup.',
+    steps: [
+      'Upload a JPG, PNG or WebP photo.',
+      'Click Remove Background to isolate the main subject.',
+      'Inspect the transparent cutout and download it as PNG.',
+    ],
+  },
   {
     slug: 'remove-object',
     title: 'AI Object Remover',

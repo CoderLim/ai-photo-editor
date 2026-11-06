@@ -38,6 +38,8 @@ const {
   DEFAULT_PHOTO_EDIT_QUALITY,
   EDIT_CREDITS,
   FAL_EDIT_MODEL,
+  FAL_BACKGROUND_REMOVAL_MODEL,
+  BACKGROUND_REMOVAL_CREDITS,
   PHOTO_EDIT_MODEL_LABEL,
   PHOTO_EDIT_QUALITIES,
   PhotoEditQualityError,
@@ -130,6 +132,8 @@ test('provider input uses GPT Image 2.6 fields, not Nano Banana resolution', () 
 
 test('fal queue keeps the four-part GPT Image edit id', () => {
   assert.equal(falQueueModel(FAL_EDIT_MODEL), FAL_EDIT_MODEL);
+  // Bria endpoint path is for submit only; status/result use owner/app.
+  assert.equal(falQueueModel(FAL_BACKGROUND_REMOVAL_MODEL), 'fal-ai/bria');
   assert.equal(
     falQueueModel('openai/gpt-image-2.6/sunburst/edit'),
     'openai/gpt-image-2.6/sunburst/edit'
@@ -154,6 +158,10 @@ test('edit API charges the server quality price and ignores client amounts', asy
     ]);
 
   assert.equal((await createPhotoProvider('fal')).model, FAL_EDIT_MODEL);
+  assert.equal(
+    (await createPhotoProvider('fal', 'remove-background')).model,
+    FAL_BACKGROUND_REMOVAL_MODEL
+  );
   assert.equal(
     (await createPhotoProvider('replicate')).model,
     REPLICATE_EDIT_MODEL
@@ -302,6 +310,41 @@ test('edit API charges the server quality price and ignores client amounts', asy
       assert.equal(task.provider, 'fal');
       assert.equal(JSON.parse(task.options || '{}').quality, quality);
     }
+
+    // Automatic background removal has a fixed price and no guided prompt.
+    const backgroundResult = await post({
+      requestId: 'request-background-0001',
+      tool: 'remove-background',
+      quality: 'max',
+      prompt: 'Pretend this costs nothing',
+      credits: 0,
+      costCredits: 0,
+    });
+    assert.equal(
+      backgroundResult.payload.code,
+      0,
+      JSON.stringify(backgroundResult.payload)
+    );
+    assert.equal(
+      backgroundResult.payload.data.credits,
+      BACKGROUND_REMOVAL_CREDITS
+    );
+    balance -= BACKGROUND_REMOVAL_CREDITS;
+    assert.equal(await getBalance(userId), balance);
+    const backgroundCall = calls.at(-1)!;
+    assert.match(backgroundCall.url, /fal-ai\/bria\/background\/remove$/);
+    assert.deepEqual(backgroundCall.body, { image_url: imageUrl });
+    const [backgroundTask] = await db()
+      .select()
+      .from(aiTask)
+      .where(eq(aiTask.id, backgroundResult.payload.data.jobId));
+    assert.equal(backgroundTask.provider, 'fal');
+    assert.equal(backgroundTask.model, FAL_BACKGROUND_REMOVAL_MODEL);
+    assert.equal(backgroundTask.costCredits, BACKGROUND_REMOVAL_CREDITS);
+    assert.equal(
+      JSON.parse(backgroundTask.options || '{}').tool,
+      'remove-background'
+    );
 
     const first = await post({
       requestId: 'request-replay-0001',

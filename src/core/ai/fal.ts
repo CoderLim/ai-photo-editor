@@ -18,7 +18,9 @@ const defaultUuid: UuidFunction = () => crypto.randomUUID();
  * fal queue application ids that are the full path, including the subpath.
  * Truncating `openai/gpt-image-2.6/flare/edit` to `openai/gpt-image-2.6`
  * polls the wrong app. Two-segment ids and legacy subpaths such as
- * `fal-ai/flux/schnell` still use the owner/app prefix.
+ * `fal-ai/flux/schnell` or `fal-ai/bria/background/remove` still use the
+ * owner/app prefix (`fal-ai/flux`, `fal-ai/bria`); polling with the endpoint
+ * path returns HTTP 405.
  * The Nano Banana id stays so edits submitted before the model switch can finish.
  */
 const FAL_FULL_QUEUE_MODELS = new Set([
@@ -203,7 +205,9 @@ export class FalProvider implements AIProvider {
         }));
       }
     } else {
-      if (data.images && Array.isArray(data.images)) {
+      if (data.image?.url) {
+        images = [{ id: '', createTime: new Date(), imageUrl: data.image.url }];
+      } else if (data.images && Array.isArray(data.images)) {
         images = data.images.map((image: any) => ({
           id: '',
           createTime: new Date(),
@@ -324,6 +328,10 @@ export class FalProvider implements AIProvider {
     }
 
     input = { ...input, ...options };
+
+    // RMBG runs pure segmentation. Supplying a prompt would switch fal to the
+    // more expensive guided-removal tier, without improving the default cutout.
+    if (model === 'fal-ai/bria/background/remove') delete input.prompt;
 
     if (options.image_input && Array.isArray(options.image_input)) {
       if (['fal-ai/kling-video/o1/video-to-video/edit'].includes(model)) {

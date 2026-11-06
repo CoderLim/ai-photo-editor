@@ -11,6 +11,7 @@ const STATIC_PATHS = [
   '/blog',
   '/tools',
   '/ai-photo-enhancer',
+  '/ai-background-remover',
   '/guest-post',
   '/privacy-policy',
   '/terms-of-service',

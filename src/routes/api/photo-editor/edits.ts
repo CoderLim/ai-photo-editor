@@ -15,6 +15,8 @@ import {
 import { getAllConfigs } from '@/modules/config/service';
 import {
   getPhotoTool,
+  BACKGROUND_REMOVAL_CREDITS,
+  DEFAULT_PHOTO_EDIT_QUALITY,
   photoEditCharge,
   PhotoEditQualityError,
 } from '@/modules/photo-editor/config';
@@ -48,10 +50,15 @@ export async function POST({ request }: { request: Request }) {
   } catch {
     return respErr('Invalid JSON');
   }
-  const prompt = typeof body.prompt === 'string' ? body.prompt.trim() : '';
+  const requestedPrompt = typeof body.prompt === 'string' ? body.prompt.trim() : '';
   const imageUrl = typeof body.imageUrl === 'string' ? body.imageUrl : '';
   const requestId = typeof body.requestId === 'string' ? body.requestId : '';
   const tool = typeof body.tool === 'string' ? body.tool : 'general';
+  const isBackgroundRemoval = tool === 'remove-background';
+  // Do not accept a user-provided prompt for automatic, unprompted segmentation.
+  const prompt = isBackgroundRemoval
+    ? 'Remove the background and preserve the original subject.'
+    : requestedPrompt;
   if (!prompt || prompt.length > 2000)
     return respErr('Prompt must be 1–2000 characters');
   if (
@@ -70,7 +77,9 @@ export async function POST({ request }: { request: Request }) {
   // provider, and price on the body are ignored so a client cannot undercharge.
   let charge: ReturnType<typeof photoEditCharge>;
   try {
-    charge = photoEditCharge(body.quality);
+    charge = isBackgroundRemoval
+      ? { quality: DEFAULT_PHOTO_EDIT_QUALITY, credits: BACKGROUND_REMOVAL_CREDITS }
+      : photoEditCharge(body.quality);
   } catch (error) {
     if (error instanceof PhotoEditQualityError) {
       return respErr(error.message, { status: 400 });
@@ -121,10 +130,13 @@ export async function POST({ request }: { request: Request }) {
       { status: 503 }
     );
   }
-  const provider = await getSelectedPhotoProvider();
+  const provider = isBackgroundRemoval ? 'fal' : await getSelectedPhotoProvider();
   let instance: Awaited<ReturnType<typeof createPhotoProvider>>;
   try {
-    instance = await createPhotoProvider(provider);
+    instance = await createPhotoProvider(
+      provider,
+      isBackgroundRemoval ? 'remove-background' : 'edit'
+    );
   } catch {
     return respErr('Image editing service is not configured', { status: 503 });
   }
@@ -163,7 +175,9 @@ export async function POST({ request }: { request: Request }) {
         mediaType: AIMediaType.IMAGE,
         model: instance.model,
         prompt,
-        options: photoModelInput(provider, imageUrl, charge.quality),
+        options: isBackgroundRemoval
+          ? { image_url: imageUrl }
+          : photoModelInput(provider, imageUrl, charge.quality),
         async: true,
       },
     });

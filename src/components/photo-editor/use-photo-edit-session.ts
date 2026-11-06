@@ -20,6 +20,8 @@ type UsePhotoEditSessionOptions = {
   toolSlug?: string;
   /** When false, restored drafts keep the fixed/built-in prompt. */
   restoreDraftPrompt?: boolean;
+  /** Override the quality-table credit charge (e.g. background removal). */
+  creditCost?: number;
 };
 
 function saveDraft(file: File, prompt: string, quality: PhotoEditQuality) {
@@ -62,6 +64,7 @@ export function usePhotoEditSession({
   fixedPrompt,
   toolSlug = 'general',
   restoreDraftPrompt = true,
+  creditCost,
 }: UsePhotoEditSessionOptions = {}) {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
@@ -251,9 +254,9 @@ export function usePhotoEditSession({
       }
 
       const credits = await dataOrThrow(await fetch('/api/credits'));
-      const cost = PHOTO_EDIT_QUALITIES.find(
-        (item) => item.id === quality
-      )!.credits;
+      const cost =
+        creditCost ??
+        PHOTO_EDIT_QUALITIES.find((item) => item.id === quality)!.credits;
       refreshHeaderCredits(credits.balance);
       if (credits.balance < cost) {
         showCreditGate(guest ? 'signup' : 'purchase');
