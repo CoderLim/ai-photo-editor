@@ -715,13 +715,17 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
                       aria-label={item.caption}
                       data-example-dot={item.id}
                       onClick={() => setExampleId(item.id)}
-                      className={cn(
-                        'h-1.5 rounded-full transition-all',
-                        current
-                          ? 'w-4 bg-blue-600'
-                          : 'w-1.5 bg-slate-300 hover:bg-slate-400'
-                      )}
-                    />
+                      className="group flex size-4 items-center justify-center"
+                    >
+                      <span
+                        className={cn(
+                          'pointer-events-none rounded-full',
+                          current
+                            ? 'h-1.5 w-4 bg-blue-600'
+                            : 'size-1.5 bg-slate-300 group-hover:bg-slate-400'
+                        )}
+                      />
+                    </button>
                   );
                 })}
               </div>
