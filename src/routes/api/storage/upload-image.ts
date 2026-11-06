@@ -5,6 +5,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { getAuth } from '@/core/auth';
 import { issueUploadToken } from '@/modules/photo-editor/upload-token';
 import { getStorage } from '@/modules/storage/service';
+import { getBalance } from '@/modules/credits/service';
 import { enforceMinIntervalRateLimit } from '@/lib/rate-limit';
 import { respData, respErr } from '@/lib/resp';
 
@@ -41,6 +42,10 @@ async function POST({ request }: { request: Request }) {
     const auth = getAuth();
     const session = await auth.api.getSession({ headers: request.headers });
     if (!session?.user) return respErr('Unauthorized');
+    // A guest without a usable trial may not fill R2 with unbillable uploads.
+    if (session.user.isAnonymous && (await getBalance(session.user.id)) <= 0) {
+      return respErr('GUEST_CREDITS_EXHAUSTED', { status: 403 });
+    }
 
     // Per account too: one user can't sidestep the IP bucket by switching networks.
     const userLimited = enforceMinIntervalRateLimit(request, {
