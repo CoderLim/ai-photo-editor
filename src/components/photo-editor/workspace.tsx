@@ -515,7 +515,7 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
             <ul
               role="listbox"
               aria-labelledby="photo-edit-quality"
-              className="mt-2 space-y-1 rounded-xl border border-slate-200 bg-white p-1.5 shadow-[0_12px_28px_-18px_rgba(15,23,42,.35)] ring-1 ring-slate-900/5"
+              className="absolute top-full left-0 z-50 mt-1.5 w-full space-y-1 rounded-xl border border-slate-200 bg-white p-1.5 shadow-[0_12px_28px_-18px_rgba(15,23,42,.35)] ring-1 ring-slate-900/5"
             >
               {PHOTO_EDIT_QUALITIES.map((option) => {
                 const selected = quality === option.id;
