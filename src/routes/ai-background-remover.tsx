@@ -20,7 +20,7 @@ import { Header } from '@/blocks/header';
 import { PhotoEditorWorkspace } from '@/components/photo-editor/workspace';
 
 const TITLE = 'AI Background Remover: Transparent PNG Online';
-const DESCRIPTION = `Remove photo backgrounds online with Bria RMBG 2.0 and download a transparent PNG. ${BACKGROUND_REMOVAL_CREDITS} credits per image. Start with 10 guest credits, no sign-up.`;
+const DESCRIPTION = `Remove photo backgrounds online and download a transparent PNG. ${BACKGROUND_REMOVAL_CREDITS} credits per image. Start with 10 guest credits, no sign-up.`;
 
 const TOOL = getPhotoTool('remove-background')!;
 
@@ -65,9 +65,9 @@ const USE_CASES = [
 const WHY_USE = [
   {
     icon: Sparkles,
-    title: 'Built on Bria RMBG 2.0',
+    title: 'A real transparent cutout',
     description:
-      'This page uses Bria RMBG 2.0, a dedicated background-removal model that returns a real transparent PNG. It is not the GPT Image 2.6 editor used for prompt-based edits elsewhere on the site.',
+      'This page returns a transparent PNG with a real alpha channel. It separates the subject from the background rather than generating a new scene. The underlying model may be updated over time.',
   },
   {
     icon: CheckCircle2,
@@ -104,9 +104,9 @@ const STEPS = [
 
 const FAQS = [
   {
-    question: 'What AI model does this background remover use?',
+    question: 'How does this background remover work?',
     answer:
-      'This page uses Bria RMBG 2.0 to separate the subject from the background and produce a transparent PNG. That is a dedicated cutout model, not GPT Image 2.6, and it does not generate a new background.',
+      'This page separates the subject from the background and produces a transparent PNG. It does not generate a new background. The underlying model may be updated over time.',
   },
   {
     question: 'Can I remove a photo background without signing up?',
@@ -173,11 +173,7 @@ const jsonLd = JSON.stringify({
       url: absoluteUrl('/ai-background-remover'),
       image: absoluteUrl('/images/ai-photo-editor/remove-background.jpg'),
       description: DESCRIPTION,
-      featureList: [
-        'Transparent PNG cutouts',
-        'Foreground segmentation',
-        'Bria RMBG 2.0 background removal',
-      ],
+      featureList: ['Transparent PNG cutouts', 'Foreground segmentation'],
       offers: {
         '@type': 'Offer',
         price: '0',
@@ -234,7 +230,7 @@ function BackgroundRemoverPage() {
             <div className="mx-auto mb-7 max-w-3xl text-center">
               <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white/90 px-3 py-1.5 text-xs font-semibold text-blue-700">
                 <Sparkles className="size-3.5" />
-                Powered by Bria RMBG 2.0
+                Transparent PNG cutouts
               </p>
               <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl lg:text-[2.75rem]">
                 AI Background Remover Online
@@ -274,9 +270,8 @@ function BackgroundRemoverPage() {
           </h2>
           <p className="mt-4 max-w-2xl leading-7 text-slate-600">
             This tool isolates the main subject and leaves a transparent
-            background. It uses Bria RMBG 2.0 for foreground segmentation, so
-            the person or product stays the original pixels rather than a newly
-            generated version.
+            background. The person or product stays the original pixels rather
+            than a newly generated version.
           </p>
           <div className="mt-9 grid gap-5 md:grid-cols-3">
             {CAPABILITIES.map((item) => {
