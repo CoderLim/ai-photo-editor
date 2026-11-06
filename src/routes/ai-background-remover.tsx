@@ -20,7 +20,7 @@ import { Header } from '@/blocks/header';
 import { PhotoEditorWorkspace } from '@/components/photo-editor/workspace';
 
 const TITLE = 'AI Background Remover: Transparent PNG Online';
-const DESCRIPTION = `Remove photo backgrounds online and download a transparent PNG. ${BACKGROUND_REMOVAL_CREDITS} credits per image. Start with 10 guest credits, no sign-up.`;
+const DESCRIPTION = `AI Background Remover: remove photo backgrounds online and download a transparent PNG. ${BACKGROUND_REMOVAL_CREDITS} credits per image. Start with 10 guest credits, no sign-up.`;
 
 const TOOL = getPhotoTool('remove-background')!;
 
