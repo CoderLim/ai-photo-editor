@@ -470,23 +470,23 @@ export function getSettings(): Setting[] {
     // ─── Users / Credits ─────────────────────────────────────────────
     {
       name: 'initial_credits_enabled',
-      title: 'Grant credits on signup',
+      title: 'Legacy signup credits (inactive)',
       type: 'switch',
       group: 'credit',
       tab: 'user',
     },
     {
       name: 'initial_credits_amount',
-      title: 'Credits amount',
+      title: 'Legacy credits amount (inactive)',
       type: 'number',
       placeholder: '20',
-      tip: 'New verified accounts receive this many welcome credits (product default: 20).',
+      tip: 'Legacy option; the photo editor now grants 10 fixed credits once per new registered account. This toggle does not change the promotion.',
       group: 'credit',
       tab: 'user',
     },
     {
       name: 'initial_credits_valid_days',
-      title: 'Valid days',
+      title: 'Legacy credit validity (inactive)',
       type: 'number',
       placeholder: '365',
       group: 'credit',
@@ -494,7 +494,7 @@ export function getSettings(): Setting[] {
     },
     {
       name: 'initial_credits_description',
-      title: 'Description',
+      title: 'Legacy credit description (inactive)',
       type: 'text',
       placeholder: 'Welcome bonus',
       group: 'credit',

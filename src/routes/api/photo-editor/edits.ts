@@ -34,7 +34,7 @@ async function sessionFor(request: Request) {
 
 export async function POST({ request }: { request: Request }) {
   const user = await sessionFor(request);
-  if (!user) return respErr('Sign in to generate an edit', { status: 401 });
+  if (!user) return respErr('AUTH_REQUIRED', { status: 401 });
   const limited = enforceMinIntervalRateLimit(request, {
     keyPrefix: 'photo-edit',
     extraKey: user.id,
@@ -142,9 +142,12 @@ export async function POST({ request }: { request: Request }) {
       options: { imageUrl, tool, quality: charge.quality },
     });
   } catch (err: any) {
-    return respErr(err?.message || 'Unable to reserve credits', {
-      status: 400,
-    });
+    if (/insufficient credits/i.test(err?.message || '')) {
+      return respErr(user.isAnonymous ? 'GUEST_CREDITS_EXHAUSTED' : 'CREDITS_INSUFFICIENT', {
+        status: user.isAnonymous ? 403 : 402,
+      });
+    }
+    return respErr(err?.message || 'Unable to reserve credits', { status: 400 });
   }
   if (task.alreadyExisted) {
     return respData({

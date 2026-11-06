@@ -1,6 +1,6 @@
 import { betterAuth, type BetterAuthOptions } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { oneTap } from 'better-auth/plugins';
+import { anonymous, oneTap } from 'better-auth/plugins';
 
 import { db } from '@/core/db';
 import { isCloudflareWorker, TCP_PROVIDERS } from '@/core/db/runtime';
@@ -11,7 +11,7 @@ import { VerifyEmail } from '@/core/email/templates/verify-email';
 import { AUTH_SECRET_PLACEHOLDER, envConfigs } from '@/config';
 import * as schema from '@/config/db/schema';
 import { getAllConfigs } from '@/modules/config/service';
-import { grantForNewUser } from '@/modules/credits/service';
+import { grantSignupBonus, linkAnonymousCredits } from '@/modules/guest-credits/service';
 import { grantRoleForNewUser } from '@/modules/rbac/service';
 import {
   getClientIpFromCtx,
@@ -156,9 +156,19 @@ function isEmailConfigured(configs: Record<string, string>): boolean {
 }
 
 function getAuthPlugins(configs: Record<string, string> | undefined) {
-  if (!configs) return [];
-  const plugins: any[] = [];
-  if (configs.google_client_id && configs.google_one_tap_enabled === 'true') {
+  const plugins: any[] = [
+    anonymous({
+      // Preserve the guest record to avoid cascading FK deletes.
+      disableDeleteAnonymousUser: true,
+      onLinkAccount: async ({ anonymousUser, newUser }: any) => {
+        const guestId = anonymousUser?.user?.id || anonymousUser?.id;
+        const targetId = newUser?.user?.id || newUser?.id;
+        if (!guestId || !targetId) throw new Error('Invalid anonymous link');
+        await linkAnonymousCredits(guestId, targetId);
+      },
+    }),
+  ];
+  if (configs?.google_client_id && configs.google_one_tap_enabled === 'true') {
     plugins.push(oneTap());
   }
   return plugins;
@@ -356,6 +366,8 @@ export function getAuth(configs?: Record<string, string>) {
               return null;
             });
             if (!all) return;
+            // A guest user is not a registered account.
+            if (createdUser.isAnonymous === true) return;
 
             try {
               await grantRoleForNewUser({
@@ -367,10 +379,9 @@ export function getAuth(configs?: Record<string, string>) {
             }
 
             try {
-              await grantForNewUser({
+              await grantSignupBonus({
                 userId: createdUser.id,
                 userEmail: createdUser.email,
-                configs: all,
               });
             } catch (error) {
               console.error('[auth] grant signup credits failed', error);

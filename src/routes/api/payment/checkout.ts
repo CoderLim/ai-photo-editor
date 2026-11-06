@@ -36,7 +36,7 @@ async function POST({ request }: { request: Request }) {
     const auth = getAuth();
     const session = await auth.api.getSession({ headers: request.headers });
 
-    if (!session?.user) {
+    if (!session?.user || session.user.isAnonymous) {
       return respErr('Unauthorized');
     }
 

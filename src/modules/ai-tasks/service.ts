@@ -2,7 +2,7 @@ import { and, desc, eq, inArray, isNull } from 'drizzle-orm';
 
 import { db } from '@/core/db';
 import { atomic, AtomicGuardError, guard } from '@/core/db/atomic';
-import { aiTask } from '@/config/db/schema';
+import { aiTask, user } from '@/config/db/schema';
 import { planConsume, revoke } from '@/modules/credits/service';
 import { getUuid } from '@/lib/hash';
 
@@ -69,6 +69,9 @@ export async function createTask(params: {
 
     try {
       await atomic((q) => [
+        // Avoid a guest submission racing a concurrent account migration.
+        guard({ table: user, column: 'id', where: eq(user.id, userId),
+          require: isNull(user.linkedUserId), message: 'Account is linking' }),
         q.insert(aiTask).values(taskData),
         ...(plan ? plan.steps(q) : []),
       ]);

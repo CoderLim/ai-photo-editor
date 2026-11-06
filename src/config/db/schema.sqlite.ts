@@ -24,6 +24,9 @@ export const user = table(
       .default(false)
       .notNull(),
     image: text('image'),
+    isAnonymous: integer('is_anonymous', { mode: 'boolean' }).notNull().default(false),
+    // Set before migrating guest credits/tasks; rejects late anonymous submissions.
+    linkedUserId: text('linked_user_id'),
     createdAt: integer('created_at', { mode: 'timestamp_ms' })
       .default(sqliteNowMs)
       .notNull(),
@@ -323,6 +326,22 @@ export const subscription = table(
     index('idx_subscription_created_at').on(table.createdAt),
   ]
 );
+
+/** Idempotency ledger for free grants and one guest→account migration. */
+export const freeCreditClaim = table('free_credit_claim', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  kind: text('kind').notNull(),
+  sourceGuestId: text('source_guest_id'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sqliteNowMs),
+});
+
+/** Persistent two-timestamp sliding 24-hour IP allowance, not a per-isolate Map. */
+export const guestTrialIpQuota = table('guest_trial_ip_quota', {
+  id: text('id').primaryKey(), // HMAC-SHA256 hex of the trusted public IP
+  latestAt: integer('latest_at', { mode: 'timestamp_ms' }),
+  previousAt: integer('previous_at', { mode: 'timestamp_ms' }),
+});
 
 export const credit = table(
   'credit',

@@ -69,7 +69,7 @@ function SignInPage() {
   // Already signed in → return to the callback destination (or home).
   useEffect(() => {
     if (sessionPending || navigatingRef.current) return;
-    if (session?.user) {
+    if (session?.user && !session.user.isAnonymous) {
       navigatingRef.current = true;
       const params = new URLSearchParams(window.location.search);
       const dest = resolveAfterAuthUrl({

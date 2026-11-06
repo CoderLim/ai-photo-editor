@@ -30,7 +30,7 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [logoFailed, setLogoFailed] = useState(false);
   const { data: session } = useSession();
-  const user = session?.user;
+  const user = session?.user?.isAnonymous ? null : session?.user;
   const logo = envConfigs.app_logo;
   const showLogo = !!logo && !logoFailed;
 

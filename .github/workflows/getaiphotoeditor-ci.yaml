@@ -34,3 +34,5 @@ jobs:
         run: pnpm test:waffo
       - name: Test photo edit credits
         run: pnpm test:photo-edit
+      - name: Test anonymous trial and migration
+        run: pnpm test:guest-credits

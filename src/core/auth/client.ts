@@ -1,4 +1,4 @@
-import { oneTapClient } from 'better-auth/client/plugins';
+import { anonymousClient, oneTapClient } from 'better-auth/client/plugins';
 import { createAuthClient } from 'better-auth/react';
 
 const baseURL =
@@ -6,7 +6,7 @@ const baseURL =
     ? window.location.origin
     : import.meta.env?.VITE_APP_URL || 'http://localhost:3000';
 
-export const authClient = createAuthClient({ baseURL });
+export const authClient = createAuthClient({ baseURL, plugins: [anonymousClient()] });
 
 export const {
   signIn,
@@ -26,6 +26,7 @@ export function getAuthClient(configs: Record<string, string>) {
     plugins:
       configs.google_client_id && configs.google_one_tap_enabled === 'true'
         ? [
+            anonymousClient(),
             oneTapClient({
               clientId: configs.google_client_id,
               autoSelect: false,
@@ -37,6 +38,6 @@ export function getAuthClient(configs: Record<string, string>) {
               },
             }),
           ]
-        : [],
+        : [anonymousClient()],
   });
 }
