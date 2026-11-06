@@ -13,7 +13,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { useSession } from '@/core/auth/client';
+import { authClient, useSession } from '@/core/auth/client';
+import { CreditGateDialog, type CreditGate } from '@/components/photo-editor/credit-gate-dialog';
 import {
   DEFAULT_PHOTO_EDIT_QUALITY,
   isPhotoEditQuality,
@@ -96,6 +97,8 @@ async function dataOrThrow(response: Response) {
 }
 export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
   const { data: session } = useSession();
+  const [creditGate, setCreditGate] = useState<CreditGate>(null);
+  const [creditBalance, setCreditBalance] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const previewRef = useRef<string | null>(null);
   const requestId = useRef<string | null>(null);
@@ -120,6 +123,17 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
   const [exampleId, setExampleId] = useState<ExampleId>('change-background');
   const [examplePaused, setExamplePaused] = useState(false);
   const qualityMenuRef = useRef<HTMLDivElement | null>(null);
+  const showCreditGate = (mode: CreditGate) => {
+    if (file) saveDraft(file, prompt, quality);
+    setCreditGate(mode);
+  };
+  useEffect(() => {
+    let canceled = false;
+    fetch('/api/credits').then(dataOrThrow)
+      .then((data) => { if (!canceled) setCreditBalance(data.balance); })
+      .catch(() => undefined);
+    return () => { canceled = true; };
+  }, [session?.user?.id]);
   const example =
     QUICK_PROMPTS.find((item) => item.id === exampleId) ?? QUICK_PROMPTS[0];
 
@@ -260,32 +274,47 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
   const submit = async () => {
     if (!preview) return toast.error('Upload a photo first.');
     if (!prompt.trim()) return toast.error('Describe your edit first.');
-    if (!session?.user) {
-      if (file) saveDraft(file, prompt, quality);
-      toast.message('Sign in to generate — new accounts get free credits.');
-      window.setTimeout(() => {
-        window.location.href =
-          '/sign-in?callbackUrl=' +
-          encodeURIComponent(
-            window.location.pathname +
-              window.location.search +
-              window.location.hash
-          );
-      }, 600);
-      return;
-    }
     setStatus('submitting');
+    let guest = Boolean(session?.user?.isAnonymous);
     try {
+      // No signup wall: create a guest session only for a real generation.
+      if (!session?.user) {
+        const anonymous = await authClient.signIn.anonymous();
+        if (anonymous.error) {
+          showCreditGate('signup');
+          setStatus('idle');
+          return;
+        }
+        guest = true;
+      }
+      if (guest) {
+        // The anonymous session alone does not grant money. IP checks and
+        // account-level idempotency happen in the server claim transaction.
+        const response = await fetch('/api/guest/trial', { method: 'POST' });
+        if (!response.ok) {
+          showCreditGate('signup');
+          setStatus('idle');
+          return;
+        }
+        await dataOrThrow(response);
+      }
+
+      const credits = await dataOrThrow(await fetch('/api/credits'));
+      const cost = PHOTO_EDIT_QUALITIES.find((item) => item.id === quality)!.credits;
+      setCreditBalance(credits.balance);
+      if (credits.balance < cost) {
+        showCreditGate(guest ? 'signup' : 'purchase');
+        setStatus('idle');
+        return;
+      }
+
       let imageUrl = upload?.url || preview;
       let uploadToken = upload?.token || '';
       if (file && !upload) {
         const data = new FormData();
         data.append('files', file);
         const stored = await dataOrThrow(
-          await fetch('/api/storage/upload-image', {
-            method: 'POST',
-            body: data,
-          })
+          await fetch('/api/storage/upload-image', { method: 'POST', body: data })
         );
         const first = stored.results?.[0];
         if (!first?.url || !first?.token)
@@ -294,6 +323,7 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
         uploadToken = first.token;
         setUpload({ url: imageUrl, token: uploadToken });
       }
+
       if (!requestId.current)
         requestId.current = crypto.randomUUID().replaceAll('-', '');
       const created = await dataOrThrow(
@@ -301,30 +331,24 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            imageUrl,
-            uploadToken,
-            sourceJobId,
-            prompt,
-            tool: tool?.slug || 'general',
-            quality,
-            requestId: requestId.current,
+            imageUrl, uploadToken, sourceJobId, prompt,
+            tool: tool?.slug || 'general', quality, requestId: requestId.current,
           }),
         })
       );
+      setCreditBalance(Math.max(0, credits.balance - cost));
       setJobId(created.jobId);
       setStatus('pending');
     } catch (err: any) {
       setStatus('idle');
       const message = err?.message || 'Unable to start editing';
-      if (/insufficient credits/i.test(message)) {
-        toast.error('Not enough credits to generate an edit.', {
-          action: {
-            label: 'Get credits',
-            onClick: () => {
-              window.location.href = '/pricing';
-            },
-          },
-        });
+      if (message === 'GUEST_CREDITS_EXHAUSTED' || message === 'GUEST_TRIAL_RATE_LIMITED' ||
+          message === 'GUEST_TRIAL_DISABLED') {
+        showCreditGate('signup');
+        return;
+      }
+      if (message === 'CREDITS_INSUFFICIENT' || /insufficient credits/i.test(message)) {
+        showCreditGate(guest ? 'signup' : 'purchase');
         return;
       }
       toast.error(message);
@@ -349,6 +373,7 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
     (item) => item.id === quality
   )!;
   return (
+    <>
     <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-stretch">
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_16px_40px_-28px_rgba(15,23,42,.4)] sm:p-5">
         <div className="mb-3.5">
@@ -424,8 +449,7 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
                   Click to upload or drag your image here
                 </p>
                 <p className="mt-1 text-xs text-slate-500">
-                  Your photo stays in your browser until you sign in and
-                  generate.
+                  Your photo stays in your browser until you generate.
                 </p>
               </>
             )}
@@ -595,6 +619,11 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
           )}
         </Button>
         <p className="mt-2 text-center text-xs leading-relaxed text-slate-500">
+          {creditBalance === null && !session?.user
+            ? 'Try AI editing with 10 free credits · '
+            : creditBalance !== null
+              ? String(creditBalance) + ' credits available · '
+              : ''}
           Model: {PHOTO_EDIT_MODEL_LABEL} · {selectedQuality.label} · original
           aspect ratio
         </p>
@@ -756,5 +785,7 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
         </div>
       </div>
     </div>
+    <CreditGateDialog mode={creditGate} onClose={() => setCreditGate(null)} />
+    </>
   );
 }
