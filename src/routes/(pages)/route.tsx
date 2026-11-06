@@ -22,7 +22,7 @@ function PagesLayout() {
           {m['common.pages.back_to_home']()}
         </Link>
       </div>
-      <div className="mx-auto max-w-3xl px-6 pt-6 pb-12 md:px-8 md:pt-8 md:pb-16">
+      <div className="mx-auto max-w-3xl min-w-0 px-6 pt-6 pb-12 md:px-8 md:pt-8 md:pb-16">
         <MDXProvider components={mdxComponents}>
           <Outlet />
         </MDXProvider>
