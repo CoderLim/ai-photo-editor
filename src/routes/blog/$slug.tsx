@@ -224,7 +224,7 @@ function BlogPostPage() {
     : null;
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f7f9fc] text-slate-900">
+    <div className="force-light flex min-h-screen flex-col bg-[#f7f9fc] text-slate-900">
       <Header />
       <main className="flex-1 px-6 py-12 md:px-8 md:py-16">
         {post.preview && (

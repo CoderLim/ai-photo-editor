@@ -132,6 +132,30 @@
   }
 }
 
+/* Marketing shells that hard-code a light page background (e.g. blog) still
+   inherit .dark tokens from <html>. Reset semantic colors here so MDX /
+   markdown body text (text-foreground) stays readable. */
+.force-light {
+  color-scheme: light;
+  --background: oklch(0.977 0.004 75);
+  --foreground: oklch(0.275 0.007 60);
+  --card: oklch(0.988 0.003 75);
+  --card-foreground: oklch(0.275 0.007 60);
+  --popover: oklch(0.988 0.003 75);
+  --popover-foreground: oklch(0.275 0.007 60);
+  --primary: oklch(0.22 0.005 60);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.948 0.006 75);
+  --secondary-foreground: oklch(0.275 0.007 60);
+  --muted: oklch(0.948 0.006 75);
+  --muted-foreground: oklch(0.5 0.005 60);
+  --accent: oklch(0.948 0.006 75);
+  --accent-foreground: oklch(0.275 0.007 60);
+  --border: oklch(0.908 0.005 75);
+  --input: oklch(0.908 0.005 75);
+  --ring: oklch(0.708 0 0);
+}
+
 /* Color themes — see src/config/appearance.ts. Each theme sets three brand
    tokens per mode plus a tint (hue + base chroma); the shared blocks below
    derive primary, the solid sidebar and the tinted neutrals (background,

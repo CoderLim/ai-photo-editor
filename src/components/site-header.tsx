@@ -37,21 +37,21 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200/70 bg-white/85 backdrop-blur-md">
-      <div className="relative mx-auto flex h-14 max-w-[1320px] items-center justify-between px-4 sm:px-6">
+      <div className="relative mx-auto flex h-16 max-w-[1320px] items-center justify-between px-4 sm:px-6">
         {/* Brand */}
         <Link href="/" className="relative z-10 flex items-center">
-          <span className="inline-flex items-center gap-2.5 text-sm font-semibold tracking-tight text-slate-900">
+          <span className="inline-flex items-center gap-2.5 text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
             {showLogo ? (
               <img
                 src={logo}
                 alt=""
-                width={28}
-                height={28}
-                className="size-7 rounded-[7px] object-cover"
+                width={36}
+                height={36}
+                className="size-9 rounded-[8px] object-cover"
                 onError={() => setLogoFailed(true)}
               />
             ) : (
-              <span className="inline-flex size-7 items-center justify-center rounded-lg bg-blue-600 text-[11px] font-bold text-white">
+              <span className="inline-flex size-9 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white">
                 {(envConfigs.app_name || 'A').charAt(0)}
               </span>
             )}

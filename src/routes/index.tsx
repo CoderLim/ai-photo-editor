@@ -9,7 +9,7 @@ import {
 
 import { Link } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
-import { PHOTO_TOOLS } from '@/modules/photo-editor/config';
+import { EDIT_CREDITS, PHOTO_TOOLS } from '@/modules/photo-editor/config';
 import { pageHead } from '@/lib/seo';
 import { Footer } from '@/blocks/footer';
 import { Header } from '@/blocks/header';
@@ -19,7 +19,7 @@ import { PhotoEditorWorkspace } from '@/components/photo-editor/workspace';
 const FAQS = [
   [
     'Is this AI photo editor really free?',
-    'Yes to start. You get 10 free credits without signing in (enough for one standard 1K edit). Sign in and you get 10 more. Each standard 1K edit uses 10 credits; one-time credit packs are available when you need more.',
+    `Yes to start. You get 10 free credits without signing in (enough for one medium-quality edit). Sign in and you get 10 more. A medium-quality edit uses ${EDIT_CREDITS} credits; other qualities use more or fewer. One-time credit packs are available when you need more.`,
   ],
   [
     'Can I use it without signing up?',
@@ -39,7 +39,7 @@ const FAQS = [
   ],
   [
     'What is the best resolution to upload?',
-    'Choose a clear, well-lit JPG, PNG or WebP image up to 10 MB. Standard edits generate a 1K output, which may not preserve your upload’s original resolution.',
+    'Choose a clear, well-lit JPG, PNG or WebP image up to 10 MB. Edits keep the original aspect ratio. Detail depends on the quality you pick, and the result may not match your upload’s original resolution.',
   ],
 ] as const;
 
@@ -67,8 +67,7 @@ const structuredDataJsonLd = JSON.stringify({
         '@type': 'Offer',
         price: '0',
         priceCurrency: 'USD',
-        description:
-          '10 free credits without signing in; 10 more after sign-in. Each 1K edit uses 10 credits',
+        description: `10 free credits without signing in; 10 more after sign-in. A medium-quality edit uses ${EDIT_CREDITS} credits; credits vary by quality`,
       },
     },
     {
@@ -142,7 +141,7 @@ function HomePage() {
     <div className="min-h-screen bg-[#f7f9fc] text-slate-900">
       <Header />
       <main>
-        <section className="relative overflow-hidden border-b border-slate-100 bg-gradient-to-b from-[#f1f6ff] via-[#f9fbff] to-[#f7f9fc] px-4 pt-10 pb-12 sm:px-6 sm:pt-14 sm:pb-14">
+        <section className="relative overflow-x-clip border-b border-slate-100 bg-gradient-to-b from-[#f1f6ff] via-[#f9fbff] to-[#f7f9fc] px-4 pt-10 pb-12 sm:px-6 sm:pt-14 sm:pb-14">
           <div className="mx-auto max-w-[1320px]">
             <div className="mb-5 text-center sm:mb-6">
               <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white/80 px-4 py-1.5 text-xs font-semibold tracking-[0.15em] text-blue-600 uppercase">
@@ -192,8 +191,8 @@ function HomePage() {
               needed on iPhone, Android, Mac, or Windows.
             </p>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-500">
-              Start with 10 free guest credits (one standard 1K edit). Sign in
-              for 10 more. Upload limit is 10 MB. Review faces and details
+              Start with 10 free guest credits (one medium-quality edit). Sign
+              in for 10 more. Upload limit is 10 MB. Review faces and details
               before using generated photos.
             </p>
           </div>
@@ -255,7 +254,7 @@ function HomePage() {
                 [
                   '03',
                   'Generate and download',
-                  'Generate a 1K edit with your free credits, inspect the result, then download or refine it. Sign in for 10 more credits and My Creations.',
+                  `Generate an edit with your free credits, inspect the result, then download or refine it. A medium-quality edit uses ${EDIT_CREDITS} credits. Sign in for 10 more credits and My Creations.`,
                 ],
               ].map(([number, title, description]) => (
                 <div
@@ -312,8 +311,8 @@ function HomePage() {
                 </h3>
                 <p className="mt-3 text-sm leading-7 text-slate-600">
                   Describe a change instead of learning selections and masks. No
-                  installation; standard results are generated at 1K and may
-                  vary.
+                  installation. Detail follows the quality you pick, and results
+                  may vary.
                 </p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-7">
@@ -371,8 +370,9 @@ function HomePage() {
                   More AI Photo Tools
                 </h2>
                 <p className="mt-3 max-w-xl text-slate-500">
-                  Open a task-focused editor. Start with free credits; each
-                  standard 1K edit uses 10 credits.
+                  Open a task-focused editor. Start with free credits. A
+                  medium-quality edit uses {EDIT_CREDITS} credits; other
+                  qualities cost more or less.
                 </p>
               </div>
               <Link
