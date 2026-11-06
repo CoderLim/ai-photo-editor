@@ -38,7 +38,7 @@ function BlogPage() {
   const { locale, posts, guestPostsOpen } = Route.useLoaderData();
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f7f9fc] text-slate-900">
+    <div className="force-light flex min-h-screen flex-col bg-[#f7f9fc] text-slate-900">
       <Header />
       <main className="flex-1 px-4 py-16 sm:py-24">
         <div className="mx-auto max-w-5xl">
