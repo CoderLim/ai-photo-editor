@@ -15,6 +15,7 @@ import { Footer } from '@/blocks/footer';
 import { Header } from '@/blocks/header';
 import { Pricing } from '@/blocks/pricing';
 import { PhotoEditorWorkspace } from '@/components/photo-editor/workspace';
+import { CoreBenefits } from '@/components/photo-editor/core-benefits';
 
 const FAQS = [
   [
@@ -172,27 +173,7 @@ function HomePage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <div className="rounded-2xl border border-slate-200 bg-white p-8 sm:p-10">
-            <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
-              No app to install
-            </p>
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              Edit Photos With AI Right in Your Browser
-            </h2>
-            <p className="mt-4 max-w-3xl leading-8 text-slate-600">
-              Choose a JPG, PNG or WebP photo and describe your edit in everyday
-              language — remove backgrounds, retouch portraits, enhance blurry
-              shots, erase objects, or swap skies. No Photoshop or desktop app
-              needed on iPhone, Android, Mac, or Windows.
-            </p>
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-500">
-              Start with 10 free guest credits (one medium-quality edit). Sign
-              in for 10 more. Upload limit is 10 MB. Review faces and details
-              before using generated photos.
-            </p>
-          </div>
-        </section>
+        <CoreBenefits />
         <section id="features" className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
           <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
             AI photo editing features
@@ -288,39 +269,6 @@ function HomePage() {
                 </p>
               </article>
             ))}
-          </div>
-        </section>
-        <section className="border-y border-slate-200 bg-white px-4 py-20 sm:px-6">
-          <div className="mx-auto max-w-6xl">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              AI Photo Editor vs Desktop Software
-            </h2>
-            <p className="mt-4 max-w-3xl leading-7 text-slate-600">
-              For quick retouching and creative changes, browser-based AI
-              editing can be simpler than learning Photoshop. Desktop software
-              still offers greater manual precision.
-            </p>
-            <div className="mt-8 grid gap-5 md:grid-cols-2">
-              <div className="rounded-2xl border border-blue-100 bg-blue-50 p-7">
-                <h3 className="text-lg font-semibold">
-                  Browser-based AI photo editing
-                </h3>
-                <p className="mt-3 text-sm leading-7 text-slate-600">
-                  Describe a change instead of learning selections and masks. No
-                  installation. Detail follows the quality you pick, and results
-                  may vary.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-7">
-                <h3 className="text-lg font-semibold">
-                  Traditional desktop editing
-                </h3>
-                <p className="mt-3 text-sm leading-7 text-slate-600">
-                  Work with layers, precise masks, and pixel-level adjustments
-                  for highly controlled edits and repeatable exports.
-                </p>
-              </div>
-            </div>
           </div>
         </section>
         <Pricing />
