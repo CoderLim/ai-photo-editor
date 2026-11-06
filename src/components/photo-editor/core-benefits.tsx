@@ -13,8 +13,6 @@ type Benefit = {
   title: string;
   description: string;
   image: string;
-  beforeImage?: string;
-  afterImage?: string;
   beforeAlt: string;
   afterAlt: string;
   icon: LucideIcon;
@@ -27,11 +25,9 @@ const BENEFITS: Benefit[] = [
     title: 'Change What You Want, Keep What Matters',
     description:
       "Change the background or other details while keeping the main subject's shape, colors, and defining features as close to the original as possible.",
-    image: '/images/ai-photo-editor/core-benefits/product-background.jpg',
-    beforeImage: '/images/ai-photo-editor/core-benefits/product-before.jpg',
-    afterImage: '/images/ai-photo-editor/core-benefits/product-after.jpg',
-    beforeAlt: 'Original photo before a targeted background change',
-    afterAlt: 'Edited background with the main subject preserved',
+    image: '/images/ai-photo-editor/core-benefits/handbag-background-compare.jpg',
+    beforeAlt: 'Handbag on a wooden table in a home setting, before changing the background',
+    afterAlt: 'Same beige handbag against a clean studio background',
     icon: Layers3,
   },
   {
@@ -39,10 +35,10 @@ const BENEFITS: Benefit[] = [
     category: 'PRECISION EDITING',
     title: 'Edit Small Details, Not the Whole Photo',
     description:
-      'Remove distractions, smooth clothing wrinkles, or adjust specific details without unnecessarily changing everything else.',
-    image: '/images/ai-photo-editor/remove-clothing-wrinkles.jpg',
-    beforeAlt: 'Clothing with visible wrinkles before AI editing',
-    afterAlt: 'Clothing with wrinkles reduced while retaining its overall look',
+      'Fix scuffs, smooth wrinkles, or adjust specific details without unnecessarily changing everything else.',
+    image: '/images/ai-photo-editor/core-benefits/shoe-repair-compare.jpg',
+    beforeAlt: 'Leather sneaker with visible scuff marks on the toe',
+    afterAlt: 'Same leather sneaker with the scuff marks cleaned up',
     icon: ScanLine,
   },
   {
@@ -51,9 +47,9 @@ const BENEFITS: Benefit[] = [
     title: 'Just Describe It, AI Handles the Rest',
     description:
       'Skip complicated selections and layers. Simply describe the change in everyday language and see the edit take shape.',
-    image: '/images/ai-photo-editor/remove-object.jpg',
-    beforeAlt: 'Outdoor photo before removing an unwanted object',
-    afterAlt: 'Outdoor photo with the unwanted object removed',
+    image: '/images/ai-photo-editor/core-benefits/balcony-cleanup-compare.jpg',
+    beforeAlt: 'Balcony with a bucket, mop and cleaning supplies',
+    afterAlt: 'Same balcony after unwanted cleaning supplies were removed',
     icon: MessageSquareText,
   },
   {
@@ -62,9 +58,9 @@ const BENEFITS: Benefit[] = [
     title: 'Give Your Photos a Whole New Look',
     description:
       'Explore new backgrounds, lighting, colors, and styles while keeping your original subject recognizable.',
-    image: '/images/ai-photo-editor/restyle-photo.jpg',
-    beforeAlt: 'Original photo before a cinematic restyle',
-    afterAlt: 'Photo after a cinematic style and lighting change',
+    image: '/images/ai-photo-editor/core-benefits/cafe-golden-hour-compare.jpg',
+    beforeAlt: 'Cafe storefront in soft overcast daylight',
+    afterAlt: 'Same cafe storefront with warm golden-hour lighting',
     icon: WandSparkles,
   },
   {
@@ -72,10 +68,10 @@ const BENEFITS: Benefit[] = [
     category: 'ITERATIVE EDITING',
     title: 'Refine Your Edits, Step by Step',
     description:
-      'Make another change to a generated result. Fine-tune details and build on previous edits without re-uploading the original.',
-    image: '/images/ai-photo-editor/portrait-retouch.jpg',
-    beforeAlt: 'Portrait before an AI retouching pass',
-    afterAlt: 'Portrait after a refined retouching pass',
+      'Keep improving your result with follow-up edits, from cleanup to lighting and finishing touches.',
+    image: '/images/ai-photo-editor/core-benefits/home-office-refresh-compare.jpg',
+    beforeAlt: 'Cluttered home office before editing and refining details',
+    afterAlt: 'Same home office tidied up with warmer lighting and refined styling',
     icon: RefreshCcw,
   },
 ];
@@ -89,27 +85,21 @@ function ComparisonPanel({
   image,
   side,
   alt,
-  separate = false,
 }: {
   image: string;
   side: 'before' | 'after';
   alt: string;
-  separate?: boolean;
 }) {
   return (
-    <div className="relative aspect-[5/4] min-w-0 overflow-hidden rounded-xl bg-slate-100">
+    <div className="relative aspect-[3/4] min-w-0 overflow-hidden rounded-xl bg-slate-100">
       <img
         src={image}
         alt={alt}
         loading="lazy"
         decoding="async"
-        width={1672}
-        height={941}
-        className={
-          separate
-            ? 'h-full w-full object-cover'
-            : `absolute top-0 h-full w-[200%] max-w-none object-cover ${side === 'before' ? 'left-0 object-left' : 'right-0 object-right'}`
-        }
+        width={1448}
+        height={1086}
+        className={`absolute top-0 h-full w-[200%] max-w-none object-cover ${side === 'before' ? 'left-0 object-left' : 'right-0 object-right'}`}
       />
       <span
         className={`absolute bottom-2 left-2 rounded-full px-3 py-1 text-xs font-semibold text-white shadow-sm ${side === 'before' ? 'bg-slate-900/70' : 'bg-blue-600'}`}
@@ -145,14 +135,12 @@ export function CoreBenefits() {
           const picture = (
             <div className="grid min-w-0 grid-cols-2 gap-2.5 sm:gap-3">
               <ComparisonPanel
-                image={benefit.beforeImage ?? benefit.image}
-                separate={!!benefit.beforeImage}
+                image={benefit.image}
                 side="before"
                 alt={benefit.beforeAlt}
               />
               <ComparisonPanel
-                image={benefit.afterImage ?? benefit.image}
-                separate={!!benefit.afterImage}
+                image={benefit.image}
                 side="after"
                 alt={benefit.afterAlt}
               />
