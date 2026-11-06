@@ -14,6 +14,14 @@ async function POST({ request }: { request: Request }) {
     const session = await getAuth().api.getSession({ headers: request.headers });
     if (!session?.user?.isAnonymous)
       return respErr('AUTH_REQUIRED', { status: 401 });
+    // Independent second throttle: guest identity, not only the public IP.
+    // This complements (never replaces) the IP limit above and DB quota.
+    const userLimited = enforceMinIntervalRateLimit(request, {
+      keyPrefix: 'guest-credit-claim-user',
+      extraKey: session.user.id,
+      intervalMs: 1200,
+    });
+    if (userLimited) return userLimited;
     const { granted } = await claimGuestTrial({
       request, userId: session.user.id, userEmail: session.user.email,
     });
