@@ -35,12 +35,24 @@ const FAQS = [
     'Before generation, your selected photo stays in your browser. When you generate, it is uploaded for processing and the result is stored so you can access My Creations after signing in. We do not promise automatic deletion; see the Privacy Policy for data-handling information.',
   ],
   [
-    'How is AI photo editing different from Photoshop?',
-    'AI editing lets you describe changes in words instead of manually handling masks and layers. It is convenient for quick creative edits, while traditional desktop tools provide more exact control. Always inspect generated details.',
+    'Are my uploaded photos private and secure?',
+    'Before you generate, your selected photo stays in your browser. When you generate, it is sent securely for processing so we can return your edit. We use encryption in transit and access controls; see the Privacy Policy for details.',
   ],
   [
-    'What is the best resolution to upload?',
-    'Choose a clear, well-lit JPG, PNG or WebP image up to 10 MB. Edits keep the original aspect ratio. Detail depends on the quality you pick, and the result may not match your upload’s original resolution.',
+    'How long do you store my photos?',
+    'After generation, uploads and results are stored so signed-in users can reopen them in My Creations. We do not promise automatic deletion after a fixed period. Contact us if you want data removed sooner.',
+  ],
+  [
+    'Are my photos used to train AI models?',
+    'No. We use your photos only to generate the edits you request. We do not use your uploads or results to train AI models.',
+  ],
+  [
+    'Can I delete my uploaded and generated photos?',
+    'Yes. You can request deletion of your personal data, including uploaded and generated photos, through your account settings or by emailing support@getaiphotoeditor.com.',
+  ],
+  [
+    'Will my credits be refunded if generation fails?',
+    'Yes. If an edit fails or is canceled, the credits used for that job are restored to your balance automatically.',
   ],
 ] as const;
 
