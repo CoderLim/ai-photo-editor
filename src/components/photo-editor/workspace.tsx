@@ -135,7 +135,9 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
   const [showOriginal, setShowOriginal] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [qualityOpen, setQualityOpen] = useState(false);
-  const [exampleId, setExampleId] = useState<ExampleId>('change-background');
+  const [exampleId, setExampleId] = useState<ExampleId>(
+    tool?.slug === 'enhance-photo' ? 'enhance-photo' : 'change-background'
+  );
   const [examplePaused, setExamplePaused] = useState(false);
   const qualityMenuRef = useRef<HTMLDivElement | null>(null);
   const showCreditGate = (mode: CreditGate) => {
@@ -192,7 +194,7 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
   }, []);
 
   useEffect(() => {
-    if (preview || examplePaused) return;
+    if (preview || examplePaused || tool) return;
     const timer = window.setInterval(() => {
       setExampleId((current) => {
         const index = QUICK_PROMPTS.findIndex((item) => item.id === current);
@@ -200,7 +202,7 @@ export function PhotoEditorWorkspace({ tool }: { tool?: ToolConfig }) {
       });
     }, 4000);
     return () => window.clearInterval(timer);
-  }, [preview, examplePaused, exampleId]);
+  }, [preview, examplePaused, exampleId, tool]);
 
   useEffect(() => {
     if (!qualityOpen) return;
