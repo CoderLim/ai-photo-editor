@@ -25,7 +25,7 @@ const BENEFITS: Benefit[] = [
     title: 'Change What You Want, Keep What Matters',
     description:
       "Change the background or other details while keeping the main subject's shape, colors, and defining features as close to the original as possible.",
-    image: '/images/ai-photo-editor/remove-background.jpg',
+    image: '/images/ai-photo-editor/core-benefits/product-background.jpg',
     beforeAlt: 'Original photo before a targeted background change',
     afterAlt: 'Edited background with the main subject preserved',
     icon: Layers3,
@@ -77,7 +77,7 @@ const BENEFITS: Benefit[] = [
 ];
 
 /**
- * Existing feature imagery contains two side-by-side scenes in one image.
+ * Feature imagery contains two side-by-side scenes in one image.
  * Render its left and right halves as separate, responsive panels.
  * Each photo is a visual example, not a pixel-perfect preservation guarantee.
  */
