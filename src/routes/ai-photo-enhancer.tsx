@@ -208,10 +208,6 @@ function PhotoEnhancerPage() {
         <section className="border-b border-slate-200 bg-gradient-to-b from-[#edf4ff] via-[#f8fbff] to-[#f7f9fc] px-4 pt-9 pb-12 sm:px-6 sm:pt-12">
           <div className="mx-auto max-w-[1320px]">
             <div className="mx-auto mb-7 max-w-3xl text-center">
-              <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white/90 px-3 py-1.5 text-xs font-semibold text-blue-700">
-                <Sparkles className="size-3.5" />
-                Prompt-based photo enhancement
-              </p>
               <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl lg:text-[2.75rem]">
                 AI Photo Enhancer Online
               </h1>
