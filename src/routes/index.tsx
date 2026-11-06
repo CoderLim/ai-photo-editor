@@ -95,30 +95,40 @@ const structuredDataJsonLd = JSON.stringify({
 });
 
 const FEATURES = [
-  [
-    'Remove and Replace Backgrounds',
-    'Change a distracting backdrop to a clean studio, outdoor scene, or brighter sky. Review fine edges after generation.',
-  ],
-  [
-    'Retouch Portraits and Skin',
-    'Ask for subtle skin cleanup, softer lighting, or a polished headshot while keeping the person recognizable.',
-  ],
-  [
-    'Enhance Blurry or Low-Quality Photos',
-    'Improve apparent clarity, lighting, and colors. Generative edits cannot guarantee recovery of lost image details.',
-  ],
-  [
-    'Erase Objects and People',
-    'Remove an unwanted item or passerby and ask AI to reconstruct the surrounding background naturally.',
-  ],
-  [
-    'Restyle Photos With Text Prompts',
-    'Describe cinematic light, a golden-hour mood, vintage color, or another creative look using plain words.',
-  ],
-  [
-    'Remove Clothing Wrinkles',
-    'Smooth creases and wrinkles in shirts, dresses, or other garments while keeping the fabric texture, fit, and overall look natural.',
-  ],
+  {
+    title: 'Remove and Replace Backgrounds',
+    description:
+      'Change a distracting backdrop to a clean studio, outdoor scene, or brighter sky. Review fine edges after generation.',
+    href: '/ai-background-remover',
+    cta: 'Open AI Background Remover',
+  },
+  {
+    title: 'Retouch Portraits and Skin',
+    description:
+      'Ask for subtle skin cleanup, softer lighting, or a polished headshot while keeping the person recognizable.',
+  },
+  {
+    title: 'Enhance Blurry or Low-Quality Photos',
+    description:
+      'Improve apparent clarity, lighting, and colors. Generative edits cannot guarantee recovery of lost image details.',
+    href: '/ai-photo-enhancer',
+    cta: 'Open AI Photo Enhancer',
+  },
+  {
+    title: 'Erase Objects and People',
+    description:
+      'Remove an unwanted item or passerby and ask AI to reconstruct the surrounding background naturally.',
+  },
+  {
+    title: 'Restyle Photos With Text Prompts',
+    description:
+      'Describe cinematic light, a golden-hour mood, vintage color, or another creative look using plain words.',
+  },
+  {
+    title: 'Remove Clothing Wrinkles',
+    description:
+      'Smooth creases and wrinkles in shirts, dresses, or other garments while keeping the fabric texture, fit, and overall look natural.',
+  },
 ] as const;
 
 const FEATURE_IMAGES = [
@@ -202,26 +212,48 @@ function HomePage() {
             fix or creative transformation.
           </p>
           <div className="mt-9 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map(([title, description], index) => (
-              <article
-                key={title}
-                className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6"
-              >
-                <img
-                  src={FEATURE_IMAGES[index]}
-                  alt={`Before and after AI photo edit: ${title}`}
-                  width={1672}
-                  height={941}
-                  loading="lazy"
-                  decoding="async"
-                  className="mb-5 aspect-[1672/941] w-full rounded-xl bg-slate-100 object-cover"
-                />
-                <h3 className="text-lg font-semibold">{title}</h3>
-                <p className="mt-3 text-sm leading-7 text-slate-600">
-                  {description}
-                </p>
-              </article>
-            ))}
+            {FEATURES.map((feature, index) => {
+              const card = (
+                <>
+                  <img
+                    src={FEATURE_IMAGES[index]}
+                    alt={`Before and after AI photo edit: ${feature.title}`}
+                    width={1672}
+                    height={941}
+                    loading="lazy"
+                    decoding="async"
+                    className="mb-5 aspect-[1672/941] w-full rounded-xl bg-slate-100 object-cover"
+                  />
+                  <h3 className="text-lg font-semibold">{feature.title}</h3>
+                  <p className="mt-3 flex-1 text-sm leading-7 text-slate-600">
+                    {feature.description}
+                  </p>
+                  {'href' in feature && feature.href ? (
+                    <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600">
+                      {feature.cta} <ArrowRight className="size-4" />
+                    </span>
+                  ) : null}
+                </>
+              );
+              const className =
+                'flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6' +
+                ('href' in feature && feature.href
+                  ? ' hover:border-blue-200'
+                  : '');
+              return 'href' in feature && feature.href ? (
+                <Link
+                  key={feature.title}
+                  href={feature.href}
+                  className={className}
+                >
+                  {card}
+                </Link>
+              ) : (
+                <article key={feature.title} className={className}>
+                  {card}
+                </article>
+              );
+            })}
           </div>
         </section>
         <section className="border-y border-slate-200 bg-white px-4 py-20 sm:px-6">
