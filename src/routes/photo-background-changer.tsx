@@ -14,13 +14,13 @@ import { BACKGROUND_REMOVAL_CREDITS } from '@/modules/photo-editor/config';
 import { absoluteUrl, pageHead } from '@/lib/seo';
 import { Footer } from '@/blocks/footer';
 import { Header } from '@/blocks/header';
-import { BackgroundRemoverWorkspace } from '@/components/photo-editor/background-remover-workspace';
 import { BackgroundChangeComparison } from '@/components/photo-editor/background-change-comparison';
+import { BackgroundRemoverWorkspace } from '@/components/photo-editor/background-remover-workspace';
 
 const PATH = '/photo-background-changer';
-const TITLE = 'Photo Background Changer Online – Colors & Photos';
+const TITLE = 'Free Photo Background Changer: Change Photo Background Online';
 const DESCRIPTION =
-  'Change photo backgrounds online. Choose white or custom colors, preset scenes, or your own image. Keep the same subject and start with 10 guest credits.';
+  'Photo Background Change online for free. Replace backgrounds with white or custom colors, preset scenes, or your own image.';
 
 const FEATURES = [
   {
@@ -51,12 +51,13 @@ const SCENARIOS = [
       'Give product images a cleaner, more consistent look without reshooting each item. Remove a distracting table, room or shelf and place your cutout against a neutral studio background.',
     detail:
       'A white or softly colored background can keep the focus on the item for an online listing, catalog or promotional graphic. You can compare several backgrounds using one prepared cutout, and download the option that suits your store.',
-    tip:
-      'Check the outline of handles, straps, reflective surfaces and any original shadows before using the result in a product listing.',
+    tip: 'Check the outline of handles, straps, reflective surfaces and any original shadows before using the result in a product listing.',
     subject: '/images/ai-photo-editor/background-remover/hero-product.webp',
     subjectAlt: 'Original product cutout',
-    beforeBackground: '/images/ai-photo-editor/background-remover/fills/office-bokeh.png',
-    afterBackground: '/images/ai-photo-editor/background-remover/fills/studio-white.png',
+    beforeBackground:
+      '/images/ai-photo-editor/background-remover/fills/office-bokeh.png',
+    afterBackground:
+      '/images/ai-photo-editor/background-remover/fills/studio-white.png',
     beforeLabel: 'Busy backdrop',
     afterLabel: 'White studio',
   },
@@ -67,12 +68,13 @@ const SCENARIOS = [
       'Replace a busy location behind a portrait with a softer outdoor setting, an office-style background or your own photograph. Keep the person in the foreground from your original image.',
     detail:
       'This is useful for profile pictures, personal graphics and social posts when the background distracts from the subject. Choose a preset scene, or upload a photo that fits the context you want.',
-    tip:
-      'Loose hair, transparent clothing and differences in lighting may look less natural after compositing. Review those areas before sharing.',
+    tip: 'Loose hair, transparent clothing and differences in lighting may look less natural after compositing. Review those areas before sharing.',
     subject: '/images/ai-photo-editor/background-remover/hero-portrait.webp',
     subjectAlt: 'Original portrait cutout',
-    beforeBackground: '/images/ai-photo-editor/background-remover/fills/park-bokeh.png',
-    afterBackground: '/images/ai-photo-editor/background-remover/fills/office-bokeh.png',
+    beforeBackground:
+      '/images/ai-photo-editor/background-remover/fills/park-bokeh.png',
+    afterBackground:
+      '/images/ai-photo-editor/background-remover/fills/office-bokeh.png',
     beforeLabel: 'Outdoor scene',
     afterLabel: 'Office scene',
   },
@@ -83,11 +85,11 @@ const SCENARIOS = [
       'Make a photo background white, blue, beige or any color you choose. Start with a prepared cutout and use the color picker to try different looks without creating a new AI image each time.',
     detail:
       'Solid backgrounds are especially useful when you need a matching series of product images, simple graphics or consistent profile photos. Choose white for a minimal look, or try a brand color for a more distinctive design.',
-    tip:
-      'A solid-color replacement does not relight the subject or automatically add realistic new shadows; inspect the final edges and contrast.',
+    tip: 'A solid-color replacement does not relight the subject or automatically add realistic new shadows; inspect the final edges and contrast.',
     subject: '/images/ai-photo-editor/background-remover/hero-product.webp',
     subjectAlt: 'Original product cutout',
-    beforeBackground: '/images/ai-photo-editor/background-remover/fills/studio-gray.png',
+    beforeBackground:
+      '/images/ai-photo-editor/background-remover/fills/studio-gray.png',
     afterColor: '#d8eaff',
     beforeLabel: 'Neutral gray',
     afterLabel: 'Custom blue',
@@ -353,14 +355,17 @@ function PhotoBackgroundChangerPage() {
                       {scenario.detail}
                     </p>
                     <div className="mt-5 rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3 text-sm leading-6 text-slate-600">
-                      <strong className="text-slate-900">Before you download: </strong>
+                      <strong className="text-slate-900">
+                        Before you download:{' '}
+                      </strong>
                       {scenario.tip}
                     </div>
                     <a
                       href="#background-changer"
                       className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700"
                     >
-                      Try this background change <ArrowRight className="size-4" />
+                      Try this background change{' '}
+                      <ArrowRight className="size-4" />
                     </a>
                   </div>
                   <div className={index % 2 === 1 ? 'lg:order-1' : ''}>
@@ -368,8 +373,16 @@ function PhotoBackgroundChangerPage() {
                       subjectSrc={scenario.subject}
                       subjectAlt={scenario.subjectAlt}
                       beforeBackground={scenario.beforeBackground}
-                      afterBackground={'afterBackground' in scenario ? scenario.afterBackground : undefined}
-                      afterColor={'afterColor' in scenario ? scenario.afterColor : undefined}
+                      afterBackground={
+                        'afterBackground' in scenario
+                          ? scenario.afterBackground
+                          : undefined
+                      }
+                      afterColor={
+                        'afterColor' in scenario
+                          ? scenario.afterColor
+                          : undefined
+                      }
                       beforeLabel={scenario.beforeLabel}
                       afterLabel={scenario.afterLabel}
                     />
@@ -419,7 +432,8 @@ function PhotoBackgroundChangerPage() {
                   className="font-semibold text-blue-600 hover:underline"
                 >
                   AI Background Remover
-                </Link>.
+                </Link>
+                .
               </p>
             </div>
           </div>
