@@ -15,6 +15,9 @@ export type PageSeoInput = {
   path: string;
   locale?: string;
   image?: string;
+  /** Optional social-only copy; page title and meta description remain unchanged. */
+  socialTitle?: string;
+  socialDescription?: string;
   noindex?: boolean;
   /**
    * True when the page should advertise hreflang alternates for every
@@ -84,7 +87,13 @@ export function pageHead(input: PageSeoInput): {
   const localized = !!input.localized;
   const canonicalLocale = localized ? locale : baseLocale;
   const canonical = absoluteUrl(input.path, canonicalLocale);
-  const image = absoluteAsset(input.image ?? '/og.png');
+  // A dedicated, versioned social asset uses the latest brand logo and avoids
+  // crawlers continuing to display the older /og.png after a logo refresh.
+  const brandShareImage = '/og-brand-20261107.png';
+  const isBrandImage = !input.image;
+  const image = absoluteAsset(input.image ?? brandShareImage);
+  const socialTitle = input.socialTitle ?? input.title;
+  const socialDescription = input.socialDescription ?? input.description;
 
   const meta: MetaEntry[] = [
     { title: input.title },
@@ -97,15 +106,27 @@ export function pageHead(input: PageSeoInput): {
     meta.push(
       { property: 'og:type', content: 'website' },
       { property: 'og:site_name', content: envConfigs.app_name },
-      { property: 'og:title', content: input.title },
-      { property: 'og:description', content: input.description },
+      { property: 'og:title', content: socialTitle },
+      { property: 'og:description', content: socialDescription },
       { property: 'og:url', content: canonical },
       { property: 'og:image', content: image },
+      { property: 'og:image:secure_url', content: image },
+      ...(isBrandImage
+        ? ([
+            { property: 'og:image:type', content: 'image/png' },
+            { property: 'og:image:width', content: '1024' },
+            { property: 'og:image:height', content: '1024' },
+            { property: 'og:image:alt', content: 'GetAIPhotoEditor logo' },
+          ] as MetaEntry[])
+        : []),
       { property: 'og:locale', content: 'en_US' },
       { name: 'twitter:card', content: 'summary_large_image' },
-      { name: 'twitter:title', content: input.title },
-      { name: 'twitter:description', content: input.description },
-      { name: 'twitter:image', content: image }
+      { name: 'twitter:title', content: socialTitle },
+      { name: 'twitter:description', content: socialDescription },
+      { name: 'twitter:image', content: image },
+      ...(isBrandImage
+        ? [{ name: 'twitter:image:alt', content: 'GetAIPhotoEditor logo' }]
+        : [])
     );
   }
 

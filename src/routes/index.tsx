@@ -442,7 +442,9 @@ export const Route = createFileRoute('/')({
       title: HOME_TITLE,
       description: HOME_DESCRIPTION,
       path: '/',
-      image: '/og.png',
+      socialTitle: 'GetAIPhotoEditor – Edit Photos with a Simple Prompt',
+      socialDescription:
+        'Remove objects, replace backgrounds, retouch and enhance photos with AI. Just upload, describe the change and generate.',
     }),
   component: HomePage,
 });
