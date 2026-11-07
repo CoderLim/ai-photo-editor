@@ -143,7 +143,7 @@ export const PHOTO_TOOLS: ToolConfig[] = [
   },
   {
     slug: 'change-background',
-    title: 'AI Background Changer',
+    title: 'Photo Background Changer',
     heading: 'Change Your Photo Background with AI',
     description:
       'Cut out the original subject with AI, then place it over a solid color, preset scene or your own background photo.',
