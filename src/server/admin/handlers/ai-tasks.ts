@@ -97,7 +97,11 @@ export async function GET({ request }: AdminHandlerContext) {
       .limit(pageSize)
       .offset(offset);
 
-    const items = rows.map((row) => {
+    const items = rows.map((row: {
+      options: string | null;
+      taskResult: string | null;
+      [key: string]: unknown;
+    }) => {
       const opts = parseJson(row.options);
       const tool = typeof opts.tool === 'string' ? opts.tool : null;
       const quality = typeof opts.quality === 'string' ? opts.quality : null;

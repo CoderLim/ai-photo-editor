@@ -8,6 +8,9 @@ export const Route = createFileRoute('/tools/$slug')({
     if (params.slug === 'enhance-photo') {
       throw redirect({ to: '/ai-photo-enhancer' });
     }
+    if (params.slug === 'change-background') {
+      throw redirect({ to: '/photo-background-changer' });
+    }
     if (params.slug === 'remove-background') {
       throw redirect({ to: '/ai-background-remover' });
     }

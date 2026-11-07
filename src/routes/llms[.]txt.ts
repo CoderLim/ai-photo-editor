@@ -22,6 +22,16 @@ const STATIC_PAGES: { path: string; title: string; description: string }[] = [
   },
   { path: '/blog', title: 'Blog', description: 'Guides and product notes' },
   {
+    path: '/ai-background-remover',
+    title: 'AI Background Remover',
+    description: 'Remove photo backgrounds and download transparent PNG cutouts',
+  },
+  {
+    path: '/photo-background-changer',
+    title: 'Photo Background Changer',
+    description: 'Change photo backgrounds to a color, preset, or custom image',
+  },
+  {
     path: '/privacy-policy',
     title: 'Privacy Policy',
     description: 'How we handle your data',

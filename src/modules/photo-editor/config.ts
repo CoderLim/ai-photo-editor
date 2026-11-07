@@ -146,16 +146,16 @@ export const PHOTO_TOOLS: ToolConfig[] = [
     title: 'AI Background Changer',
     heading: 'Change Your Photo Background with AI',
     description:
-      'Change portrait or product backgrounds with AI. Describe a studio, outdoor scene, or clean backdrop while keeping the main subject recognizable.',
+      'Cut out the original subject with AI, then place it over a solid color, preset scene or your own background photo.',
     category: 'Replace & Transform',
     examplePrompt:
-      'Replace the background with a clean, softly lit professional studio. Preserve the main subject, face, pose and clothing.',
+      'Remove the original background and preserve the person or product as a transparent cutout.',
     limitations:
-      'Fine hair, transparent objects and complex lighting can change during editing.',
+      'Fine hair and transparent edges may need review; compositing does not automatically relight the subject.',
     steps: [
       'Upload the image.',
-      'Describe the replacement background.',
-      'Inspect subject edges and lighting before downloading.',
+      'Prepare the cutout, then select a color, preset or your own background photo.',
+      'Inspect the result and download a PNG.',
     ],
   },
   {
