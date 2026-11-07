@@ -453,12 +453,12 @@ function BackgroundRemoverPage() {
         </section>
 
         <section className="px-4 py-14 sm:px-6">
-          <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-5 rounded-2xl bg-slate-900 p-8 text-white sm:flex-row sm:items-center sm:p-10">
+          <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-5 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm sm:flex-row sm:items-center sm:p-10">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight">
+              <h2 className="text-2xl font-bold tracking-tight text-slate-950">
                 Ready to remove the background?
               </h2>
-              <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">
+              <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
                 Start with 10 guest credits. Each cutout costs{' '}
                 {BACKGROUND_REMOVAL_CREDITS} credits, and no account is required
                 to try.
