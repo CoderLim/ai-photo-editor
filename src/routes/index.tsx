@@ -98,9 +98,9 @@ const FEATURES = [
   {
     title: 'Remove and Replace Backgrounds',
     description:
-      'Change a distracting backdrop to a clean studio, outdoor scene, or brighter sky. Review fine edges after generation.',
-    href: '/ai-background-remover',
-    cta: 'Open AI Background Remover',
+      'Create a subject cutout, then choose a studio color, preset scene, or your own background photo.',
+    href: '/photo-background-changer',
+    cta: 'Open Photo Background Changer',
   },
   {
     title: 'Retouch Portraits and Skin',
@@ -392,7 +392,9 @@ function HomePage() {
                       ? '/ai-background-remover'
                       : tool.slug === 'enhance-photo'
                         ? '/ai-photo-enhancer'
-                        : '#editor'
+                        : tool.slug === 'change-background'
+                           ? '/photo-background-changer'
+                           : '#editor'
                   }
                   className="group overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg"
                 >

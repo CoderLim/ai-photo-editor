@@ -472,7 +472,14 @@ function BackgroundRemoverPage() {
             </a>
           </div>
           <p className="mx-auto mt-5 max-w-6xl text-center text-sm text-slate-500">
-            Looking for a different edit? Open the{' '}
+            Want a new background rather than transparency? Try the{' '}
+            <Link
+              href="/photo-background-changer"
+              className="font-semibold text-blue-600 hover:underline"
+            >
+              Photo Background Changer
+            </Link>
+            . Looking for a different edit? Open the{' '}
             <Link
               href="/"
               className="font-semibold text-blue-600 hover:underline"
