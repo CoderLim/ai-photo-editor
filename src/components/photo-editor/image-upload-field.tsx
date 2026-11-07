@@ -1,5 +1,5 @@
 import { useRef, useState, type RefObject } from 'react';
-import { ImagePlus, UploadCloud } from 'lucide-react';
+import { Trash2, UploadCloud } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
@@ -9,6 +9,7 @@ type ImageUploadFieldProps = {
   showPreviewThumb?: boolean;
   inputRef?: RefObject<HTMLInputElement | null>;
   onFile: (file?: File) => void;
+  onClear?: () => void;
   className?: string;
 };
 
@@ -19,12 +20,14 @@ export function ImageUploadField({
   showPreviewThumb = true,
   inputRef: externalRef,
   onFile,
+  onClear,
   className,
 }: ImageUploadFieldProps) {
   const localRef = useRef<HTMLInputElement | null>(null);
   const inputRef = externalRef ?? localRef;
   const [dragging, setDragging] = useState(false);
   const openPicker = () => inputRef.current?.click();
+  const hasPreview = Boolean(showPreviewThumb && preview);
 
   return (
     <div className={className}>
@@ -72,7 +75,7 @@ export function ImageUploadField({
             : 'border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50/50'
         )}
       >
-        {showPreviewThumb && preview ? (
+        {hasPreview ? (
           <div className="flex w-full items-center gap-4 text-left">
             <img
               src={preview}
@@ -87,7 +90,19 @@ export function ImageUploadField({
                 Click to replace photo
               </p>
             </div>
-            <ImagePlus className="size-5 text-slate-500" />
+            {onClear ? (
+              <button
+                type="button"
+                aria-label="Remove photo"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClear();
+                }}
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600"
+              >
+                <Trash2 className="size-5" />
+              </button>
+            ) : null}
           </div>
         ) : (
           <>

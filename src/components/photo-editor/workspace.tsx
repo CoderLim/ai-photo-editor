@@ -81,6 +81,7 @@ export function PhotoEditorWorkspace() {
             fileName={edit.file?.name}
             showPreviewThumb={Boolean(edit.preview && !edit.result)}
             onFile={edit.chooseFile}
+            onClear={edit.clearFile}
           />
           <div className="mt-3.5">
             <div className="mb-2 flex items-center justify-between">

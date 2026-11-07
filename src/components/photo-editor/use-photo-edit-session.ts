@@ -215,6 +215,23 @@ export function usePhotoEditSession({
     saveDraft(selected, fixedPrompt || prompt, quality);
   };
 
+  const clearFile = () => {
+    if (previewRef.current) {
+      URL.revokeObjectURL(previewRef.current);
+      previewRef.current = null;
+    }
+    setFile(null);
+    setPreview('');
+    setUpload(null);
+    setSourceJobId(null);
+    setResult('');
+    setJobId(null);
+    setShowOriginal(false);
+    setStatus('idle');
+    requestId.current = null;
+    clearDraft();
+  };
+
   const changeQuality = (next: PhotoEditQuality) => {
     setQuality(next);
     requestId.current = null;
@@ -361,6 +378,7 @@ export function usePhotoEditSession({
     selectedQuality,
     loading,
     chooseFile,
+    clearFile,
     changeQuality,
     changePrompt,
     submit,

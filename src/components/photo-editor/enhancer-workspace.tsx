@@ -35,6 +35,7 @@ export function EnhancerWorkspace() {
             fileName={edit.file?.name}
             showPreviewThumb={Boolean(edit.preview && !edit.result)}
             onFile={edit.chooseFile}
+            onClear={edit.clearFile}
           />
           <QualitySelector
             className="mt-3"
