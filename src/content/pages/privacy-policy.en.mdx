@@ -1,7 +1,7 @@
 export const meta = {
   title: 'Privacy Policy',
   description: 'How we collect, use, and protect your personal information.',
-  updated_at: '2026-11-05',
+  updated_at: '2026-11-07',
 };
 
 ## Introduction
@@ -13,26 +13,39 @@ We respect your privacy and are committed to protecting your personal data. This
 We collect the following types of information to provide and improve our service:
 
 1. **Account Information** — Your name, email address, and other details you provide when creating an account.
-2. **Usage Data** — Information about how you interact with the service, including features accessed, frequency of use, and interaction patterns.
-3. **Device Information** — Device type, operating system, and browser type, used to optimize compatibility and performance.
-4. **Cookies** — Small data files stored on your device to remember preferences and improve your experience.
-5. **Payment Information** — Billing details handled by trusted third-party payment processors. We do not store full card numbers on our servers.
+2. **Photos and AI inputs** — Images you upload for editing, prompts or instructions you submit, and the edited or generated images we return. Until you start a generation, a selected photo stays in your browser; when you generate, it is uploaded for processing.
+3. **Usage Data** — Information about how you interact with the service, including features accessed, frequency of use, and interaction patterns.
+4. **Device Information** — Device type, operating system, and browser type, used to optimize compatibility and performance.
+5. **Cookies** — Small data files stored on your device to remember preferences and improve your experience.
+6. **Payment Information** — Billing details handled by trusted third-party payment processors. We do not store full card numbers on our servers.
 
 ## How We Use Your Information
 
 We use the data we collect to:
 
-- Provide, maintain, and improve the service.
+- Provide, maintain, and improve the service, including running the photo edits you request and showing signed-in users their creations.
 - Process transactions and send related confirmations.
 - Send technical notices, security alerts, and support messages.
 - Respond to your questions, feedback, and support requests.
 - Detect, prevent, and address fraud and abuse.
 
+We do not use your uploaded photos or generated outputs to train our own AI models.
+
+## Photos, storage, and AI processors
+
+After you generate an edit, we store the upload and result in our object storage so you can reopen them in My Creations when signed in. Related task metadata (such as status, prompt, and timestamps) is kept in our databases.
+
+To run edits we send image URLs and related inputs to AI infrastructure providers. Depending on configuration, processing currently uses **fal.ai** and/or **Replicate** (for example GPT Image 2.6 edit models named in our [Terms of Service](/terms-of-service)). Those providers process images to fulfill your request under their agreements with us. They may retain transient copies according to their own retention and security practices. We do not sell your photos.
+
+## Retention
+
+There is **no fixed automatic deletion period** for uploaded or generated photos today. We retain them while they are needed to provide the service (including My Creations) and for related security, abuse-prevention, billing, and legal purposes. When you ask us to delete personal data as described below, or when we close an account for policy or legal reasons, we remove the associated photos and related personal data from active systems, subject to limited copies that may remain in backups for a short period or that we must keep by law.
+
 ## Data Sharing
 
 We do not sell your personal information. We may share data only in these limited cases:
 
-- With service providers who help us operate the service, under confidentiality agreements.
+- With service providers who help us operate the service (including storage and the AI processors named above), under appropriate agreements.
 - To comply with legal obligations or respond to lawful requests from public authorities.
 - To protect our rights, property, or safety, or that of our users.
 
@@ -42,7 +55,10 @@ We implement industry-standard security measures including encryption in transit
 
 ## Your Rights
 
-You have the right to access, update, export, or delete your personal information. You can do this through your account settings or by contacting us at the email address below.
+You have the right to access, update, export, or delete your personal information.
+
+- Where the product already supports it, you can update certain account profile details in your account settings.
+- To request deletion of personal data—including uploaded and generated photos—or other access/export requests, email **support@getaiphotoeditor.com** from the address on your account (or include enough detail for us to verify you). After we verify the request, we complete it within **30 days**.
 
 ## Changes to This Policy
 

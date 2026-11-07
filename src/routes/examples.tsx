@@ -2,8 +2,6 @@ import { createFileRoute } from '@tanstack/react-router';
 import { ArrowRight } from 'lucide-react';
 
 import { Link } from '@/core/i18n/navigation';
-import { envConfigs } from '@/config';
-import { PHOTO_EDIT_MODEL_LABEL } from '@/modules/photo-editor/config';
 import { EXAMPLE_EDITS } from '@/modules/photo-editor/example-edits';
 import { absoluteUrl, pageHead } from '@/lib/seo';
 import { Footer } from '@/blocks/footer';
@@ -42,10 +40,9 @@ function ExamplesPage() {
           AI Photo Edit Examples
         </h1>
         <p className="mt-4 max-w-2xl leading-7 text-slate-600">
-          Curated before-and-after edits with the prompt and credit cost for
-          each. These are official-style {PHOTO_EDIT_MODEL_LABEL} demo cases
-          mirrored for {envConfigs.app_name} — not a live feed of customer
-          photos. Use them to see what a natural-language edit can look like.
+          Before-and-after edits created by our users, with the prompt and
+          credit cost for each. Browse real community results to see what a
+          natural-language edit can look like.
         </p>
         <Link
           href="/#editor"
