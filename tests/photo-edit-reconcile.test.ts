@@ -34,8 +34,15 @@ const { AITaskStatus, createTask, findTask } =
 const { getBalance, grant } = await import('../src/modules/credits/service');
 const { PHOTO_EDIT_MISSING_PROVIDER_ID_MS, PHOTO_EDIT_STALE_MS } =
   await import('../src/modules/photo-editor/config');
-const { reconcilePhotoEditTask, reconcileStalePhotoEdits } =
-  await import('../src/modules/photo-editor/reconcile');
+const {
+  PHOTO_EDIT_LIST_PROVIDER_BUDGET,
+  reconcilePhotoEditTask,
+  reconcileStalePhotoEdits,
+  shouldReconcileOnList,
+} = await import('../src/modules/photo-editor/reconcile');
+const { envConfigs } = await import('../src/config');
+const { GET: cronGet } =
+  await import('../src/routes/api/cron/reconcile-photo-edits');
 
 after(async () => {
   await rm(directory, { recursive: true, force: true });
@@ -85,6 +92,46 @@ async function seedPendingEdit(params: {
 test('exports stale thresholds for photo edits', () => {
   assert.equal(PHOTO_EDIT_MISSING_PROVIDER_ID_MS, 180_000);
   assert.equal(PHOTO_EDIT_STALE_MS, 15 * 60_000);
+  assert.equal(PHOTO_EDIT_LIST_PROVIDER_BUDGET, 3);
+});
+
+test('shouldReconcileOnList caps fresh provider polls and always settles stale', () => {
+  const now = Date.now();
+  const fresh = {
+    id: 'edit_list_fresh',
+    status: AITaskStatus.PENDING,
+    taskId: 'pred',
+    createdAt: new Date(now - 5_000),
+  } as any;
+  const stale = {
+    id: 'edit_list_stale',
+    status: AITaskStatus.PENDING,
+    taskId: 'pred',
+    createdAt: new Date(now - PHOTO_EDIT_STALE_MS - 1),
+  } as any;
+  const missingId = {
+    id: 'edit_list_noid',
+    status: AITaskStatus.PENDING,
+    taskId: null,
+    createdAt: new Date(now - PHOTO_EDIT_MISSING_PROVIDER_ID_MS - 1),
+  } as any;
+
+  assert.deepEqual(shouldReconcileOnList(fresh, now, 1), {
+    reconcile: true,
+    consumesProviderBudget: true,
+  });
+  assert.deepEqual(shouldReconcileOnList(fresh, now, 0), {
+    reconcile: false,
+    consumesProviderBudget: false,
+  });
+  assert.deepEqual(shouldReconcileOnList(stale, now, 0), {
+    reconcile: true,
+    consumesProviderBudget: true,
+  });
+  assert.deepEqual(shouldReconcileOnList(missingId, now, 0), {
+    reconcile: true,
+    consumesProviderBudget: false,
+  });
 });
 
 test('provider success with an image settles the task and keeps the charge', async () => {
@@ -264,4 +311,81 @@ test('reconcileStalePhotoEdits sweeps old pending photo edits', async () => {
     AITaskStatus.PENDING
   );
   assert.equal(await getBalance('reconcile-sweep'), 10);
+});
+
+test('concurrent reconcile of one success settles once without double write', async () => {
+  await seedUser('reconcile-race');
+  const pending = await seedPendingEdit({
+    userId: 'reconcile-race',
+    id: 'edit_reconcile_race_001',
+    createdAt: new Date(Date.now() - 30_000),
+  });
+  let queries = 0;
+  const deps = {
+    now: Date.now(),
+    queryProvider: async () => {
+      queries += 1;
+      return {
+        taskId: 'pred_test',
+        taskStatus: AITaskStatus.SUCCESS,
+        taskInfo: {
+          images: [
+            {
+              id: '',
+              createTime: new Date(),
+              imageUrl: 'https://cdn.example/race.png',
+            },
+          ],
+        },
+      };
+    },
+    persistOutput: async (url: string) => url,
+  };
+  const results = await Promise.all([
+    reconcilePhotoEditTask(pending, deps),
+    reconcilePhotoEditTask(pending, deps),
+  ]);
+  assert.ok(results.every((row) => row.status === AITaskStatus.SUCCESS));
+  assert.equal(await getBalance('reconcile-race'), 10);
+  const [final] = await Promise.all([findTask(pending.id)]);
+  assert.equal(final!.status, AITaskStatus.SUCCESS);
+  assert.ok(queries >= 1);
+});
+
+test('cron reconcile rejects missing or wrong secrets and accepts a match', async () => {
+  const previous = envConfigs.cron_secret;
+  envConfigs.cron_secret = 'test-cron-secret-value-32chars!!';
+  try {
+    const denied = await cronGet({
+      request: new Request(
+        'http://localhost:3000/api/cron/reconcile-photo-edits'
+      ),
+    });
+    assert.equal(denied.status, 401);
+
+    const wrong = await cronGet({
+      request: new Request(
+        'http://localhost:3000/api/cron/reconcile-photo-edits',
+        { headers: { authorization: 'Bearer wrong-secret' } }
+      ),
+    });
+    assert.equal(wrong.status, 401);
+
+    const ok = await cronGet({
+      request: new Request(
+        'http://localhost:3000/api/cron/reconcile-photo-edits',
+        {
+          headers: {
+            authorization: 'Bearer test-cron-secret-value-32chars!!',
+          },
+        }
+      ),
+    });
+    assert.equal(ok.status, 200);
+    const body = await ok.json();
+    assert.equal(body.code, 0);
+    assert.equal(typeof body.data.checked, 'number');
+  } finally {
+    envConfigs.cron_secret = previous;
+  }
 });

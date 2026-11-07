@@ -221,20 +221,27 @@ export async function POST({ request }: { request: Request }) {
 async function GET({ request }: { request: Request }) {
   const user = await sessionFor(request);
   if (!user) return respErr('Unauthorized', { status: 401 });
-  const { reconcilePhotoEditTask } =
-    await import('@/modules/photo-editor/reconcile');
+  const {
+    PHOTO_EDIT_LIST_PROVIDER_BUDGET,
+    reconcilePhotoEditTask,
+    shouldReconcileOnList,
+  } = await import('@/modules/photo-editor/reconcile');
   const tasks = await getTasks({
     userId: user.id,
     mediaType: 'image',
     limit: 30,
   });
+  const now = Date.now();
+  let providerBudget = PHOTO_EDIT_LIST_PROVIDER_BUDGET;
   const items = [];
   for (const t of tasks as Array<typeof aiTask.$inferSelect>) {
     if (!t.id.startsWith('edit_')) continue;
-    const settled =
-      t.status === AITaskStatus.PENDING || t.status === AITaskStatus.PROCESSING
-        ? await reconcilePhotoEditTask(t)
-        : t;
+    const decision = shouldReconcileOnList(t, now, providerBudget);
+    let settled = t;
+    if (decision.reconcile) {
+      settled = await reconcilePhotoEditTask(t, { now });
+      if (decision.consumesProviderBudget) providerBudget -= 1;
+    }
     let result: any = {};
     let opts: any = {};
     try {

@@ -149,6 +149,7 @@ API routes are thin server-route wrappers — they check auth, parse params, cal
 - `ai-tasks/service.ts` calls `credits/` for consumption/revocation. This is the second.
 - `payment/service.ts` also calls `notify/` to push a bot message (Telegram/Feishu/WeCom, configured in the admin Notify tab) after a paid order commits. Channel senders live in `@/core/notify`.
 - `payment/service.ts` calls `guest-posts/` (`planGuestPostFulfillment`, `planGuestPostRefund`) so a paid guest post order publishes its article, and a refund takes it down, in the same atomic write. This is the third.
+- `photo-editor/reconcile.ts` (and create/poll routes) call `ai-tasks/` to create, settle, and refund photo-edit jobs. Product modules may use `ai-tasks` the same way `ai-tasks` uses `credits` — do not invert that (ai-tasks must not import photo-editor).
 - All other modules are fully independent.
 
 ## Key Patterns

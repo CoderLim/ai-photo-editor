@@ -53,6 +53,8 @@ After 15 minutes (`PHOTO_EDIT_STALE_MS`), or when the provider reports success
 without a recoverable image URL, the task is marked `failed` and credits are
 refunded. Polls, My Creations, and the admin Generations list all run this
 reconcile. Optional cron: `GET|POST /api/cron/reconcile-photo-edits`.
+`photo-editor` → `ai-tasks` is an allowed product→infrastructure module edge
+(documented in `AGENTS.md`); do not add the reverse import.
 
 ### Action required
 

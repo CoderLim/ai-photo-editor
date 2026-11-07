@@ -1,4 +1,4 @@
-import { and, asc, inArray, isNull, like, lt } from 'drizzle-orm';
+import { and, asc, inArray, isNull, lt, sql } from 'drizzle-orm';
 
 import { AIMediaType, type AITaskResult } from '@/core/ai';
 import { db } from '@/core/db';
@@ -10,6 +10,9 @@ import {
   PHOTO_EDIT_STALE_MS,
 } from './config';
 import { createPhotoProvider, persistPhotoOutput } from './service';
+
+/** Cap provider queries when reconciling a history list in one request. */
+export const PHOTO_EDIT_LIST_PROVIDER_BUDGET = 3;
 
 export type PhotoEditReconcileDeps = {
   now?: number;
@@ -122,7 +125,43 @@ export async function reconcilePhotoEditTask(
 }
 
 /**
+ * Whether a history/list request should run reconcile for this open task.
+ * Always settles expired missing-id / stale rows; caps fresh provider polls.
+ */
+export function shouldReconcileOnList(
+  task: AiTask,
+  now: number,
+  providerBudget: number
+): { reconcile: boolean; consumesProviderBudget: boolean } {
+  if (
+    task.status !== AITaskStatus.PENDING &&
+    task.status !== AITaskStatus.PROCESSING
+  ) {
+    return { reconcile: false, consumesProviderBudget: false };
+  }
+  if (!task.id.startsWith('edit_')) {
+    return { reconcile: false, consumesProviderBudget: false };
+  }
+  const age = now - createdAtMs(task);
+  if (!task.taskId) {
+    return {
+      reconcile: age > PHOTO_EDIT_MISSING_PROVIDER_ID_MS,
+      consumesProviderBudget: false,
+    };
+  }
+  if (age > PHOTO_EDIT_STALE_MS) {
+    return { reconcile: true, consumesProviderBudget: true };
+  }
+  if (providerBudget > 0) {
+    return { reconcile: true, consumesProviderBudget: true };
+  }
+  return { reconcile: false, consumesProviderBudget: false };
+}
+
+/**
  * Find photo edits that have outlived PHOTO_EDIT_STALE_MS and settle them.
+ * Does not include the shorter missing-taskId window — that still runs via
+ * poll / list / admin reconciles so submit has time to persist task_id.
  */
 export async function reconcileStalePhotoEdits(
   params: PhotoEditReconcileDeps & { limit?: number } = {}
@@ -138,7 +177,8 @@ export async function reconcileStalePhotoEdits(
       and(
         isNull(aiTask.deletedAt),
         inArray(aiTask.status, [AITaskStatus.PENDING, AITaskStatus.PROCESSING]),
-        like(aiTask.id, 'edit_%'),
+        // `_` is a LIKE wildcard; escape so we match the literal `edit_` prefix.
+        sql`${aiTask.id} like ${'edit!_%'} escape '!'`,
         lt(aiTask.createdAt, cutoff)
       )
     )
