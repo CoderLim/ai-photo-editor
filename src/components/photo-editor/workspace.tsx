@@ -103,7 +103,7 @@ export function PhotoEditorWorkspace() {
               placeholder="What would you like to change? e.g. Remove the person in the background while keeping the main subject unchanged."
               className="w-full resize-y rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm leading-relaxed text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
-            <div className="mt-2 flex flex-nowrap gap-1.5 overflow-x-auto">
+            <div className="mt-2 flex [scrollbar-width:none] flex-nowrap gap-1.5 overflow-x-auto [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               {QUICK_PROMPTS.map((item) => (
                 <button
                   key={item.id}

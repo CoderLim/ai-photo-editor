@@ -42,19 +42,19 @@ const CAPABILITIES = [
 const USE_CASES = [
   {
     title: 'Product photos',
-    image: '/images/ai-photo-editor/background-remover/product-photos.svg',
+    image: '/images/ai-photo-editor/background-remover/product-photos.webp',
     description:
       'Create transparent product cutouts for catalogs, marketplaces and marketing graphics.',
   },
   {
     title: 'Portraits and profile pictures',
-    image: '/images/ai-photo-editor/background-remover/portraits.svg',
+    image: '/images/ai-photo-editor/background-remover/portraits.webp',
     description:
       'Isolate a person from a busy background without redrawing their face or clothing.',
   },
   {
     title: 'Designs and presentations',
-    image: '/images/ai-photo-editor/background-remover/designs.svg',
+    image: '/images/ai-photo-editor/background-remover/designs.webp',
     description:
       'Place a transparent PNG over your own layouts, thumbnails or slides.',
   },
@@ -64,20 +64,20 @@ const WHY_USE = [
   {
     icon: Sparkles,
     title: 'A real transparent cutout',
-    image: '/images/ai-photo-editor/background-remover/real-cutout.svg',
+    image: '/images/ai-photo-editor/background-remover/real-cutout.webp',
     description:
       'This page returns a transparent PNG with a real alpha channel. It separates the subject from the background rather than generating a new scene. The underlying model may be updated over time.',
   },
   {
     icon: CheckCircle2,
     title: 'Two cutouts from your guest credits',
-    image: '/images/ai-photo-editor/background-remover/free-credits.svg',
+    image: '/images/ai-photo-editor/background-remover/free-credits.webp',
     description: `You start with 10 guest credits, and each background removal costs ${BACKGROUND_REMOVAL_CREDITS} credits, enough for two cutouts. Sign in for 10 more. No account is required to try.`,
   },
   {
     icon: ShieldCheck,
     title: 'Review the cutout before you use it',
-    image: '/images/ai-photo-editor/background-remover/edge-review.svg',
+    image: '/images/ai-photo-editor/background-remover/edge-review.webp',
     description:
       'Compare the original and the result on a checkerboard. Fine hair, sheer materials, reflective edges and crowded scenes can still need a second pass.',
   },
@@ -226,11 +226,25 @@ function BackgroundRemoverPage() {
     <div className="min-h-screen bg-[#f7f9fc] text-slate-900">
       <Header />
       <main>
-        <section className="relative isolate overflow-hidden border-b border-slate-200 bg-gradient-to-b from-[#edf4ff] via-[#f8fbff] to-[#f7f9fc] px-4 pt-9 pb-12 sm:px-6 sm:pt-12">
-          <img src="/images/ai-photo-editor/background-remover/hero-portrait.svg" alt="" aria-hidden="true" width={430} height={720} className="pointer-events-none absolute top-24 left-3 hidden h-[710px] w-[23vw] max-w-[370px] object-contain 2xl:block" />
-          <img src="/images/ai-photo-editor/background-remover/hero-product.svg" alt="" aria-hidden="true" width={430} height={720} className="pointer-events-none absolute top-24 right-3 hidden h-[710px] w-[23vw] max-w-[370px] object-contain 2xl:block" />
-          <div className="relative z-10 mx-auto max-w-[1320px]">
-            <div className="mx-auto mb-7 max-w-3xl text-center">
+        <section className="relative isolate overflow-hidden border-b border-slate-200 bg-gradient-to-b from-[#edf4ff] via-[#f8fbff] to-[#f7f9fc] px-4 pt-9 pb-16 sm:px-6 sm:pt-12 sm:pb-20">
+          <img
+            src="/images/ai-photo-editor/background-remover/hero-portrait.webp"
+            alt=""
+            aria-hidden="true"
+            width={720}
+            height={1280}
+            className="pointer-events-none absolute top-4 left-4 hidden h-auto max-h-[70vh] w-[20vw] max-w-[280px] object-contain xl:block 2xl:left-8 2xl:max-w-[320px]"
+          />
+          <img
+            src="/images/ai-photo-editor/background-remover/hero-product.webp"
+            alt=""
+            aria-hidden="true"
+            width={720}
+            height={1280}
+            className="pointer-events-none absolute top-[22%] right-4 hidden h-auto max-h-[min(36rem,52vh)] w-[20vw] max-w-[280px] object-contain xl:block 2xl:right-8 2xl:max-w-[320px]"
+          />
+          <div className="relative z-10 mx-auto max-w-3xl">
+            <div className="mb-8 text-center">
               <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl lg:text-[2.75rem]">
                 AI Background Remover Online
               </h1>
@@ -306,7 +320,15 @@ function BackgroundRemoverPage() {
                 key={item.title}
                 className="rounded-2xl border border-slate-200 bg-white p-6"
               >
-                <img src={item.image} alt={`Background removal illustration for ${item.title}`} width={640} height={440} loading="lazy" decoding="async" className="mb-5 aspect-[16/11] w-full rounded-xl bg-blue-50 object-cover" />
+                <img
+                  src={item.image}
+                  alt={`Background removal illustration for ${item.title}`}
+                  width={1200}
+                  height={900}
+                  loading="lazy"
+                  decoding="async"
+                  className="mb-5 aspect-[4/3] w-full rounded-xl bg-blue-50 object-cover"
+                />
                 <h3 className="text-lg font-semibold">{item.title}</h3>
                 <p className="mt-3 text-sm leading-7 text-slate-600">
                   {item.description}
@@ -343,7 +365,16 @@ function BackgroundRemoverPage() {
                   <span className="inline-flex size-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                     <Icon className="size-5" />
                   </span>
-                  <img src={item.image} alt="" aria-hidden="true" width={640} height={440} loading="lazy" decoding="async" className="mt-5 aspect-[16/11] w-full rounded-xl bg-blue-50 object-cover" />
+                  <img
+                    src={item.image}
+                    alt=""
+                    aria-hidden="true"
+                    width={1200}
+                    height={900}
+                    loading="lazy"
+                    decoding="async"
+                    className="mt-5 aspect-[4/3] w-full rounded-xl bg-blue-50 object-cover"
+                  />
                   <h3 className="mt-5 text-lg font-semibold">{item.title}</h3>
                   <p className="mt-3 text-sm leading-7 text-slate-600">
                     {item.description}
