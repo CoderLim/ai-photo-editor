@@ -52,7 +52,8 @@ const SCENARIOS = [
     detail:
       'A white or softly colored background can keep the focus on the item for an online listing, catalog or promotional graphic. You can compare several backgrounds using one prepared cutout, and download the option that suits your store.',
     tip: 'Check the outline of handles, straps, reflective surfaces and any original shadows before using the result in a product listing.',
-    comparisonImage: '/images/ai-photo-editor/core-benefits/handbag-background-compare.jpg',
+    comparisonImage:
+      '/images/ai-photo-editor/core-benefits/handbag-background-compare.jpg',
     comparisonAlt:
       'Before and after comparison of the same beige handbag, from a furnished room to a clean beige studio background',
     beforeLabel: 'Room backdrop',
@@ -80,19 +81,33 @@ const COLOR_SWATCHES = [
   { label: 'Warm beige', color: '#ead7c4', border: false },
   { label: 'Blush pink', color: '#f8dbe1', border: false },
   { label: 'Mint green', color: '#d2eee3', border: false },
-  { label: 'Custom color', color: 'conic-gradient(#ef4444, #eab308, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444)', border: false },
+  {
+    label: 'Custom color',
+    color:
+      'conic-gradient(#ef4444, #eab308, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444)',
+    border: false,
+  },
 ] as const;
 
-const COLOR_SCENARIO = {
-  eyebrow: 'For clean, consistent colors',
-  title: 'Change Photo Background Color',
-  intro:
-    'Make a photo background white, blue, beige or any color you choose. Start with a prepared cutout and use the color picker to try different looks without creating a new AI image each time.',
-  detail:
-    'Solid backgrounds are useful when you need matching product images, simple graphics or consistent profile photos. Use white for a minimal look or try a brand color for your visual identity.',
-  tip:
-    'A solid-color replacement does not relight the subject or automatically add realistic new shadows; inspect the final edges and contrast.',
-} as const;
+const WHITE_STEPS = [
+  {
+    title: 'Upload your photo',
+    description:
+      'Choose a JPG, PNG or WebP image up to 10 MB with a clearly visible subject.',
+  },
+  {
+    title: 'Prepare the cutout',
+    description:
+      'Click Prepare Background. The AI isolates the subject for ' +
+      BACKGROUND_REMOVAL_CREDITS +
+      ' credits.',
+  },
+  {
+    title: 'Pick a white background',
+    description:
+      'Select Studio white, or dial in a custom off-white with the color picker. Preview and download the PNG.',
+  },
+] as const;
 
 const STEPS = [
   {
@@ -123,7 +138,7 @@ const FAQS = [
   {
     question: 'Can I change a photo background to white?',
     answer:
-      'Yes. White is one of the built-in background colors. You can also choose other preset colors or any custom color using the picker.',
+      'Yes. You can make the background white with the Studio white preset, or change the background to white with a custom hex near pure white. That covers clean product shots, softer off-white looks, and simple profile graphics—inspect edges and contrast before you download.',
   },
   {
     question: 'Can I use my own image as the new background?',
@@ -150,7 +165,7 @@ const FAQS = [
   {
     question: 'Can I also download a transparent PNG?',
     answer:
-      'Yes. Select the Transparent option in the Color tab. For a dedicated transparent-cutout workflow, see AI Background Remover.',
+      'Yes. Select the Transparent option in the Color tab. For a dedicated transparent-cutout workflow, use our transparent background maker.',
   },
   {
     question: 'Which formats can I upload and download?',
@@ -163,6 +178,27 @@ const FAQS = [
       'Reserved credits are automatically returned if the background-removal task fails. Check the Privacy Policy for details about how uploaded images are handled.',
   },
 ] as const;
+
+const REMOVER_LINK_FAQ = 'Can I also download a transparent PNG?';
+const REMOVER_LINK_LABEL = 'transparent background maker';
+
+function FaqAnswer({ question, answer }: { question: string; answer: string }) {
+  if (question !== REMOVER_LINK_FAQ) return answer;
+  const index = answer.lastIndexOf(REMOVER_LINK_LABEL);
+  if (index < 0) return answer;
+  return (
+    <>
+      {answer.slice(0, index)}
+      <Link
+        href="/ai-background-remover"
+        className="font-semibold text-blue-600 hover:underline"
+      >
+        {REMOVER_LINK_LABEL}
+      </Link>
+      {answer.slice(index + REMOVER_LINK_LABEL.length)}
+    </>
+  );
+}
 
 const jsonLd = JSON.stringify({
   '@context': 'https://schema.org',
@@ -325,12 +361,12 @@ function PhotoBackgroundChangerPage() {
               Real-world background ideas
             </p>
             <h2 className="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">
-              Photo Background Changes for Products, Portraits and Colors
+              Photo Background Changes for Products and Portraits
             </h2>
             <p className="mt-4 max-w-3xl leading-7 text-slate-600">
-              Explore background replacement for product photos, portraits and
-              solid colors. The photo examples show different backdrops around
-              the same subject, while the color samples show available choices.
+              Explore background replacement for product photos and portraits.
+              The examples show different backdrops around the same subject
+              while keeping the original foreground.
             </p>
             <div className="mt-12 space-y-16 sm:space-y-20">
               {SCENARIOS.map((scenario, index) => (
@@ -345,14 +381,24 @@ function PhotoBackgroundChangerPage() {
                     <h3 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
                       {scenario.title}
                     </h3>
-                    <p className="mt-5 leading-7 text-slate-600">{scenario.intro}</p>
-                    <p className="mt-4 leading-7 text-slate-600">{scenario.detail}</p>
+                    <p className="mt-5 leading-7 text-slate-600">
+                      {scenario.intro}
+                    </p>
+                    <p className="mt-4 leading-7 text-slate-600">
+                      {scenario.detail}
+                    </p>
                     <div className="mt-5 rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3 text-sm leading-6 text-slate-600">
-                      <strong className="text-slate-900">Before you download: </strong>
+                      <strong className="text-slate-900">
+                        Before you download:{' '}
+                      </strong>
                       {scenario.tip}
                     </div>
-                    <a href="#background-changer" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700">
-                      Try this background change <ArrowRight className="size-4" />
+                    <a
+                      href="#background-changer"
+                      className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700"
+                    >
+                      Try this background change{' '}
+                      <ArrowRight className="size-4" />
                     </a>
                   </div>
                   <div className={index % 2 === 1 ? 'lg:order-1' : ''}>
@@ -365,48 +411,88 @@ function PhotoBackgroundChangerPage() {
                   </div>
                 </article>
               ))}
-              <article className="grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
-                <div>
-                  <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
-                    {COLOR_SCENARIO.eyebrow}
-                  </p>
-                  <h3 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
-                    {COLOR_SCENARIO.title}
-                  </h3>
-                  <p className="mt-5 leading-7 text-slate-600">{COLOR_SCENARIO.intro}</p>
-                  <p className="mt-4 leading-7 text-slate-600">{COLOR_SCENARIO.detail}</p>
-                  <div className="mt-5 rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3 text-sm leading-6 text-slate-600">
-                    <strong className="text-slate-900">Before you download: </strong>
-                    {COLOR_SCENARIO.tip}
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+          <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
+            White backgrounds
+          </p>
+          <h2 className="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">
+            Make the Background White
+          </h2>
+          <p className="mt-4 max-w-3xl leading-7 text-slate-600">
+            Not every white backdrop is the same. Pure white (#FFFFFF) reads as
+            a hard studio cut for marketplaces. Soft off-white or cream looks
+            warmer for lifestyle shots. ID-photo style white is usually a
+            bright, even field behind a head-and-shoulders crop. E-commerce
+            white often favors a clean, high-key look so the product stays
+            sharp—without claiming official document compliance.
+          </p>
+          <p className="mt-4 max-w-3xl leading-7 text-slate-600">
+            After you prepare the cutout, pick Studio white or a custom near-
+            white hex. Switching colors reuses the same cutout and does not
+            charge another AI run. A solid white fill does not relight the
+            subject or invent new shadows, so check edges and contrast before
+            you download.
+          </p>
+          <div className="mt-10 grid items-start gap-8 lg:grid-cols-2 lg:gap-14">
+            <div>
+              <h3 className="text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">
+                Change Background to White in 3 Steps
+              </h3>
+              <div className="mt-6 space-y-4">
+                {WHITE_STEPS.map((step, index) => (
+                  <article
+                    key={step.title}
+                    className="rounded-2xl border border-slate-200 bg-white p-5"
+                  >
+                    <p className="text-sm font-bold text-blue-600">
+                      {String(index + 1).padStart(2, '0')}
+                    </p>
+                    <h4 className="mt-2 text-base font-semibold">
+                      {step.title}
+                    </h4>
+                    <p className="mt-2 text-sm leading-7 text-slate-600">
+                      {step.description}
+                    </p>
+                  </article>
+                ))}
+              </div>
+              <a
+                href="#background-changer"
+                className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700"
+              >
+                Make my background white <ArrowRight className="size-4" />
+              </a>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+              <h3 className="text-lg font-semibold text-slate-950">
+                Choose white or another solid color
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Start with Studio white, or preview other presets and a custom
+                color after preparing your cutout.
+              </p>
+              <div className="mt-6 grid grid-cols-3 gap-4">
+                {COLOR_SWATCHES.map((swatch) => (
+                  <div key={swatch.label}>
+                    <div
+                      role="img"
+                      aria-label={swatch.label + ' background color sample'}
+                      className={
+                        'aspect-square rounded-2xl shadow-inner ' +
+                        (swatch.border ? 'border border-slate-200' : '')
+                      }
+                      style={{ background: swatch.color }}
+                    />
+                    <p className="mt-2 text-center text-xs font-medium text-slate-600">
+                      {swatch.label}
+                    </p>
                   </div>
-                  <a href="#background-changer" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700">
-                    Try a background color <ArrowRight className="size-4" />
-                  </a>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-                  <h4 className="text-lg font-semibold text-slate-950">
-                    Choose the color that fits your photo
-                  </h4>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    Preview these backgrounds after preparing your cutout, or choose an exact custom color.
-                  </p>
-                  <div className="mt-6 grid grid-cols-3 gap-4">
-                    {COLOR_SWATCHES.map((swatch) => (
-                      <div key={swatch.label}>
-                        <div
-                          role="img"
-                          aria-label={swatch.label + ' background color sample'}
-                          className={'aspect-square rounded-2xl shadow-inner ' + (swatch.border ? 'border border-slate-200' : '')}
-                          style={{ background: swatch.color }}
-                        />
-                        <p className="mt-2 text-center text-xs font-medium text-slate-600">
-                          {swatch.label}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </article>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -444,12 +530,12 @@ function PhotoBackgroundChangerPage() {
                 carefully, especially if you plan to use it professionally.
               </p>
               <p className="mt-4 text-sm leading-7 text-slate-600">
-                Need transparency instead of a replacement background? Use the{' '}
+                Need transparency instead of a replacement background? Use our{' '}
                 <Link
                   href="/ai-background-remover"
                   className="font-semibold text-blue-600 hover:underline"
                 >
-                  AI Background Remover
+                  transparent background maker
                 </Link>
                 .
               </p>
@@ -491,13 +577,13 @@ function PhotoBackgroundChangerPage() {
               </h2>
               <p className="mt-3 leading-7 text-slate-600">
                 Choose this photo background changer when you want a new color
-                or image behind your subject. For a transparent PNG cutout only,
-                use our{' '}
+                or image behind your subject—including when you make the
+                background white. For a transparent PNG cutout only, use our{' '}
                 <Link
                   href="/ai-background-remover"
                   className="font-semibold text-blue-600 hover:underline"
                 >
-                  AI Background Remover
+                  transparent background maker
                 </Link>
                 . Both tools share the same subject-cutout workflow.
               </p>
@@ -530,7 +616,7 @@ function PhotoBackgroundChangerPage() {
               <div key={question} className="border-b border-slate-200 py-6">
                 <h3 className="text-lg font-semibold">{question}</h3>
                 <p className="mt-3 text-sm leading-7 text-slate-600">
-                  {answer}
+                  <FaqAnswer question={question} answer={answer} />
                 </p>
               </div>
             ))}

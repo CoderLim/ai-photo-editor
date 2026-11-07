@@ -5,7 +5,6 @@ import {
   Layers3,
   Scissors,
   ShieldCheck,
-  Sparkles,
 } from 'lucide-react';
 
 import { Link } from '@/core/i18n/navigation';
@@ -22,7 +21,7 @@ const DESCRIPTION = `AI Background Remover: remove photo backgrounds online and 
 const CAPABILITIES = [
   {
     icon: Layers3,
-    title: 'Create a transparent PNG cutout',
+    title: 'Keep a real alpha channel',
     description:
       'Download a PNG with a real alpha channel. Preview it on the checkerboard before you save, so you can see which areas are transparent.',
   },
@@ -62,20 +61,17 @@ const USE_CASES = [
 
 const WHY_USE = [
   {
-    icon: Sparkles,
     title: 'A real transparent cutout',
     image: '/images/ai-photo-editor/background-remover/real-cutout.webp',
     description:
       'This page returns a transparent PNG with a real alpha channel. It separates the subject from the background rather than generating a new scene. The underlying model may be updated over time.',
   },
   {
-    icon: CheckCircle2,
     title: 'Two cutouts from your guest credits',
     image: '/images/ai-photo-editor/background-remover/free-credits.webp',
     description: `You start with 10 guest credits, and each background removal costs ${BACKGROUND_REMOVAL_CREDITS} credits, enough for two cutouts. Sign in for 10 more. No account is required to try.`,
   },
   {
-    icon: ShieldCheck,
     title: 'Review the cutout before you use it',
     image: '/images/ai-photo-editor/background-remover/edge-review.webp',
     description:
@@ -116,7 +112,7 @@ const FAQS = [
   {
     question: 'Will the removed background be transparent?',
     answer:
-      'Yes. Background removal produces a PNG cutout with transparent areas, not a new white or studio background. Preview it on the checkerboard before downloading.',
+      'Yes. This transparent background maker produces a PNG cutout with a real alpha channel—not a new white or studio fill. Preview it on the checkerboard before downloading.',
   },
   {
     question: 'Does the tool change the person or product?',
@@ -126,7 +122,7 @@ const FAQS = [
   {
     question: 'Is this the same as changing a photo background?',
     answer:
-      'No. This tool removes the background and leaves transparency so you can place the subject on another design. To describe a new scene instead of a cutout, use the AI photo editor.',
+      'No. This tool removes the background and leaves transparency so you can place the subject on another design. To make the background white or swap in a color or photo instead, use make background white on the Photo Background Changer. To describe a new scene instead of a cutout, use the AI photo editor.',
   },
   {
     question: 'Which photo formats are supported?',
@@ -147,18 +143,27 @@ const FAQS = [
 
 const EDITOR_LINK_FAQ = 'Is this the same as changing a photo background?';
 const EDITOR_LINK_LABEL = 'AI photo editor';
+const CHANGER_LINK_LABEL = 'make background white';
 
 function FaqAnswer({ question, answer }: { question: string; answer: string }) {
   if (question !== EDITOR_LINK_FAQ) return answer;
-  const index = answer.lastIndexOf(EDITOR_LINK_LABEL);
-  if (index < 0) return answer;
+  const changerIndex = answer.indexOf(CHANGER_LINK_LABEL);
+  const editorIndex = answer.lastIndexOf(EDITOR_LINK_LABEL);
+  if (changerIndex < 0 || editorIndex < 0) return answer;
   return (
     <>
-      {answer.slice(0, index)}
+      {answer.slice(0, changerIndex)}
+      <Link
+        href="/photo-background-changer"
+        className="font-semibold text-blue-600 hover:underline"
+      >
+        {CHANGER_LINK_LABEL}
+      </Link>
+      {answer.slice(changerIndex + CHANGER_LINK_LABEL.length, editorIndex)}
       <Link href="/" className="font-semibold text-blue-600 hover:underline">
         {EDITOR_LINK_LABEL}
       </Link>
-      {answer.slice(index + EDITOR_LINK_LABEL.length)}
+      {answer.slice(editorIndex + EDITOR_LINK_LABEL.length)}
     </>
   );
 }
@@ -306,6 +311,47 @@ function BackgroundRemoverPage() {
           </div>
         </section>
 
+        <section className="border-y border-slate-200 bg-white px-4 py-16 sm:px-6 sm:py-20">
+          <div className="mx-auto max-w-6xl">
+            <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
+              Transparent PNG output
+            </p>
+            <h2 className="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">
+              Transparent Background Maker
+            </h2>
+            <p className="mt-4 max-w-3xl leading-7 text-slate-600">
+              This page is a transparent background maker: it returns a PNG with
+              a real transparency channel, not a flat white rectangle painted
+              behind the subject. Preview the cutout on the checkerboard so you
+              can see which pixels are actually transparent before you download.
+            </p>
+            <div className="mt-10 rounded-2xl border border-slate-200 bg-[#f7f9fc] p-6 sm:p-8">
+              <h3 className="text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">
+                Remove White Background from Image
+              </h3>
+              <p className="mt-4 leading-7 text-slate-600">
+                Already have a studio-white or pure-white backdrop and need the
+                subject alone? Remove the white background from the image to
+                produce a transparent PNG you can drop onto any layout. That is
+                the opposite of compositing a cutout onto white—if you want to{' '}
+                <Link
+                  href="/photo-background-changer"
+                  className="font-semibold text-blue-600 hover:underline"
+                >
+                  make background white
+                </Link>{' '}
+                instead, use the Photo Background Changer.
+              </p>
+              <a
+                href="#remover"
+                className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700"
+              >
+                Remove white background <ArrowRight className="size-4" />
+              </a>
+            </div>
+          </div>
+        </section>
+
         <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
           <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
             Everyday use cases
@@ -354,33 +400,27 @@ function BackgroundRemoverPage() {
             Why Use This AI Background Remover
           </h2>
           <div className="mt-9 grid gap-5 md:grid-cols-3">
-            {WHY_USE.map((item) => {
-              const Icon = item.icon;
-              return (
-                <article
-                  key={item.title}
-                  className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-                >
-                  <span className="inline-flex size-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                    <Icon className="size-5" />
-                  </span>
-                  <img
-                    src={item.image}
-                    alt=""
-                    aria-hidden="true"
-                    width={1200}
-                    height={900}
-                    loading="lazy"
-                    decoding="async"
-                    className="mt-5 aspect-[4/3] w-full rounded-xl bg-blue-50 object-cover"
-                  />
-                  <h3 className="mt-5 text-lg font-semibold">{item.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-slate-600">
-                    {item.description}
-                  </p>
-                </article>
-              );
-            })}
+            {WHY_USE.map((item) => (
+              <article
+                key={item.title}
+                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+              >
+                <img
+                  src={item.image}
+                  alt=""
+                  aria-hidden="true"
+                  width={1200}
+                  height={900}
+                  loading="lazy"
+                  decoding="async"
+                  className="aspect-[4/3] w-full rounded-xl bg-blue-50 object-cover"
+                />
+                <h3 className="mt-5 text-lg font-semibold">{item.title}</h3>
+                <p className="mt-3 text-sm leading-7 text-slate-600">
+                  {item.description}
+                </p>
+              </article>
+            ))}
           </div>
         </section>
 
@@ -472,14 +512,15 @@ function BackgroundRemoverPage() {
             </a>
           </div>
           <p className="mx-auto mt-5 max-w-6xl text-center text-sm text-slate-500">
-            Want a new background rather than transparency? Try the{' '}
+            Want a new background rather than transparency?{' '}
             <Link
               href="/photo-background-changer"
               className="font-semibold text-blue-600 hover:underline"
             >
-              Photo Background Changer
-            </Link>
-            . Looking for a different edit? Open the{' '}
+              Make background white
+            </Link>{' '}
+            or swap in a color or photo on the Photo Background Changer. Looking
+            for a different edit? Open the{' '}
             <Link
               href="/"
               className="font-semibold text-blue-600 hover:underline"
