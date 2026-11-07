@@ -1,3 +1,4 @@
+import * as ai_tasks from './handlers/ai-tasks';
 import * as analytics_funnel from './handlers/analytics-funnel';
 import * as analytics_overview from './handlers/analytics-overview';
 import * as analytics_report from './handlers/analytics-report';
@@ -31,6 +32,7 @@ export const handlers: Record<
   string,
   (context: AdminHandlerContext) => Promise<Response>
 > = {
+  ai_tasks_list: ai_tasks.GET,
   users_list: users_index.GET,
   users_get: users_id.GET,
   users_sources: users_sources.GET,

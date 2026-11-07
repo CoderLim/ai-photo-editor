@@ -4,6 +4,7 @@ import {
   CreditCard,
   FolderOpen,
   Home,
+  Images,
   LayoutDashboard,
   Settings,
   Shield,
@@ -60,6 +61,12 @@ function AdminLayout() {
         { href: '/admin/guest-posts', label: m['admin.nav.guest_posts']() },
         { href: '/admin/tickets', label: m['admin.nav.tickets']() },
       ],
+    },
+    {
+      href: '/admin/ai-tasks',
+      label: m['admin.nav.ai_tasks'](),
+      icon: Images,
+      group,
     },
   ];
 

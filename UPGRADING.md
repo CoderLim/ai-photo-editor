@@ -46,6 +46,20 @@ exports, permission codes, and behavior that changes for end users.
 
 ---
 
+## 2026-11-07: Admin Generations page (`/admin/ai-tasks`)
+
+Adds an admin list of all users' AI generation records (`ai_task`), with
+preview thumbnails and status filters. Permission codes
+`admin.ai-tasks.read|write|delete` were already in the seed; the viewer role
+now also gets `admin.ai-tasks.read`.
+
+1. Pull the code.
+2. If you maintain non-super-admin roles and want viewers to open the page,
+   run `pnpm admin:token sync-permissions` (or re-grant `admin.ai-tasks.read`
+   on the viewer role). `super_admin` needs no change.
+
+---
+
 ## 2026-11-05: English-only locale (Chinese removed)
 
 The app no longer ships a `zh` locale. Paraglide `locales` is `["en"]` only,

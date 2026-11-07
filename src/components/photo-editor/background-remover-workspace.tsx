@@ -26,7 +26,8 @@ export function BackgroundRemoverWorkspace() {
 
   const previewSrc =
     edit.result && !edit.showOriginal ? edit.result : edit.preview;
-  const checkerPreview = Boolean(edit.result) && !edit.showOriginal;
+  /** Checker as soon as an image is on the canvas (upload or cutout). */
+  const checkerPreview = Boolean(previewSrc);
 
   return (
     <>
@@ -68,17 +69,17 @@ export function BackgroundRemoverWorkspace() {
                 edit.chooseFile(e.dataTransfer.files?.[0]);
               }}
               className={cn(
-                'relative flex min-h-[28rem] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed px-4 py-5 text-center transition-colors sm:min-h-[34rem]',
+                'relative cursor-pointer overflow-hidden rounded-xl border-2 border-dashed border-slate-200 text-center transition-colors hover:border-blue-400',
                 checkerPreview
-                  ? cn('border-slate-200 hover:border-blue-400', CHECKER_BG)
-                  : 'border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50/50'
+                  ? cn('mx-auto w-fit max-w-full', CHECKER_BG)
+                  : 'flex min-h-[28rem] w-full flex-col items-center justify-center bg-white px-4 py-5 hover:bg-blue-50/50 sm:min-h-[34rem]'
               )}
             >
               {previewSrc ? (
-                <>
+                <div className="relative max-w-full">
                   {edit.result && (
                     <div
-                      className="absolute top-3 right-3 z-10 flex items-center gap-1 rounded-lg bg-white/95 p-1 text-xs shadow-sm"
+                      className="absolute top-2 right-2 z-10 flex items-center gap-1 rounded-lg bg-white/95 p-1 text-xs shadow-sm"
                       onClick={(e) => e.stopPropagation()}
                       onKeyDown={(e) => e.stopPropagation()}
                     >
@@ -108,32 +109,16 @@ export function BackgroundRemoverWorkspace() {
                       </button>
                     </div>
                   )}
-                  {checkerPreview ? (
-                    <div
-                      className={cn(
-                        'inline-flex max-h-[24rem] max-w-full items-center justify-center overflow-hidden rounded-xl sm:max-h-[30rem]',
-                        CHECKER_BG
-                      )}
-                    >
-                      <img
-                        src={previewSrc}
-                        alt="Photo with a transparent background"
-                        className="max-h-[24rem] max-w-full object-contain sm:max-h-[30rem]"
-                      />
-                    </div>
-                  ) : (
-                    <img
-                      src={previewSrc}
-                      alt="Selected photo"
-                      className="max-h-[24rem] max-w-full rounded-lg object-contain sm:max-h-[30rem]"
-                    />
-                  )}
-                  <p className="mt-3 text-xs font-medium text-slate-500">
-                    {checkerPreview
-                      ? 'Checkered areas are transparent'
-                      : 'Click or drop to replace photo'}
-                  </p>
-                </>
+                  <img
+                    src={previewSrc}
+                    alt={
+                      edit.result && !edit.showOriginal
+                        ? 'Photo with a transparent background'
+                        : 'Selected photo'
+                    }
+                    className="block h-auto max-h-[24rem] w-auto max-w-full sm:max-h-[30rem]"
+                  />
+                </div>
               ) : (
                 <>
                   <div className="mb-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
@@ -159,6 +144,11 @@ export function BackgroundRemoverWorkspace() {
                 </div>
               )}
             </div>
+            {previewSrc && (
+              <p className="mt-2 text-center text-xs font-medium text-slate-500">
+                Checkered areas are transparent · click or drop to replace
+              </p>
+            )}
           </div>
 
           <div className="mt-3.5 flex flex-col gap-2 sm:flex-row">

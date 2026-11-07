@@ -398,6 +398,7 @@ const defaultRoles = [
       'admin.payments.read',
       'admin.subscriptions.read',
       'admin.credits.read',
+      'admin.ai-tasks.read',
     ],
   },
 ];

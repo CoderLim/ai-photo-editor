@@ -249,6 +249,23 @@ export const adminOperations: AdminOperation[] = [
       .strict()
   ),
   op(
+    'ai_tasks_list',
+    'List AI generation tasks across all users. Soft-deleted tasks are excluded. Filter by status, mediaType, or userId; search matches prompt, provider, model, email, name, or exact task/user ids.',
+    'ai-tasks.read',
+    'GET',
+    'ai-tasks',
+    z
+      .object({
+        ...search,
+        userId: id.optional(),
+        status: z
+          .enum(['pending', 'processing', 'success', 'failed', 'canceled'])
+          .optional(),
+        mediaType: short.optional(),
+      })
+      .strict()
+  ),
+  op(
     'categories_list',
     'List categories; all=true returns the complete category dropdown list.',
     'categories.read',
