@@ -14,9 +14,9 @@ import {
 } from '@/modules/ai-tasks/service';
 import { getAllConfigs } from '@/modules/config/service';
 import {
-  getPhotoTool,
   BACKGROUND_REMOVAL_CREDITS,
   DEFAULT_PHOTO_EDIT_QUALITY,
+  getPhotoTool,
   photoEditCharge,
   PhotoEditQualityError,
 } from '@/modules/photo-editor/config';
@@ -50,7 +50,8 @@ export async function POST({ request }: { request: Request }) {
   } catch {
     return respErr('Invalid JSON');
   }
-  const requestedPrompt = typeof body.prompt === 'string' ? body.prompt.trim() : '';
+  const requestedPrompt =
+    typeof body.prompt === 'string' ? body.prompt.trim() : '';
   const imageUrl = typeof body.imageUrl === 'string' ? body.imageUrl : '';
   const requestId = typeof body.requestId === 'string' ? body.requestId : '';
   const tool = typeof body.tool === 'string' ? body.tool : 'general';
@@ -78,7 +79,10 @@ export async function POST({ request }: { request: Request }) {
   let charge: ReturnType<typeof photoEditCharge>;
   try {
     charge = isBackgroundRemoval
-      ? { quality: DEFAULT_PHOTO_EDIT_QUALITY, credits: BACKGROUND_REMOVAL_CREDITS }
+      ? {
+          quality: DEFAULT_PHOTO_EDIT_QUALITY,
+          credits: BACKGROUND_REMOVAL_CREDITS,
+        }
       : photoEditCharge(body.quality);
   } catch (error) {
     if (error instanceof PhotoEditQualityError) {
@@ -130,7 +134,9 @@ export async function POST({ request }: { request: Request }) {
       { status: 503 }
     );
   }
-  const provider = isBackgroundRemoval ? 'fal' : await getSelectedPhotoProvider();
+  const provider = isBackgroundRemoval
+    ? 'fal'
+    : await getSelectedPhotoProvider();
   let instance: Awaited<ReturnType<typeof createPhotoProvider>>;
   try {
     instance = await createPhotoProvider(
@@ -155,11 +161,16 @@ export async function POST({ request }: { request: Request }) {
     });
   } catch (err: any) {
     if (/insufficient credits/i.test(err?.message || '')) {
-      return respErr(user.isAnonymous ? 'GUEST_CREDITS_EXHAUSTED' : 'CREDITS_INSUFFICIENT', {
-        status: user.isAnonymous ? 403 : 402,
-      });
+      return respErr(
+        user.isAnonymous ? 'GUEST_CREDITS_EXHAUSTED' : 'CREDITS_INSUFFICIENT',
+        {
+          status: user.isAnonymous ? 403 : 402,
+        }
+      );
     }
-    return respErr(err?.message || 'Unable to reserve credits', { status: 400 });
+    return respErr(err?.message || 'Unable to reserve credits', {
+      status: 400,
+    });
   }
   if (task.alreadyExisted) {
     return respData({
@@ -210,38 +221,43 @@ export async function POST({ request }: { request: Request }) {
 async function GET({ request }: { request: Request }) {
   const user = await sessionFor(request);
   if (!user) return respErr('Unauthorized', { status: 401 });
+  const { reconcilePhotoEditTask } =
+    await import('@/modules/photo-editor/reconcile');
   const tasks = await getTasks({
     userId: user.id,
     mediaType: 'image',
     limit: 30,
   });
-  return respData({
-    items: (tasks as Array<typeof aiTask.$inferSelect>)
-      .filter((t) => t.id.startsWith('edit_'))
-      .map((t) => {
-        let result: any = {};
-        let opts: any = {};
-        try {
-          result = JSON.parse(t.taskResult || '{}');
-        } catch {
-          /* ignore */
-        }
-        try {
-          opts = JSON.parse(t.options || '{}');
-        } catch {
-          /* ignore */
-        }
-        return {
-          id: t.id,
-          status: t.status,
-          createdAt: t.createdAt,
-          prompt: t.prompt,
-          originalUrl: opts.imageUrl,
-          resultUrl: result.images?.[0]?.imageUrl,
-          credits: t.costCredits,
-        };
-      }),
-  });
+  const items = [];
+  for (const t of tasks as Array<typeof aiTask.$inferSelect>) {
+    if (!t.id.startsWith('edit_')) continue;
+    const settled =
+      t.status === AITaskStatus.PENDING || t.status === AITaskStatus.PROCESSING
+        ? await reconcilePhotoEditTask(t)
+        : t;
+    let result: any = {};
+    let opts: any = {};
+    try {
+      result = JSON.parse(settled.taskResult || '{}');
+    } catch {
+      /* ignore */
+    }
+    try {
+      opts = JSON.parse(settled.options || '{}');
+    } catch {
+      /* ignore */
+    }
+    items.push({
+      id: settled.id,
+      status: settled.status,
+      createdAt: settled.createdAt,
+      prompt: settled.prompt,
+      originalUrl: opts.imageUrl,
+      resultUrl: result.images?.[0]?.imageUrl,
+      credits: settled.costCredits,
+    });
+  }
+  return respData({ items });
 }
 
 export const Route = createFileRoute('/api/photo-editor/edits')({

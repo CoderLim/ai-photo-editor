@@ -69,6 +69,16 @@ export const BACKGROUND_REMOVAL_CREDITS = 4;
 /** Public display name for the underlying image model (compliance / UI). */
 export const PHOTO_EDIT_MODEL_LABEL = 'GPT Image 2.6';
 
+/** Give submit a short window to persist the provider request id. */
+export const PHOTO_EDIT_MISSING_PROVIDER_ID_MS = 180_000;
+/**
+ * After this age, pending/processing photo edits are forced to failed (credits
+ * refunded) even if the browser stopped polling. GPT Image jobs usually finish
+ * in well under a minute; 15 minutes covers provider queues without holding
+ * credits forever.
+ */
+export const PHOTO_EDIT_STALE_MS = 15 * 60_000;
+
 export function isPhotoEditQuality(value: unknown): value is PhotoEditQuality {
   return (
     typeof value === 'string' &&

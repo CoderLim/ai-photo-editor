@@ -31,6 +31,11 @@ function resultImageUrl(taskResult: string | null | undefined): string | null {
 
 export async function GET({ request }: AdminHandlerContext) {
   try {
+    // Settle orphaned photo edits whose browsers stopped polling.
+    const { reconcileStalePhotoEdits } =
+      await import('@/modules/photo-editor/reconcile');
+    await reconcileStalePhotoEdits({ limit: 5 });
+
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
     const pageSize = Math.min(
@@ -97,25 +102,27 @@ export async function GET({ request }: AdminHandlerContext) {
       .limit(pageSize)
       .offset(offset);
 
-    const items = rows.map((row: {
-      options: string | null;
-      taskResult: string | null;
-      [key: string]: unknown;
-    }) => {
-      const opts = parseJson(row.options);
-      const tool = typeof opts.tool === 'string' ? opts.tool : null;
-      const quality = typeof opts.quality === 'string' ? opts.quality : null;
-      const originalUrl =
-        typeof opts.imageUrl === 'string' ? opts.imageUrl : null;
-      const { options: _options, taskResult, ...rest } = row;
-      return {
-        ...rest,
-        tool,
-        quality,
-        originalUrl,
-        resultUrl: resultImageUrl(taskResult),
-      };
-    });
+    const items = rows.map(
+      (row: {
+        options: string | null;
+        taskResult: string | null;
+        [key: string]: unknown;
+      }) => {
+        const opts = parseJson(row.options);
+        const tool = typeof opts.tool === 'string' ? opts.tool : null;
+        const quality = typeof opts.quality === 'string' ? opts.quality : null;
+        const originalUrl =
+          typeof opts.imageUrl === 'string' ? opts.imageUrl : null;
+        const { options: _options, taskResult, ...rest } = row;
+        return {
+          ...rest,
+          tool,
+          quality,
+          originalUrl,
+          resultUrl: resultImageUrl(taskResult),
+        };
+      }
+    );
 
     return respPage(items, total);
   } catch (error: any) {

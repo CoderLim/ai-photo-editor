@@ -46,6 +46,25 @@ exports, permission codes, and behavior that changes for end users.
 
 ---
 
+## 2026-11-07: Photo-edit stale reconcile + cron
+
+Photo edits no longer stay `pending` forever when the browser stops polling.
+After 15 minutes (`PHOTO_EDIT_STALE_MS`), or when the provider reports success
+without a recoverable image URL, the task is marked `failed` and credits are
+refunded. Polls, My Creations, and the admin Generations list all run this
+reconcile. Optional cron: `GET|POST /api/cron/reconcile-photo-edits`.
+
+### Action required
+
+1. Pull the code and redeploy.
+2. Set `CRON_SECRET` (env / Workers secret) if you want scheduled sweeps.
+   Call the cron route with `Authorization: Bearer <CRON_SECRET>` every few
+   minutes (Cloudflare Cron Triggers → HTTP, or any external cron).
+3. Without cron, opening `/admin/ai-tasks` or a user's creations list still
+   settles a handful of stale jobs; client polls settle the job being watched.
+
+---
+
 ## 2026-11-07: Admin Generations page (`/admin/ai-tasks`)
 
 Adds an admin list of all users' AI generation records (`ai_task`), with

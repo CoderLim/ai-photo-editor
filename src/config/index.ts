@@ -36,6 +36,8 @@ export const envConfigs: Record<string, string> = {
   auth_cookie_prefix: procEnv.AUTH_COOKIE_PREFIX ?? '',
   // Enable only after deploying the anonymous-credit schema migration.
   anonymous_trial_enabled: procEnv.ANONYMOUS_TRIAL_ENABLED ?? 'false',
+  // Shared secret for `/api/cron/*` workers (Cloudflare Cron Triggers, etc.).
+  cron_secret: procEnv.CRON_SECRET ?? '',
 
   // Payment - Waffo Pancake
   waffo_enabled: procEnv.WAFFO_ENABLED ?? '',
