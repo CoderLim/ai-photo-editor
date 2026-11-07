@@ -226,7 +226,7 @@ function BackgroundRemoverPage() {
     <div className="min-h-screen bg-[#f7f9fc] text-slate-900">
       <Header />
       <main>
-        <section className="relative isolate overflow-hidden border-b border-slate-200 bg-gradient-to-b from-[#edf4ff] via-[#f8fbff] to-[#f7f9fc] px-4 pt-9 pb-16 sm:px-6 sm:pt-12 sm:pb-20">
+        <section className="relative isolate overflow-hidden border-b border-slate-200 bg-gradient-to-b from-[#edf4ff] via-[#f8fbff] to-[#f7f9fc] px-4 pt-2 pb-16 sm:px-6 sm:pt-3 sm:pb-20">
           <img
             src="/images/ai-photo-editor/background-remover/hero-portrait.webp"
             alt=""
@@ -244,14 +244,13 @@ function BackgroundRemoverPage() {
             className="pointer-events-none absolute top-[22%] right-4 hidden h-auto max-h-[min(36rem,52vh)] w-[20vw] max-w-[280px] object-contain xl:block 2xl:right-8 2xl:max-w-[320px]"
           />
           <div className="relative z-10 mx-auto max-w-3xl">
-            <div className="mb-8 text-center">
+            <div className="mb-3 text-center">
               <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl lg:text-[2.75rem]">
                 AI Background Remover Online
               </h1>
-              <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
-                Upload a photo and remove the background in one step. Keep the
-                original subject and download a transparent PNG you can place on
-                another design.
+              <p className="mx-auto mt-2 text-sm text-slate-600 sm:text-base">
+                Remove the background in one step and download a transparent
+                PNG.
               </p>
             </div>
             <div id="remover" className="scroll-mt-24">

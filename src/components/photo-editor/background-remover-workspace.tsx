@@ -11,6 +11,10 @@ import { Button } from '@/components/ui/button';
 
 const removerTool = getPhotoTool('remove-background');
 
+/** High-contrast checker so transparent PNG alpha is obvious in the preview. */
+const CHECKER_BG =
+  'bg-[conic-gradient(#cbd5e1_25%,#f8fafc_0_50%,#cbd5e1_0_75%,#f8fafc_0)] bg-[length:24px_24px]';
+
 /** Single-column upload/preview shell for transparent PNG cutouts. */
 export function BackgroundRemoverWorkspace() {
   const edit = usePhotoEditSession({
@@ -66,7 +70,7 @@ export function BackgroundRemoverWorkspace() {
               className={cn(
                 'relative flex min-h-[28rem] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed px-4 py-5 text-center transition-colors sm:min-h-[34rem]',
                 checkerPreview
-                  ? 'border-slate-200 bg-[conic-gradient(#e2e8f0_25%,white_0_50%,#e2e8f0_0_75%,white_0)] bg-[length:20px_20px] hover:border-blue-400'
+                  ? cn('border-slate-200 hover:border-blue-400', CHECKER_BG)
                   : 'border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50/50'
               )}
             >
@@ -104,17 +108,30 @@ export function BackgroundRemoverWorkspace() {
                       </button>
                     </div>
                   )}
-                  <img
-                    src={previewSrc}
-                    alt={
-                      edit.result && !edit.showOriginal
-                        ? 'Photo with a transparent background'
-                        : 'Selected photo'
-                    }
-                    className="max-h-[24rem] max-w-full rounded-lg object-contain sm:max-h-[30rem]"
-                  />
+                  {checkerPreview ? (
+                    <div
+                      className={cn(
+                        'inline-flex max-h-[24rem] max-w-full items-center justify-center overflow-hidden rounded-xl sm:max-h-[30rem]',
+                        CHECKER_BG
+                      )}
+                    >
+                      <img
+                        src={previewSrc}
+                        alt="Photo with a transparent background"
+                        className="max-h-[24rem] max-w-full object-contain sm:max-h-[30rem]"
+                      />
+                    </div>
+                  ) : (
+                    <img
+                      src={previewSrc}
+                      alt="Selected photo"
+                      className="max-h-[24rem] max-w-full rounded-lg object-contain sm:max-h-[30rem]"
+                    />
+                  )}
                   <p className="mt-3 text-xs font-medium text-slate-500">
-                    Click or drop to replace photo
+                    {checkerPreview
+                      ? 'Checkered areas are transparent'
+                      : 'Click or drop to replace photo'}
                   </p>
                 </>
               ) : (
