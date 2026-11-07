@@ -25,6 +25,7 @@ const CHECKER_BG =
   'bg-[conic-gradient(#cbd5e1_25%,#f8fafc_0_50%,#cbd5e1_0_75%,#f8fafc_0)] bg-[length:24px_24px]';
 
 const TRANSPARENT_FILL: CutoutFill = { mode: 'transparent' };
+const WHITE_FILL: CutoutFill = { mode: 'color', color: '#ffffff' };
 
 type CutoutPreviewProps = {
   previewSrc: string;
@@ -75,7 +76,12 @@ function CutoutPreview({
 }
 
 /** Upload / cutout shell; fill panel appears only after background removal. */
-export function BackgroundRemoverWorkspace() {
+export function BackgroundRemoverWorkspace({
+  variant = 'remover',
+}: {
+  variant?: 'remover' | 'changer';
+} = {}) {
+  const isChanger = variant === 'changer';
   const edit = usePhotoEditSession({
     fixedPrompt: removerTool?.examplePrompt,
     toolSlug: 'remove-background',
@@ -83,7 +89,7 @@ export function BackgroundRemoverWorkspace() {
     creditCost: BACKGROUND_REMOVAL_CREDITS,
   });
 
-  const [fill, setFill] = useState<CutoutFill>(TRANSPARENT_FILL);
+  const [fill, setFill] = useState<CutoutFill>(isChanger ? WHITE_FILL : TRANSPARENT_FILL);
   const [downloading, setDownloading] = useState(false);
   const fillRef = useRef(fill);
   fillRef.current = fill;
@@ -92,8 +98,8 @@ export function BackgroundRemoverWorkspace() {
   useEffect(() => {
     const prev = fillRef.current;
     if (prev.mode === 'photo') revokePhotoUrl(prev.photoUrl);
-    setFill(TRANSPARENT_FILL);
-  }, [edit.preview]);
+    setFill(isChanger ? WHITE_FILL : TRANSPARENT_FILL);
+  }, [edit.preview, isChanger]);
 
   useEffect(() => {
     return () => {
@@ -115,7 +121,9 @@ export function BackgroundRemoverWorkspace() {
       const name =
         fill.mode === 'transparent'
           ? 'background-removed.png'
-          : 'background-filled.png';
+          : isChanger
+            ? 'photo-background-changed.png'
+            : 'background-filled.png';
       downloadBlob(blob, name);
     } catch (e) {
       const message =
@@ -167,7 +175,7 @@ export function BackgroundRemoverWorkspace() {
             : 'text-slate-500 hover:text-slate-800'
         )}
       >
-        Cutout
+        {isChanger ? 'Changed' : 'Cutout'}
       </button>
     </div>
   ) : null;
@@ -188,7 +196,9 @@ export function BackgroundRemoverWorkspace() {
           ? 'Submitting edit...'
           : edit.status === 'pending'
             ? 'Generating...'
-            : 'Remove Background'}
+            : isChanger
+              ? 'Prepare Background'
+              : 'Remove Background'}
         {!edit.loading && (
           <span
             className="rounded-md bg-white/15 px-2 py-1 text-xs"
@@ -211,7 +221,7 @@ export function BackgroundRemoverWorkspace() {
           ) : (
             <Download className="size-4" />
           )}
-          {fill.mode === 'transparent' ? 'Download PNG' : 'Download'}
+          {isChanger ? 'Download PNG' : fill.mode === 'transparent' ? 'Download PNG' : 'Download'}
         </Button>
       )}
     </div>
@@ -224,7 +234,7 @@ export function BackgroundRemoverWorkspace() {
         : edit.creditBalance !== null
           ? String(edit.creditBalance) + ' credits available · '
           : ''}
-      Transparent PNG cutout
+      {isChanger ? 'Choose a color or photo after cutout' : 'Transparent PNG cutout'}
     </p>
   );
 
@@ -354,8 +364,9 @@ export function BackgroundRemoverWorkspace() {
                     Click to upload or drag your image here
                   </p>
                   <p className="mt-1 text-xs text-slate-500">
-                    Preview appears here. After removal you can add a
-                    background.
+                    {isChanger
+                      ? 'Create a cutout, then choose a color or photo background.'
+                      : 'Preview appears here. After removal you can add a background.'}
                   </p>
                 </>
               )}
