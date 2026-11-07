@@ -43,11 +43,16 @@ export function ExampleEditCard({ example }: { example: ExampleEdit }) {
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
       <h2 className="sr-only">{example.title}</h2>
-      <p className="sr-only">{example.prompt}</p>
       <div className="grid min-w-0 grid-cols-2 gap-2.5 sm:gap-3">
         <Panel src={example.beforeSrc} alt={example.beforeAlt} label="Before" />
         <Panel src={example.afterSrc} alt={example.afterAlt} label="After" />
       </div>
+      <p
+        className="mt-4 line-clamp-2 min-h-[2.75rem] text-sm leading-[1.375rem] text-slate-600"
+        title={example.prompt}
+      >
+        {example.prompt}
+      </p>
       <div className="mt-auto flex items-center gap-3 border-t border-slate-100 pt-4">
         <Avatar className="size-10 shrink-0">
           <AvatarImage src={example.userAvatar} alt={example.userName} />
