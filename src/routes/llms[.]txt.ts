@@ -24,12 +24,19 @@ const STATIC_PAGES: { path: string; title: string; description: string }[] = [
   {
     path: '/ai-background-remover',
     title: 'AI Background Remover',
-    description: 'Remove photo backgrounds and download transparent PNG cutouts',
+    description:
+      'Remove photo backgrounds and download transparent PNG cutouts',
   },
   {
     path: '/photo-background-changer',
     title: 'Photo Background Changer',
     description: 'Change photo backgrounds to a color, preset, or custom image',
+  },
+  {
+    path: '/examples',
+    title: 'AI Photo Edit Examples',
+    description:
+      'Curated before/after AI photo edits with prompts and credit costs',
   },
   {
     path: '/privacy-policy',
