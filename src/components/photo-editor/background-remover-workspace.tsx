@@ -224,7 +224,7 @@ export function BackgroundRemoverWorkspace() {
         : edit.creditBalance !== null
           ? String(edit.creditBalance) + ' credits available · '
           : ''}
-      Model: Bria RMBG 2.0 · transparent PNG
+      Transparent PNG cutout
     </p>
   );
 
