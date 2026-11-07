@@ -15,11 +15,12 @@ import { absoluteUrl, pageHead } from '@/lib/seo';
 import { Footer } from '@/blocks/footer';
 import { Header } from '@/blocks/header';
 import { BackgroundRemoverWorkspace } from '@/components/photo-editor/background-remover-workspace';
+import { BackgroundChangeComparison } from '@/components/photo-editor/background-change-comparison';
 
 const PATH = '/photo-background-changer';
-const TITLE = 'Photo Background Changer – Change Backgrounds Online';
+const TITLE = 'Photo Background Changer Online – Colors & Photos';
 const DESCRIPTION =
-  'Change photo backgrounds online. Keep your original subject, choose a solid color, a preset scene, or upload your own background. Try free without signing up.';
+  'Change photo backgrounds online. Choose white or custom colors, preset scenes, or your own image. Keep the same subject and start with 10 guest credits.';
 
 const FEATURES = [
   {
@@ -42,26 +43,54 @@ const FEATURES = [
   },
 ] as const;
 
-const EXAMPLES = [
+const SCENARIOS = [
   {
-    title: 'Clean studio backdrop',
-    src: '/images/ai-photo-editor/background-remover/fills/studio-beige.png',
-    alt: 'Beige studio background preset for product or portrait photos',
-    description:
-      'Try a neutral studio color for product listings and profile pictures.',
+    eyebrow: 'For online shops',
+    title: 'Change Product Photo Backgrounds',
+    intro:
+      'Give product images a cleaner, more consistent look without reshooting each item. Remove a distracting table, room or shelf and place your cutout against a neutral studio background.',
+    detail:
+      'A white or softly colored background can keep the focus on the item for an online listing, catalog or promotional graphic. You can compare several backgrounds using one prepared cutout, and download the option that suits your store.',
+    tip:
+      'Check the outline of handles, straps, reflective surfaces and any original shadows before using the result in a product listing.',
+    subject: '/images/ai-photo-editor/background-remover/hero-product.webp',
+    subjectAlt: 'Original product cutout',
+    beforeBackground: '/images/ai-photo-editor/background-remover/fills/office-bokeh.png',
+    afterBackground: '/images/ai-photo-editor/background-remover/fills/studio-white.png',
+    beforeLabel: 'Busy backdrop',
+    afterLabel: 'White studio',
   },
   {
-    title: 'Soft outdoor scene',
-    src: '/images/ai-photo-editor/background-remover/fills/park-bokeh.png',
-    alt: 'Soft green park background preset',
-    description: 'Change a portrait or pet photo to a soft outdoor backdrop.',
+    eyebrow: 'For profile pictures and travel memories',
+    title: 'Change Portrait Backgrounds',
+    intro:
+      'Replace a busy location behind a portrait with a softer outdoor setting, an office-style background or your own photograph. Keep the person in the foreground from your original image.',
+    detail:
+      'This is useful for profile pictures, personal graphics and social posts when the background distracts from the subject. Choose a preset scene, or upload a photo that fits the context you want.',
+    tip:
+      'Loose hair, transparent clothing and differences in lighting may look less natural after compositing. Review those areas before sharing.',
+    subject: '/images/ai-photo-editor/background-remover/hero-portrait.webp',
+    subjectAlt: 'Original portrait cutout',
+    beforeBackground: '/images/ai-photo-editor/background-remover/fills/park-bokeh.png',
+    afterBackground: '/images/ai-photo-editor/background-remover/fills/office-bokeh.png',
+    beforeLabel: 'Outdoor scene',
+    afterLabel: 'Office scene',
   },
   {
-    title: 'Professional office',
-    src: '/images/ai-photo-editor/background-remover/fills/office-bokeh.png',
-    alt: 'Professional office photo background preset',
-    description:
-      'Give a profile photo or team graphic an office-style setting.',
+    eyebrow: 'For clean, consistent colors',
+    title: 'Change Photo Background Color',
+    intro:
+      'Make a photo background white, blue, beige or any color you choose. Start with a prepared cutout and use the color picker to try different looks without creating a new AI image each time.',
+    detail:
+      'Solid backgrounds are especially useful when you need a matching series of product images, simple graphics or consistent profile photos. Choose white for a minimal look, or try a brand color for a more distinctive design.',
+    tip:
+      'A solid-color replacement does not relight the subject or automatically add realistic new shadows; inspect the final edges and contrast.',
+    subject: '/images/ai-photo-editor/background-remover/hero-product.webp',
+    subjectAlt: 'Original product cutout',
+    beforeBackground: '/images/ai-photo-editor/background-remover/fills/studio-gray.png',
+    afterColor: '#d8eaff',
+    beforeLabel: 'Neutral gray',
+    afterLabel: 'Custom blue',
   },
 ] as const;
 
@@ -293,38 +322,105 @@ function PhotoBackgroundChangerPage() {
         <section className="border-y border-slate-200 bg-white px-4 py-16 sm:px-6 sm:py-20">
           <div className="mx-auto max-w-6xl">
             <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
-              Background options
+              Real-world background ideas
             </p>
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              Backgrounds for Product Photos, Portraits and More
+            <h2 className="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">
+              Photo Background Changes for Products, Portraits and Colors
             </h2>
             <p className="mt-4 max-w-3xl leading-7 text-slate-600">
-              Use a clean studio look, a soft outdoor scene or a professional
-              setting. You can also upload your own backdrop for custom designs.
+              Explore three useful ways to replace a photo background. Each
+              comparison places the same foreground cutout over two different
+              backdrops, so you can see the background change without a newly
+              generated subject.
             </p>
-            <div className="mt-9 grid gap-5 md:grid-cols-3">
-              {EXAMPLES.map((item) => (
+            <div className="mt-12 space-y-16 sm:space-y-20">
+              {SCENARIOS.map((scenario, index) => (
                 <article
-                  key={item.title}
-                  className="overflow-hidden rounded-2xl border border-slate-200 bg-[#f7f9fc]"
+                  key={scenario.title}
+                  className="grid items-center gap-8 lg:grid-cols-2 lg:gap-14"
                 >
-                  <img
-                    src={item.src}
-                    alt={item.alt}
-                    width={1000}
-                    height={750}
-                    loading="lazy"
-                    decoding="async"
-                    className="aspect-[4/3] w-full object-cover"
-                  />
-                  <div className="p-6">
-                    <h3 className="text-lg font-semibold">{item.title}</h3>
-                    <p className="mt-3 text-sm leading-7 text-slate-600">
-                      {item.description}
+                  <div className={index % 2 === 1 ? 'lg:order-2' : ''}>
+                    <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
+                      {scenario.eyebrow}
                     </p>
+                    <h2 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+                      {scenario.title}
+                    </h2>
+                    <p className="mt-5 leading-7 text-slate-600">
+                      {scenario.intro}
+                    </p>
+                    <p className="mt-4 leading-7 text-slate-600">
+                      {scenario.detail}
+                    </p>
+                    <div className="mt-5 rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3 text-sm leading-6 text-slate-600">
+                      <strong className="text-slate-900">Before you download: </strong>
+                      {scenario.tip}
+                    </div>
+                    <a
+                      href="#background-changer"
+                      className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700"
+                    >
+                      Try this background change <ArrowRight className="size-4" />
+                    </a>
+                  </div>
+                  <div className={index % 2 === 1 ? 'lg:order-1' : ''}>
+                    <BackgroundChangeComparison
+                      subjectSrc={scenario.subject}
+                      subjectAlt={scenario.subjectAlt}
+                      beforeBackground={scenario.beforeBackground}
+                      afterBackground={'afterBackground' in scenario ? scenario.afterBackground : undefined}
+                      afterColor={'afterColor' in scenario ? scenario.afterColor : undefined}
+                      beforeLabel={scenario.beforeLabel}
+                      afterLabel={scenario.afterLabel}
+                    />
                   </div>
                 </article>
               ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-[#f1f6ff] px-4 py-16 sm:px-6 sm:py-20">
+          <div className="mx-auto grid max-w-6xl items-start gap-8 lg:grid-cols-[1fr_1fr] lg:gap-16">
+            <div>
+              <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
+                Focus on the background
+              </p>
+              <h2 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+                Keep Your Subject, Change Only the Background
+              </h2>
+              <p className="mt-5 leading-7 text-slate-600">
+                Changing a background should not mean inventing a new face,
+                product logo or clothing detail. Our background changer first
+                separates the foreground from the uploaded photo, then places
+                that same cutout onto a background you select.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm sm:p-8">
+              <h3 className="text-lg font-semibold text-slate-950">
+                What stays the same—and what may need checking
+              </h3>
+              <p className="mt-4 leading-7 text-slate-600">
+                Switching between preset backgrounds or colors does not rerun
+                the image generator or redraw your subject. The cutout pixels
+                are reused, so the face, clothing and product features in that
+                cutout stay the same across background choices.
+              </p>
+              <p className="mt-4 leading-7 text-slate-600">
+                AI segmentation can still miss fine hair, fuzzy fur, glass or
+                transparent fabrics. A new background will not automatically
+                recreate matching light or cast shadows. Preview the result
+                carefully, especially if you plan to use it professionally.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-slate-600">
+                Need transparency instead of a replacement background? Use the{' '}
+                <Link
+                  href="/ai-background-remover"
+                  className="font-semibold text-blue-600 hover:underline"
+                >
+                  AI Background Remover
+                </Link>.
+              </p>
             </div>
           </div>
         </section>
