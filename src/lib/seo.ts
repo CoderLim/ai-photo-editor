@@ -88,8 +88,8 @@ export function pageHead(input: PageSeoInput): {
   const canonicalLocale = localized ? locale : baseLocale;
   const canonical = absoluteUrl(input.path, canonicalLocale);
   // A dedicated, versioned social asset uses the latest brand logo and avoids
-  // crawlers continuing to display the older /og.png after a logo refresh.
-  const brandShareImage = '/og-brand-20261107.png';
+  // crawlers continuing to display a stale share image after a logo refresh.
+  const brandShareImage = '/og-brand-20261108.png';
   const isBrandImage = !input.image;
   const image = absoluteAsset(input.image ?? brandShareImage);
   const socialTitle = input.socialTitle ?? input.title;
