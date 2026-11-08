@@ -32,6 +32,9 @@ export const userEvents = {
   // Call track('paywall_hit', { feature }) where a feature needs a paid plan
   // or more credits.
   paywall_hit: { tone: 'amber', client: true },
+  // Browser: Generate Edit failed before an ai_task row exists (e.g. network
+  // "Failed to fetch" on upload or edits). detail.step names the failing call.
+  photo_edit_submit_failed: { tone: 'red', client: true },
   // Server only: recordEvent({ userId, kind: 'risk_flagged', detail }).
   risk_flagged: { tone: 'red' },
 } satisfies Record<string, EventDefinition>;

@@ -9,6 +9,7 @@ import {
   PHOTO_EDIT_QUALITIES,
   type PhotoEditQuality,
 } from '@/modules/photo-editor/config';
+import { track } from '@/lib/track';
 import type { CreditGate } from '@/components/photo-editor/credit-gate-dialog';
 
 type Draft = { file: File; prompt: string; quality?: PhotoEditQuality };
@@ -250,8 +251,12 @@ export function usePhotoEditSession({
     if (!editPrompt) return toast.error('Describe your edit first.');
     setStatus('submitting');
     let guest = Boolean(session?.user?.isAnonymous);
+    // Names the failing fetch when submit throws before an ai_task exists.
+    let step: 'anonymous' | 'trial' | 'credits' | 'upload' | 'edits' =
+      'anonymous';
     try {
       if (!session?.user) {
+        step = 'anonymous';
         const anonymous = await authClient.signIn.anonymous();
         if (anonymous.error) {
           showCreditGate('signup');
@@ -261,6 +266,7 @@ export function usePhotoEditSession({
         guest = true;
       }
       if (guest) {
+        step = 'trial';
         const response = await fetch('/api/guest/trial', { method: 'POST' });
         if (!response.ok) {
           showCreditGate('signup');
@@ -270,6 +276,7 @@ export function usePhotoEditSession({
         await dataOrThrow(response);
       }
 
+      step = 'credits';
       const credits = await dataOrThrow(await fetch('/api/credits'));
       const cost =
         creditCost ??
@@ -284,6 +291,7 @@ export function usePhotoEditSession({
       let imageUrl = upload?.url || preview;
       let uploadToken = upload?.token || '';
       if (file && !upload) {
+        step = 'upload';
         const data = new FormData();
         data.append('files', file);
         const stored = await dataOrThrow(
@@ -302,6 +310,7 @@ export function usePhotoEditSession({
 
       if (!requestId.current)
         requestId.current = crypto.randomUUID().replaceAll('-', '');
+      step = 'edits';
       const created = await dataOrThrow(
         await fetch('/api/photo-editor/edits', {
           method: 'POST',
@@ -338,6 +347,14 @@ export function usePhotoEditSession({
         showCreditGate(guest ? 'signup' : 'purchase');
         return;
       }
+      // No ai_task row in these cases — record for the admin timeline.
+      track('photo_edit_submit_failed', {
+        step,
+        error: String(message).slice(0, 200),
+        tool: toolSlug,
+        quality,
+        ...(file ? { fileKb: Math.round(file.size / 1024) } : {}),
+      });
       toast.error(message);
     }
   };

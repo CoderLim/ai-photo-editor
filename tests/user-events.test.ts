@@ -71,6 +71,15 @@ test('the browser may only report kinds registered with client: true', () => {
     ).kind,
     'plan_selected'
   );
+  assert.equal(
+    (
+      parseClientEvent({
+        kind: 'photo_edit_submit_failed',
+        detail: { step: 'upload', error: 'Failed to fetch' },
+      }) as any
+    ).kind,
+    'photo_edit_submit_failed'
+  );
   for (const kind of ['risk_flagged', 'order_paid', 'nope', '__proto__'])
     assert.ok('error' in parseClientEvent({ kind }), kind);
 });

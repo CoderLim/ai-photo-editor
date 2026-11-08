@@ -525,6 +525,7 @@
   "admin.user_detail.timeline_ticket_opened": "Ticket opened",
   "admin.user_detail.timeline_plan_selected": "Picked a plan",
   "admin.user_detail.timeline_paywall_hit": "Hit a paywall",
+  "admin.user_detail.timeline_photo_edit_submit_failed": "Photo edit submit failed",
   "admin.user_detail.timeline_risk_flagged": "Risk flag",
   "admin.roles.title": "Roles",
   "admin.roles.description": "Manage system roles and permissions",
