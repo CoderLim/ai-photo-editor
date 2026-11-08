@@ -604,12 +604,24 @@ money, credits, permissions, secrets, or user input:
    - A setting that becomes a `<script src>` or other executable URL needs a
      host allow-list taken from deployment env, not from settings. "https"
      alone is not trust.
-6. **Accounts**
+6. **File downloads (same-origin only)**
+   - Never use `<a href={r2OrCdnUrl} download>` or `target="_blank"` on a
+     storage/CDN URL to "download" a file. Cross-origin `download` is ignored
+     (especially mobile Safari) and the browser opens a preview tab instead.
+   - Always download via a **same-origin** route that proxies the object and
+     sets `Content-Disposition: attachment` (photo-editor:
+     `/api/photo-editor/edits/$id/download`). On the client, use
+     `downloadPhotoResult` / `downloadBlob` from `@/lib/download` — fetch the
+     same-origin URL as a blob, then trigger the save. Do not `window.open`
+     the file URL.
+   - The proxy must auth the caller, check object ownership, and allow-list the
+     URL against the configured storage domain (no open SSRF proxy).
+7. **Accounts**
    - Don't auto-link or auto-verify identities. Keep better-auth's
      `requireLocalEmailVerified`.
    - Agent and service accounts are `user.type = 'api'`. Exclude them from user
      lists and analytics.
-7. **Tests**
+8. **Tests**
    - Add a test under `tests/` for any change to money, credits or permissions,
      including the concurrent case.
 
@@ -647,26 +659,27 @@ it when the task matches:
 
 All functionality is self-contained — no external packages needed.
 
-| Location                  | Key Exports                                                                                   |
-| ------------------------- | --------------------------------------------------------------------------------------------- |
-| `@/core/payment`          | `PaymentManager`, `StripeProvider`, `PayPalProvider`, `CreemProvider`                         |
-| `@/core/email`            | `EmailManager`, `ResendProvider`                                                              |
-| `@/core/storage`          | `StorageManager`, `S3Provider`, `R2Provider`                                                  |
-| `@/core/ai`               | `AIManager`, `ReplicateProvider`, `GeminiProvider`, `FalProvider`, `KieProvider`              |
-| `@/core/auth/rbac`        | `matchPermission`, `matchAnyPermission`, `ROLES`                                              |
-| `@/core/db`               | `db()` singleton, `createDb` (multi-dialect)                                                  |
-| `@/lib/hash`              | `getUuid`, `getSnowId`, `getUniSeq`, `getNonceStr`, `md5`                                     |
-| `@/lib/resp`              | `respData`, `respOk`, `respErr`                                                               |
-| `@/lib/cookie`            | `getCookie`, `setCookie`, `getCookieFromCtx`                                                  |
-| `@/lib/rate-limit`        | `enforceMinIntervalRateLimit`                                                                 |
-| `@/lib/cache`             | `cacheGet`, `cacheSet`, `cacheRemove`                                                         |
-| `@/lib/time`              | `getTimestamp`, `getIsoTimestr`                                                               |
-| `@/lib/api-client`        | `apiGet`, `apiPost`, `apiPut`, `apiPatch`, `apiDelete`, `pageQuery`, `PageResult`, `ApiError` |
-| `@/lib/query-client`      | `getQueryClient`, `makeQueryClient`                                                           |
-| `@/paraglide/messages.js` | `m` — compiled message functions (`m['ns.key']()`)                                            |
-| `@/paraglide/runtime.js`  | `getLocale`, `setLocale`, `localizeHref`, `localizeUrl`, `locales`, `baseLocale`              |
-| `@/core/i18n/navigation`  | `Link`, `useRouter`, `usePathname` (locale-aware)                                             |
-| `@/core/i18n/dynamic`     | `tDynamic` (runtime-built message keys)                                                       |
+| Location                  | Key Exports                                                                                                |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `@/core/payment`          | `PaymentManager`, `StripeProvider`, `PayPalProvider`, `CreemProvider`                                      |
+| `@/core/email`            | `EmailManager`, `ResendProvider`                                                                           |
+| `@/core/storage`          | `StorageManager`, `S3Provider`, `R2Provider`                                                               |
+| `@/core/ai`               | `AIManager`, `ReplicateProvider`, `GeminiProvider`, `FalProvider`, `KieProvider`                           |
+| `@/core/auth/rbac`        | `matchPermission`, `matchAnyPermission`, `ROLES`                                                           |
+| `@/core/db`               | `db()` singleton, `createDb` (multi-dialect)                                                               |
+| `@/lib/hash`              | `getUuid`, `getSnowId`, `getUniSeq`, `getNonceStr`, `md5`                                                  |
+| `@/lib/resp`              | `respData`, `respOk`, `respErr`                                                                            |
+| `@/lib/cookie`            | `getCookie`, `setCookie`, `getCookieFromCtx`                                                               |
+| `@/lib/rate-limit`        | `enforceMinIntervalRateLimit`                                                                              |
+| `@/lib/cache`             | `cacheGet`, `cacheSet`, `cacheRemove`                                                                      |
+| `@/lib/time`              | `getTimestamp`, `getIsoTimestr`                                                                            |
+| `@/lib/api-client`        | `apiGet`, `apiPost`, `apiPut`, `apiPatch`, `apiDelete`, `pageQuery`, `PageResult`, `ApiError`              |
+| `@/lib/download`          | `downloadBlob`, `downloadPhotoResult` (same-origin attachment download; never cross-origin `<a download>`) |
+| `@/lib/query-client`      | `getQueryClient`, `makeQueryClient`                                                                        |
+| `@/paraglide/messages.js` | `m` — compiled message functions (`m['ns.key']()`)                                                         |
+| `@/paraglide/runtime.js`  | `getLocale`, `setLocale`, `localizeHref`, `localizeUrl`, `locales`, `baseLocale`                           |
+| `@/core/i18n/navigation`  | `Link`, `useRouter`, `usePathname` (locale-aware)                                                          |
+| `@/core/i18n/dynamic`     | `tDynamic` (runtime-built message keys)                                                                    |
 
 ## Database Schema (21 tables)
 
@@ -733,6 +746,7 @@ Keep `.env.example` minimal; don't add provider keys to it.
 9. **Run the `security-scan` skill before every `git commit`** — it checks for leaked secrets, injection/XSS/logic vulnerabilities in the diff, and `.gitignore`/`.dockerignore` gaps. HIGH findings block the commit.
 10. **Multi-statement writes use `atomic()`, never `db().transaction()`.** The latter is not atomic on D1. See "Atomic writes".
 11. **Upgrading a project from newer template code?** Follow `UPGRADING.md`. **Changing the template in a way existing projects must act on?** Add an entry there.
+12. **User-facing file downloads go same-origin** — use `@/lib/download` (`downloadPhotoResult` / `downloadBlob`) and an authenticated attachment proxy (e.g. `/api/photo-editor/edits/$id/download`). Never rely on cross-origin `<a download>` or opening R2/CDN URLs in a new tab. See "File downloads (same-origin only)".
 
 ## Cloud Sandbox Notes (ShipAny Code / e2b)
 

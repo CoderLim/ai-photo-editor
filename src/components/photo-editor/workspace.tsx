@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Download, LoaderCircle, RotateCcw, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { PHOTO_EDIT_MODEL_LABEL } from '@/modules/photo-editor/config';
+import { downloadPhotoResult } from '@/lib/download';
 import { cn } from '@/lib/utils';
 import { CreditGateDialog } from '@/components/photo-editor/credit-gate-dialog';
 import { ImageUploadField } from '@/components/photo-editor/image-upload-field';
@@ -51,8 +53,27 @@ export function PhotoEditorWorkspace() {
   const edit = usePhotoEditSession({ toolSlug: 'general' });
   const [exampleId, setExampleId] = useState<ExampleId>('change-background');
   const [examplePaused, setExamplePaused] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const example =
     QUICK_PROMPTS.find((item) => item.id === exampleId) ?? QUICK_PROMPTS[0];
+
+  async function handleDownload() {
+    if (!edit.result) return;
+    setDownloading(true);
+    try {
+      await downloadPhotoResult({
+        resultUrl: edit.result,
+        jobId: edit.jobId,
+        filename: 'edited-photo.png',
+      });
+    } catch (e) {
+      toast.error(
+        e instanceof Error ? e.message : 'Download failed. Try again.'
+      );
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   useEffect(() => {
     for (const item of QUICK_PROMPTS) {
@@ -307,16 +328,18 @@ export function PhotoEditorWorkspace() {
                     <RotateCcw className="size-4" />
                     Edit Again
                   </Button>
-                  <a
-                    href={edit.result}
-                    download
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex h-9 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
+                  <Button
+                    disabled={downloading}
+                    onClick={handleDownload}
+                    className="rounded-lg bg-blue-600 text-white hover:bg-blue-700"
                   >
-                    <Download className="size-4" />
+                    {downloading ? (
+                      <LoaderCircle className="size-4 animate-spin" />
+                    ) : (
+                      <Download className="size-4" />
+                    )}
                     Download
-                  </a>
+                  </Button>
                 </>
               )}
             </div>

@@ -8,10 +8,10 @@ import {
 } from '@/modules/photo-editor/config';
 import {
   compositeCutout,
-  downloadBlob,
   revokePhotoUrl,
   type CutoutFill,
 } from '@/lib/composite-cutout';
+import { downloadBlob, downloadPhotoResult } from '@/lib/download';
 import { cn } from '@/lib/utils';
 import { BackgroundFillPanel } from '@/components/photo-editor/background-fill-panel';
 import { CreditGateDialog } from '@/components/photo-editor/credit-gate-dialog';
@@ -89,7 +89,9 @@ export function BackgroundRemoverWorkspace({
     creditCost: BACKGROUND_REMOVAL_CREDITS,
   });
 
-  const [fill, setFill] = useState<CutoutFill>(isChanger ? WHITE_FILL : TRANSPARENT_FILL);
+  const [fill, setFill] = useState<CutoutFill>(
+    isChanger ? WHITE_FILL : TRANSPARENT_FILL
+  );
   const [downloading, setDownloading] = useState(false);
   const fillRef = useRef(fill);
   fillRef.current = fill;
@@ -128,16 +130,19 @@ export function BackgroundRemoverWorkspace({
     } catch (e) {
       const message =
         e instanceof Error ? e.message : 'Download failed. Try again.';
-      if (fill.mode === 'transparent' && edit.jobId && edit.session?.user) {
-        toast.error(message + ' Opening the server download instead.');
-        window.open(
-          `/api/photo-editor/edits/${edit.jobId}/download`,
-          '_blank',
-          'noopener,noreferrer'
-        );
-      } else {
-        toast.error(message);
+      if (fill.mode === 'transparent' && edit.jobId) {
+        try {
+          await downloadPhotoResult({
+            resultUrl: edit.result,
+            jobId: edit.jobId,
+            filename: 'background-removed.png',
+          });
+          return;
+        } catch {
+          /* Fall through to toast. */
+        }
       }
+      toast.error(message);
     } finally {
       setDownloading(false);
     }
@@ -221,7 +226,11 @@ export function BackgroundRemoverWorkspace({
           ) : (
             <Download className="size-4" />
           )}
-          {isChanger ? 'Download PNG' : fill.mode === 'transparent' ? 'Download PNG' : 'Download'}
+          {isChanger
+            ? 'Download PNG'
+            : fill.mode === 'transparent'
+              ? 'Download PNG'
+              : 'Download'}
         </Button>
       )}
     </div>
@@ -234,7 +243,9 @@ export function BackgroundRemoverWorkspace({
         : edit.creditBalance !== null
           ? String(edit.creditBalance) + ' credits available · '
           : ''}
-      {isChanger ? 'Choose a color or photo after cutout' : 'Transparent PNG cutout'}
+      {isChanger
+        ? 'Choose a color or photo after cutout'
+        : 'Transparent PNG cutout'}
     </p>
   );
 
