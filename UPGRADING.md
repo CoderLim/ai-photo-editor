@@ -63,13 +63,13 @@ other stale jobs before failing and refunding — not the old 3-minute window.
 2. Confirm `VITE_APP_URL` is the public `https://` origin (already required
    for OAuth / links). Localhost does not register provider webhooks.
 3. Confirm R2 (`r2_*`) is configured in admin Storage settings.
-4. **Required for full coverage:** schedule
-   `/api/cron/reconcile-photo-edits` with
-   `Authorization: Bearer <CRON_SECRET>` every few minutes. The repo
-   `wrangler.jsonc` still has **no** Cloudflare Cron Triggers — add
-   something like `{"crons": ["*/5 * * * *"]}` plus a Worker route/cron
-   handler that hits that URL, or use an external cron. Without it, stale
-   and missing-`task_id` jobs only settle when someone opens Generations /
+4. **Cron fallback:** add Cloudflare Cron Triggers to your gitignored
+   `wrangler.jsonc`, e.g. `"triggers": { "crons": ["*/5 * * * *"] }`.
+   The Worker `scheduled` path runs `reconcileStalePhotoEdits` via
+   `server/plugins/photo-edit-cron.ts` (nitro `cloudflare:scheduled`).
+   HTTP alternative still works: call `/api/cron/reconcile-photo-edits`
+   with `Authorization: Bearer <CRON_SECRET>`. Without either, stale /
+   missing-`task_id` jobs only settle when someone opens Generations /
    My Creations or polls a job.
 
 ---

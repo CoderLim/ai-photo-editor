@@ -145,7 +145,7 @@ R2 object key 改为确定性 `photo-editor/{taskId}.png`，并发结算覆盖�
 
 ## Cron 现状
 
-生产 `wrangler.jsonc` **未配置** Cloudflare Cron Triggers；`CRON_SECRET` 与 `/api/cron/reconcile-photo-edits` 已存在。部署后应在 Workers 配触发器，或用外部 cron 带 Bearer 调用。Webhook 上线后 cron 仍是兜底，不是主路径。
+Workers `triggers.crons`（建议 `*/5 * * * *`）经 Nitro `cloudflare:scheduled` 钩子直接跑 `reconcileStalePhotoEdits`（`server/plugins/photo-edit-cron.ts`）。HTTP 兜底仍可用：`/api/cron/reconcile-photo-edits` + `Authorization: Bearer <CRON_SECRET>`。Webhook 是主路径，cron 只兜 stale / missing-taskId。
 
 ## 不改
 

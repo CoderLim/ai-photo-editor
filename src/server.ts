@@ -94,6 +94,7 @@ function withPoweredBy(response: Response): Response {
 // Custom server entry — wraps every request in a db scope (one db client per
 // request on Workers, see core/db/request-scope.ts) and Paraglide's middleware
 // so getLocale() resolves per-request (AsyncLocalStorage) during SSR.
+// Cron: see server/plugins/photo-edit-cron.ts (cloudflare:scheduled hook).
 export default {
   async fetch(req: Request): Promise<Response> {
     await ensureCloudflareEnv();
