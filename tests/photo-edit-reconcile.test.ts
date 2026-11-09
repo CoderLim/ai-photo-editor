@@ -90,8 +90,8 @@ async function seedPendingEdit(params: {
 }
 
 test('exports stale thresholds for photo edits', () => {
-  assert.equal(PHOTO_EDIT_MISSING_PROVIDER_ID_MS, 180_000);
   assert.equal(PHOTO_EDIT_STALE_MS, 15 * 60_000);
+  assert.equal(PHOTO_EDIT_MISSING_PROVIDER_ID_MS, PHOTO_EDIT_STALE_MS);
   assert.equal(PHOTO_EDIT_LIST_PROVIDER_BUDGET, 3);
 });
 

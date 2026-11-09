@@ -28,7 +28,7 @@
     "test:guest-posts": "node --import tsx --test tests/guest-posts.test.ts tests/guest-post-notify.test.ts",
     "test:payment": "node --import tsx --test tests/payment-idempotency.test.ts tests/payment-guards.test.ts tests/refund.test.ts",
     "test:waffo": "node --import tsx --test src/core/payment/waffo.test.ts",
-    "test:photo-edit": "node --import tsx --test tests/photo-edit-credits.test.ts tests/photo-edit-reconcile.test.ts tests/photo-edit-webhook.test.ts",
+    "test:photo-edit": "node --import tsx --test tests/photo-edit-credits.test.ts tests/photo-edit-reconcile.test.ts tests/photo-edit-webhook.test.ts tests/photo-edit-submit-race.test.ts",
     "test:atomic": "node --import tsx --test tests/atomic.test.ts",
     "test:guest-credits": "node --import tsx --test tests/guest-credits.test.ts",
     "test:atomic:d1": "ATOMIC_D1=1 node --import tsx --test tests/atomic.test.ts",

@@ -86,6 +86,10 @@ R2 object key 改为确定性 `photo-editor/{taskId}.png`，并发结算覆盖�
 - `isDefiniteProviderReject`：明确 4xx（除 408/429）或未配置 → `failed` + 退款。
 - 超时 / 5xx / 网络等不确定 → **保持 pending**（文案不说已退款），等 Webhook / poll / cron；不自动重试 `generate()`。
 
+### P1：缺少 `task_id` 的等待窗口
+
+`PHOTO_EDIT_MISSING_PROVIDER_ID_MS` 与 `PHOTO_EDIT_STALE_MS` **同为 15 分钟**。未确认提交留下的 null `task_id` 可在此窗口内被 Webhook 认领；超时后 poll / list / cron 统一 `failed` + 退款。公开 Webhook 入口另限 body ≤ `PHOTO_EDIT_WEBHOOK_MAX_BODY_BYTES`（1 MiB），超限 413。
+
 ### P1：失败退款可靠
 
 `updateTask(FAILED)` 把状态更新与 `revoke` 步骤放进**同一次** `atomic()`（抽取 `planRevoke`）。失败则整笔回滚，Webhook 可 5xx 重试。

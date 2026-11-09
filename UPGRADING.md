@@ -53,7 +53,9 @@ Completed Replicate / Fal photo edits are settled by a signed webhook at
 no longer loses a finished image to `data_removed`. Polling and the stale
 reconcile cron remain as fallbacks. Production must have R2 configured —
 success no longer accepts a temporary provider URL. Failure marks the task
-failed and revokes credits in one `atomic()` write.
+failed and revokes credits in one `atomic()` write. Rows that never received
+a provider `task_id` (lost submit response) wait the same **15 minutes** as
+other stale jobs before failing and refunding — not the old 3-minute window.
 
 ### Action required
 
@@ -61,10 +63,14 @@ failed and revokes credits in one `atomic()` write.
 2. Confirm `VITE_APP_URL` is the public `https://` origin (already required
    for OAuth / links). Localhost does not register provider webhooks.
 3. Confirm R2 (`r2_*`) is configured in admin Storage settings.
-4. Prefer a scheduled call to `/api/cron/reconcile-photo-edits` with
+4. **Required for full coverage:** schedule
+   `/api/cron/reconcile-photo-edits` with
    `Authorization: Bearer <CRON_SECRET>` every few minutes. The repo
-   `wrangler.jsonc` does not yet define Cloudflare Cron Triggers — add one
-   (or an external cron) if you have not already.
+   `wrangler.jsonc` still has **no** Cloudflare Cron Triggers — add
+   something like `{"crons": ["*/5 * * * *"]}` plus a Worker route/cron
+   handler that hits that URL, or use an external cron. Without it, stale
+   and missing-`task_id` jobs only settle when someone opens Generations /
+   My Creations or polls a job.
 
 ---
 

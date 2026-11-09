@@ -69,15 +69,23 @@ export const BACKGROUND_REMOVAL_CREDITS = 4;
 /** Public display name for the underlying image model (compliance / UI). */
 export const PHOTO_EDIT_MODEL_LABEL = 'GPT Image 2.6';
 
-/** Give submit a short window to persist the provider request id. */
-export const PHOTO_EDIT_MISSING_PROVIDER_ID_MS = 180_000;
 /**
  * After this age, pending/processing photo edits are forced to failed (credits
  * refunded) even if the browser stopped polling. GPT Image jobs usually finish
- * in well under a minute; 15 minutes covers provider queues without holding
- * credits forever.
+ * in well under a minute; 15 minutes covers provider queues and late webhooks
+ * when submit never stored a provider task id (timeout / lost response),
+ * without holding credits forever.
  */
 export const PHOTO_EDIT_STALE_MS = 15 * 60_000;
+/**
+ * Same window as stale settle. Unconfirmed submits leave `task_id` null and
+ * wait for a webhook; failing them at 3 minutes would race a late success
+ * callback. Cron / list reconcile use this too.
+ */
+export const PHOTO_EDIT_MISSING_PROVIDER_ID_MS = PHOTO_EDIT_STALE_MS;
+
+/** Reject oversized provider webhook bodies (public endpoint). */
+export const PHOTO_EDIT_WEBHOOK_MAX_BODY_BYTES = 1024 * 1024;
 
 export function isPhotoEditQuality(value: unknown): value is PhotoEditQuality {
   return (

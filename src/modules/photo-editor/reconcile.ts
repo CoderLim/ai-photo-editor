@@ -177,8 +177,8 @@ export function shouldReconcileOnList(
 
 /**
  * Find photo edits that have outlived PHOTO_EDIT_STALE_MS and settle them.
- * Does not include the shorter missing-taskId window — that still runs via
- * poll / list / admin reconciles so submit has time to persist task_id.
+ * Includes rows still missing `task_id` (unconfirmed submit waiting on a
+ * webhook): after the shared stale window they fail and refund via reconcile.
  */
 export async function reconcileStalePhotoEdits(
   params: PhotoEditReconcileDeps & { limit?: number } = {}

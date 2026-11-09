@@ -1,7 +1,7 @@
 import { FalProvider, ReplicateProvider, type AIProvider } from '@/core/ai';
 import { getAllConfigs } from '@/modules/config/service';
 import { getStorage } from '@/modules/storage/service';
-import { isProduction } from '@/lib/env';
+import { isCloudflareWorker, isProduction } from '@/lib/env';
 
 import {
   FAL_BACKGROUND_REMOVAL_MODEL,
@@ -78,9 +78,10 @@ export function photoModelInput(
 export async function persistPhotoOutput(sourceUrl: string, taskId: string) {
   const storage = await getStorage();
   if (!storage) {
-    // Local/dev only. Production (including Workers) must not mark success
-    // with a temporary provider URL that can disappear.
-    if (isProduction) {
+    // Local/dev only. Production and Cloudflare Workers must not mark success
+    // with a temporary provider URL that can disappear. Workers builds usually
+    // set NODE_ENV=production; also gate on the runtime detect as a backup.
+    if (isProduction || isCloudflareWorker) {
       throw new Error('Photo storage is not configured');
     }
     return sourceUrl;
