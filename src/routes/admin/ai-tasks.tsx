@@ -68,10 +68,13 @@ function Thumb({
   src,
   alt,
   className,
+  fit = 'cover',
 }: {
   src: string | null;
   alt: string;
   className?: string;
+  /** Table thumbs crop to fill; detail preview must show the full image. */
+  fit?: 'cover' | 'contain';
 }) {
   if (!src) {
     return (
@@ -89,7 +92,11 @@ function Thumb({
     <img
       src={src}
       alt={alt}
-      className={cn('border-border rounded-md border object-cover', className)}
+      className={cn(
+        'border-border rounded-md border',
+        fit === 'contain' ? 'object-contain' : 'object-cover',
+        className
+      )}
     />
   );
 }
@@ -248,7 +255,7 @@ function AiTasksPage() {
       </Card>
 
       <Dialog open={!!active} onOpenChange={(open) => !open && setActive(null)}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
           {active && (
             <>
               <DialogHeader>
@@ -263,21 +270,39 @@ function AiTasksPage() {
                     <p className="text-muted-foreground mb-2 text-xs font-medium uppercase">
                       {m['admin.ai_tasks.original']()}
                     </p>
-                    <Thumb
-                      src={active.originalUrl}
-                      alt={m['admin.ai_tasks.original']()}
-                      className="aspect-square w-full"
-                    />
+                    <a
+                      href={active.originalUrl ?? undefined}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={cn(
+                        !active.originalUrl && 'pointer-events-none'
+                      )}
+                    >
+                      <Thumb
+                        src={active.originalUrl}
+                        alt={m['admin.ai_tasks.original']()}
+                        fit="contain"
+                        className="bg-muted max-h-[min(60vh,520px)] w-full"
+                      />
+                    </a>
                   </div>
                   <div>
                     <p className="text-muted-foreground mb-2 text-xs font-medium uppercase">
                       {m['admin.ai_tasks.result']()}
                     </p>
-                    <Thumb
-                      src={active.resultUrl}
-                      alt={m['admin.ai_tasks.result']()}
-                      className="aspect-square w-full"
-                    />
+                    <a
+                      href={active.resultUrl ?? undefined}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={cn(!active.resultUrl && 'pointer-events-none')}
+                    >
+                      <Thumb
+                        src={active.resultUrl}
+                        alt={m['admin.ai_tasks.result']()}
+                        fit="contain"
+                        className="bg-muted max-h-[min(60vh,520px)] w-full"
+                      />
+                    </a>
                   </div>
                 </div>
                 <div className="grid gap-2 text-sm sm:grid-cols-2">
