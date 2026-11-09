@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm';
 import { AIMediaType } from '@/core/ai';
 import { getAuth } from '@/core/auth';
 import { db } from '@/core/db';
+import { envConfigs } from '@/config';
 import { aiTask } from '@/config/db/schema';
 import {
   AITaskStatus,
@@ -26,6 +27,7 @@ import {
   photoModelInput,
 } from '@/modules/photo-editor/service';
 import { verifyUploadToken } from '@/modules/photo-editor/upload-token';
+import { photoEditWebhookCallbackUrl } from '@/modules/photo-editor/webhook-sign';
 import { md5 } from '@/lib/hash';
 import { enforceMinIntervalRateLimit } from '@/lib/rate-limit';
 import { respData, respErr } from '@/lib/resp';
@@ -181,6 +183,11 @@ export async function POST({ request }: { request: Request }) {
   }
 
   try {
+    const callbackUrl = await photoEditWebhookCallbackUrl(
+      envConfigs.app_url,
+      provider,
+      task.id
+    );
     const remote = await instance.instance.generate({
       params: {
         mediaType: AIMediaType.IMAGE,
@@ -190,6 +197,7 @@ export async function POST({ request }: { request: Request }) {
           ? { image_url: imageUrl }
           : photoModelInput(provider, imageUrl, charge.quality),
         async: true,
+        callbackUrl,
       },
     });
     await db()

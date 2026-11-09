@@ -3,7 +3,7 @@ import { and, desc, eq, inArray, isNull } from 'drizzle-orm';
 import { db } from '@/core/db';
 import { atomic, AtomicGuardError, guard } from '@/core/db/atomic';
 import { aiTask, user } from '@/config/db/schema';
-import { planConsume, revoke } from '@/modules/credits/service';
+import { planConsume, planRevoke, revoke } from '@/modules/credits/service';
 import { getUuid } from '@/lib/hash';
 
 export enum AITaskStatus {
@@ -70,8 +70,13 @@ export async function createTask(params: {
     try {
       await atomic((q) => [
         // Avoid a guest submission racing a concurrent account migration.
-        guard({ table: user, column: 'id', where: eq(user.id, userId),
-          require: isNull(user.linkedUserId), message: 'Account is linking' }),
+        guard({
+          table: user,
+          column: 'id',
+          where: eq(user.id, userId),
+          require: isNull(user.linkedUserId),
+          message: 'Account is linking',
+        }),
         q.insert(aiTask).values(taskData),
         ...(plan ? plan.steps(q) : []),
       ]);
@@ -95,8 +100,23 @@ export async function createTask(params: {
   throw new Error('Insufficient credits');
 }
 
+function creditIdFromTaskInfo(
+  taskInfo: string | null | undefined
+): string | null {
+  if (!taskInfo) return null;
+  try {
+    const info = JSON.parse(taskInfo);
+    return typeof info?.creditId === 'string' && info.creditId
+      ? info.creditId
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Update task status. Revokes credits on failure.
+ * Update task status. On failure, marks the task failed and revokes credits in
+ * the same atomic write so a crash cannot leave a failed job without a refund.
  */
 export async function updateTask(params: {
   taskId: string;
@@ -115,38 +135,60 @@ export async function updateTask(params: {
 
   // Terminal statuses are immutable. Concurrent polls must never overwrite a
   // successful job with a late failure, or refund a successfully settled job.
-  if (![AITaskStatus.PENDING, AITaskStatus.PROCESSING].includes(task.status as AITaskStatus)) {
+  if (
+    ![AITaskStatus.PENDING, AITaskStatus.PROCESSING].includes(
+      task.status as AITaskStatus
+    )
+  ) {
     return;
   }
   const updateData: any = { status };
   if (taskResult) {
     updateData.taskResult = JSON.stringify(taskResult);
   }
+
+  const shouldRefund =
+    status === AITaskStatus.FAILED || status === AITaskStatus.CANCELED;
+  const creditId = shouldRefund ? creditIdFromTaskInfo(task.taskInfo) : null;
+  const revokePlan = creditId ? await planRevoke(creditId) : null;
+
   try {
     await atomic((q) => [
       guard({
-        table: aiTask, column: 'userId', where: eq(aiTask.id, taskId),
-        require: inArray(aiTask.status, [AITaskStatus.PENDING, AITaskStatus.PROCESSING]),
+        table: aiTask,
+        column: 'userId',
+        where: eq(aiTask.id, taskId),
+        require: inArray(aiTask.status, [
+          AITaskStatus.PENDING,
+          AITaskStatus.PROCESSING,
+        ]),
         message: 'Task already settled',
       }),
       q.update(aiTask).set(updateData).where(eq(aiTask.id, taskId)),
+      ...(revokePlan ? revokePlan.steps(q) : []),
     ]);
   } catch (error) {
     if (error instanceof AtomicGuardError) return;
     throw error;
   }
+}
 
-  // Revoke credits on failure
-  if (status === AITaskStatus.FAILED && task.taskInfo) {
-    try {
-      const info = JSON.parse(task.taskInfo as string);
-      if (info.creditId) {
-        await revoke(info.creditId);
-      }
-    } catch {
-      // Ignore parse errors
-    }
+/**
+ * Idempotent refund for a task that is already terminal but whose consume
+ * row may still be active (historical race or pre-atomic failure path).
+ */
+export async function ensureTaskRefund(task: {
+  status: string;
+  taskInfo?: string | null;
+}) {
+  if (
+    task.status !== AITaskStatus.FAILED &&
+    task.status !== AITaskStatus.CANCELED
+  ) {
+    return;
   }
+  const creditId = creditIdFromTaskInfo(task.taskInfo);
+  if (creditId) await revoke(creditId);
 }
 
 /**

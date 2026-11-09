@@ -46,6 +46,28 @@ exports, permission codes, and behavior that changes for end users.
 
 ---
 
+## 2026-11-09: Photo-edit provider webhooks
+
+Completed Replicate / Fal photo edits are settled by a signed webhook at
+`/api/photo-editor/webhook/{replicate|fal}?job=…&sig=…`, so a closed browser
+no longer loses a finished image to `data_removed`. Polling and the stale
+reconcile cron remain as fallbacks. Production must have R2 configured —
+success no longer accepts a temporary provider URL. Failure marks the task
+failed and revokes credits in one `atomic()` write.
+
+### Action required
+
+1. Pull the code and redeploy Workers (no schema / permission changes).
+2. Confirm `VITE_APP_URL` is the public `https://` origin (already required
+   for OAuth / links). Localhost does not register provider webhooks.
+3. Confirm R2 (`r2_*`) is configured in admin Storage settings.
+4. Prefer a scheduled call to `/api/cron/reconcile-photo-edits` with
+   `Authorization: Bearer <CRON_SECRET>` every few minutes. The repo
+   `wrangler.jsonc` does not yet define Cloudflare Cron Triggers — add one
+   (or an external cron) if you have not already.
+
+---
+
 ## 2026-11-07: Photo-edit stale reconcile + cron
 
 Photo edits no longer stay `pending` forever when the browser stops polling.

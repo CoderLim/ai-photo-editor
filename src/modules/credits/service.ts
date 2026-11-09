@@ -336,7 +336,14 @@ export async function planDeductForRefund(params: {
 
 // --- Revoke (restore credits from a consumed record) ---
 
-export async function revoke(consumeCreditId: string) {
+/**
+ * Plan restoring a consume row. Returns null when there is nothing to revoke
+ * (missing / already deleted / no consumedDetail). Steps include the claim
+ * guard so concurrent revokes restore once.
+ */
+export async function planRevoke(
+  consumeCreditId: string
+): Promise<{ steps: (q: any) => AtomicStep[] } | null> {
   const [consumeRecord] = await db()
     .select()
     .from(credit)
@@ -349,16 +356,14 @@ export async function revoke(consumeCreditId: string) {
     )
     .limit(1);
 
-  if (!consumeRecord || !consumeRecord.consumedDetail) return;
+  if (!consumeRecord || !consumeRecord.consumedDetail) return null;
 
   const items: { creditId: string; creditsConsumed: number }[] = JSON.parse(
     consumeRecord.consumedDetail
   );
 
-  try {
-    await atomic((q) => [
-      // Claim the consumption record first: a retried or concurrent revoke
-      // (e.g. a provider's failure callback delivered twice) must restore once.
+  return {
+    steps: (q) => [
       guard({
         table: credit,
         column: 'userId',
@@ -370,7 +375,6 @@ export async function revoke(consumeCreditId: string) {
         .update(credit)
         .set({ status: CreditStatus.DELETED })
         .where(eq(credit.id, consumeCreditId)),
-      // Atomic increment per source grant — no read-modify-write race.
       ...items.map((item) =>
         q
           .update(credit)
@@ -379,7 +383,15 @@ export async function revoke(consumeCreditId: string) {
           })
           .where(eq(credit.id, item.creditId))
       ),
-    ]);
+    ],
+  };
+}
+
+export async function revoke(consumeCreditId: string) {
+  const plan = await planRevoke(consumeCreditId);
+  if (!plan) return;
+  try {
+    await atomic(plan.steps);
   } catch (error) {
     if (error instanceof AtomicGuardError) return; // already revoked
     throw error;
