@@ -46,6 +46,34 @@ exports, permission codes, and behavior that changes for end users.
 
 ---
 
+## 2026-11-09: Photo-edit provider webhooks
+
+Completed Replicate / Fal photo edits are settled by a signed webhook at
+`/api/photo-editor/webhook/{replicate|fal}?job=…&sig=…`, so a closed browser
+no longer loses a finished image to `data_removed`. Polling and the stale
+reconcile cron remain as fallbacks. Production must have R2 configured —
+success no longer accepts a temporary provider URL. Failure marks the task
+failed and revokes credits in one `atomic()` write. Rows that never received
+a provider `task_id` (lost submit response) wait the same **15 minutes** as
+other stale jobs before failing and refunding — not the old 3-minute window.
+
+### Action required
+
+1. Pull the code and redeploy Workers (no schema / permission changes).
+2. Confirm `VITE_APP_URL` is the public `https://` origin (already required
+   for OAuth / links). Localhost does not register provider webhooks.
+3. Confirm R2 (`r2_*`) is configured in admin Storage settings.
+4. **Cron fallback:** add Cloudflare Cron Triggers to your gitignored
+   `wrangler.jsonc`, e.g. `"triggers": { "crons": ["*/5 * * * *"] }`.
+   The Worker `scheduled` path runs `reconcileStalePhotoEdits` via
+   `server/plugins/photo-edit-cron.ts` (nitro `cloudflare:scheduled`).
+   HTTP alternative still works: call `/api/cron/reconcile-photo-edits`
+   with `Authorization: Bearer <CRON_SECRET>`. Without either, stale /
+   missing-`task_id` jobs only settle when someone opens Generations /
+   My Creations or polls a job.
+
+---
+
 ## 2026-11-07: Photo-edit stale reconcile + cron
 
 Photo edits no longer stay `pending` forever when the browser stops polling.

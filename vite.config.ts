@@ -103,6 +103,9 @@ export default defineConfig({
       srcDirectory: 'src',
     }),
     viteReact(),
-    nitro(),
+    nitro({
+      // Photo-edit cron: cloudflare:scheduled hook (see server/plugins/).
+      plugins: ['./server/plugins/photo-edit-cron.ts'],
+    }),
   ],
 });

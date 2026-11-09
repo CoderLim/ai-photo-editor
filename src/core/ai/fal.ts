@@ -110,7 +110,7 @@ export class FalProvider implements AIProvider {
       !callbackUrl.includes('127.0.0.1');
 
     if (isValidCallbackUrl) {
-      apiUrl += `?fal_webhook=${callbackUrl}`;
+      apiUrl += `?fal_webhook=${encodeURIComponent(callbackUrl)}`;
     }
 
     const resp = await fetch(apiUrl, {

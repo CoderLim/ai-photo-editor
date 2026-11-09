@@ -1,9 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { eq } from 'drizzle-orm';
 
 import { AIMediaType } from '@/core/ai';
 import { getAuth } from '@/core/auth';
-import { db } from '@/core/db';
+import { envConfigs } from '@/config';
 import { aiTask } from '@/config/db/schema';
 import {
   AITaskStatus,
@@ -21,14 +20,45 @@ import {
   PhotoEditQualityError,
 } from '@/modules/photo-editor/config';
 import {
+  attachPhotoEditProviderTaskId,
+  PhotoEditProviderIdError,
+} from '@/modules/photo-editor/reconcile';
+import {
   createPhotoProvider,
   getSelectedPhotoProvider,
   photoModelInput,
 } from '@/modules/photo-editor/service';
 import { verifyUploadToken } from '@/modules/photo-editor/upload-token';
+import { photoEditWebhookCallbackUrl } from '@/modules/photo-editor/webhook-sign';
 import { md5 } from '@/lib/hash';
 import { enforceMinIntervalRateLimit } from '@/lib/rate-limit';
 import { respData, respErr } from '@/lib/resp';
+
+/**
+ * Provider clearly refused the request (no billable job). Timeouts, 5xx, and
+ * network blips are NOT definite — the supplier may still run and webhook.
+ */
+export function isDefiniteProviderReject(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  const statusMatch = /(?:status(?:\s*code)?\s*[:=]?\s*|HTTP\s+)(\d{3})/i.exec(
+    message
+  );
+  if (statusMatch) {
+    const code = Number(statusMatch[1]);
+    return code >= 400 && code < 500 && code !== 408 && code !== 429;
+  }
+  return /not configured|unsupported image provider|api key is not configured|api token is not configured/i.test(
+    message
+  );
+}
+
+function clientStatus(status: string): string {
+  if (status === AITaskStatus.SUCCESS) return 'success';
+  if (status === AITaskStatus.FAILED || status === AITaskStatus.CANCELED) {
+    return 'failed';
+  }
+  return 'pending';
+}
 
 async function sessionFor(request: Request) {
   return (await getAuth().api.getSession({ headers: request.headers }))?.user;
@@ -180,7 +210,13 @@ export async function POST({ request }: { request: Request }) {
     });
   }
 
+  let remoteTaskId: string | undefined;
   try {
+    const callbackUrl = await photoEditWebhookCallbackUrl(
+      envConfigs.app_url,
+      provider,
+      task.id
+    );
     const remote = await instance.instance.generate({
       params: {
         mediaType: AIMediaType.IMAGE,
@@ -190,32 +226,61 @@ export async function POST({ request }: { request: Request }) {
           ? { image_url: imageUrl }
           : photoModelInput(provider, imageUrl, charge.quality),
         async: true,
+        callbackUrl,
       },
     });
-    await db()
-      .update(aiTask)
-      .set({
-        taskId: remote.taskId,
-        status:
-          remote.taskStatus === 'success'
-            ? AITaskStatus.PROCESSING
-            : AITaskStatus.PENDING,
-      })
-      .where(eq(aiTask.id, task.id));
-  } catch (error: any) {
-    // Unknown remote outcome can incur supplier costs, but must not charge a
-    // user for a task that the app cannot track or deliver.
-    await updateTask({ taskId: task.id, status: AITaskStatus.FAILED });
-    return respErr('Could not submit the edit. Credits were restored.', {
-      status: 502,
+    remoteTaskId = remote.taskId;
+  } catch (error: unknown) {
+    if (isDefiniteProviderReject(error)) {
+      await updateTask({ taskId: task.id, status: AITaskStatus.FAILED });
+      return respErr('Could not submit the edit. Credits were restored.', {
+        status: 502,
+      });
+    }
+    // Outcome uncertain (timeout / 5xx / network): leave pending so a late
+    // webhook can still claim and settle. Do not refund or reopen later.
+    console.warn(
+      'Photo edit submit unconfirmed:',
+      error instanceof Error ? error.message : error
+    );
+    return respData({
+      jobId: task.id,
+      status: 'pending',
+      credits: charge.credits,
     });
   }
 
-  return respData({
-    jobId: task.id,
-    status: 'pending',
-    credits: charge.credits,
-  });
+  try {
+    // Never force status back to pending — webhook may already have settled.
+    const current = await attachPhotoEditProviderTaskId(task.id, remoteTaskId!);
+    return respData({
+      jobId: current.id,
+      status: clientStatus(current.status),
+      credits: current.costCredits,
+    });
+  } catch (error: unknown) {
+    if (
+      error instanceof PhotoEditProviderIdError &&
+      error.code === 'mismatch'
+    ) {
+      console.warn(
+        'Photo edit provider id conflict after submit:',
+        error.message
+      );
+    } else {
+      console.warn(
+        'Photo edit attach after submit failed:',
+        error instanceof Error ? error.message : error
+      );
+    }
+    // Provider already accepted the job — keep pending for webhook/poll.
+    const current = await findTask(task.id);
+    return respData({
+      jobId: task.id,
+      status: clientStatus(current?.status || AITaskStatus.PENDING),
+      credits: task.costCredits,
+    });
+  }
 }
 
 async function GET({ request }: { request: Request }) {

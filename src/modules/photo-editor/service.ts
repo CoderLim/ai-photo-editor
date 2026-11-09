@@ -1,10 +1,11 @@
 import { FalProvider, ReplicateProvider, type AIProvider } from '@/core/ai';
 import { getAllConfigs } from '@/modules/config/service';
 import { getStorage } from '@/modules/storage/service';
+import { isCloudflareWorker, isProduction } from '@/lib/env';
 
 import {
-  FAL_EDIT_MODEL,
   FAL_BACKGROUND_REMOVAL_MODEL,
+  FAL_EDIT_MODEL,
   REPLICATE_EDIT_MODEL,
   type PhotoEditQuality,
 } from './config';
@@ -18,7 +19,10 @@ export async function createPhotoProvider(
     if (!configs.fal_api_key) throw new Error('fal API key is not configured');
     return {
       instance: new FalProvider({ apiKey: configs.fal_api_key }),
-      model: task === 'remove-background' ? FAL_BACKGROUND_REMOVAL_MODEL : FAL_EDIT_MODEL,
+      model:
+        task === 'remove-background'
+          ? FAL_BACKGROUND_REMOVAL_MODEL
+          : FAL_EDIT_MODEL,
     };
   }
   if (task === 'remove-background')
@@ -74,12 +78,19 @@ export function photoModelInput(
 export async function persistPhotoOutput(sourceUrl: string, taskId: string) {
   const storage = await getStorage();
   if (!storage) {
-    // Local development only; production must configure R2.
+    // Local/dev only. Production and Cloudflare Workers must not mark success
+    // with a temporary provider URL that can disappear. Workers builds usually
+    // set NODE_ENV=production; also gate on the runtime detect as a backup.
+    if (isProduction || isCloudflareWorker) {
+      throw new Error('Photo storage is not configured');
+    }
     return sourceUrl;
   }
+  // Deterministic key so concurrent webhook/poll settlers overwrite one object
+  // instead of leaving orphan uploads.
   const saved = await storage.downloadAndUpload({
     url: sourceUrl,
-    key: 'photo-editor/' + taskId + '-' + crypto.randomUUID() + '.png',
+    key: 'photo-editor/' + taskId + '.png',
     contentType: 'image/png',
   });
   if (!saved.success || !saved.url)

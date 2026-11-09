@@ -1,9 +1,14 @@
-import { and, asc, inArray, isNull, lt, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull, lt, sql } from 'drizzle-orm';
 
 import { AIMediaType, type AITaskResult } from '@/core/ai';
 import { db } from '@/core/db';
 import { aiTask, type AiTask } from '@/config/db/schema';
-import { AITaskStatus, findTask, updateTask } from '@/modules/ai-tasks/service';
+import {
+  AITaskStatus,
+  ensureTaskRefund,
+  findTask,
+  updateTask,
+} from '@/modules/ai-tasks/service';
 
 import {
   PHOTO_EDIT_MISSING_PROVIDER_ID_MS,
@@ -16,8 +21,15 @@ export const PHOTO_EDIT_LIST_PROVIDER_BUDGET = 3;
 
 export type PhotoEditReconcileDeps = {
   now?: number;
+  /** When set, skip the live provider query (e.g. verified webhook payload). */
+  remote?: AITaskResult;
   queryProvider?: (task: AiTask) => Promise<AITaskResult>;
   persistOutput?: (url: string, taskId: string) => Promise<string>;
+  /**
+   * Webhook path: surface transient failures so the HTTP handler can return
+   * 5xx and let the provider retry. Poll/list/cron keep the default (false).
+   */
+  throwOnError?: boolean;
 };
 
 function createdAtMs(task: AiTask): number {
@@ -29,7 +41,9 @@ function createdAtMs(task: AiTask): number {
 
 async function markFailed(taskId: string): Promise<AiTask> {
   await updateTask({ taskId, status: AITaskStatus.FAILED });
-  return (await findTask(taskId))!;
+  const settled = (await findTask(taskId))!;
+  await ensureTaskRefund(settled);
+  return settled;
 }
 
 function toolFromOptions(
@@ -60,7 +74,7 @@ async function defaultQueryProvider(task: AiTask): Promise<AITaskResult> {
 
 /**
  * Advance one photo-edit ai_task toward a terminal status.
- * Safe to call from client polls, history lists, admin pages, or a cron sweep.
+ * Safe to call from client polls, history lists, admin pages, webhooks, or a cron sweep.
  */
 export async function reconcilePhotoEditTask(
   task: AiTask,
@@ -70,12 +84,14 @@ export async function reconcilePhotoEditTask(
     task.status !== AITaskStatus.PENDING &&
     task.status !== AITaskStatus.PROCESSING
   ) {
+    await ensureTaskRefund(task);
     return task;
   }
   if (!task.id.startsWith('edit_')) return task;
 
   const now = deps.now ?? Date.now();
   const age = now - createdAtMs(task);
+  const throwOnError = deps.throwOnError === true;
 
   if (!task.taskId) {
     if (age > PHOTO_EDIT_MISSING_PROVIDER_ID_MS) {
@@ -88,7 +104,7 @@ export async function reconcilePhotoEditTask(
   const persistOutput = deps.persistOutput ?? persistPhotoOutput;
 
   try {
-    const remote = await queryProvider(task);
+    const remote = deps.remote ?? (await queryProvider(task));
     if (remote.taskStatus === AITaskStatus.SUCCESS) {
       const original = remote.taskInfo?.images?.[0]?.imageUrl;
       if (!original) {
@@ -115,6 +131,7 @@ export async function reconcilePhotoEditTask(
     }
     return task;
   } catch (error: unknown) {
+    if (throwOnError) throw error;
     const message = error instanceof Error ? error.message : String(error);
     console.warn('Photo edit status query failed:', message);
     if (age > PHOTO_EDIT_STALE_MS) {
@@ -160,8 +177,8 @@ export function shouldReconcileOnList(
 
 /**
  * Find photo edits that have outlived PHOTO_EDIT_STALE_MS and settle them.
- * Does not include the shorter missing-taskId window — that still runs via
- * poll / list / admin reconciles so submit has time to persist task_id.
+ * Includes rows still missing `task_id` (unconfirmed submit waiting on a
+ * webhook): after the shared stale window they fail and refund via reconcile.
  */
 export async function reconcileStalePhotoEdits(
   params: PhotoEditReconcileDeps & { limit?: number } = {}
@@ -193,4 +210,118 @@ export async function reconcileStalePhotoEdits(
     if (settled.status === AITaskStatus.SUCCESS) succeeded += 1;
   }
   return { checked: rows.length, failed, succeeded };
+}
+
+/** Look up a photo-edit row by our stable edit_ id. */
+export async function findPhotoEditById(id: string): Promise<AiTask | null> {
+  if (!id.startsWith('edit_')) return null;
+  const [row] = await db()
+    .select()
+    .from(aiTask)
+    .where(and(eq(aiTask.id, id), isNull(aiTask.deletedAt)))
+    .limit(1);
+  return row ?? null;
+}
+
+export class PhotoEditProviderIdError extends Error {
+  code: 'mismatch' | 'attach_failed' | 'not_found';
+
+  constructor(code: PhotoEditProviderIdError['code'], message: string) {
+    super(message);
+    this.name = 'PhotoEditProviderIdError';
+    this.code = code;
+  }
+}
+
+function isOpenStatus(status: string): boolean {
+  return status === AITaskStatus.PENDING || status === AITaskStatus.PROCESSING;
+}
+
+/**
+ * Attach a provider prediction id without touching terminal status.
+ * Used by both the submit handler (after generate) and webhooks (early claim).
+ * Never overwrites an existing different taskId or reopens a settled row.
+ */
+export async function attachPhotoEditProviderTaskId(
+  taskId: string,
+  providerTaskId: string
+): Promise<AiTask> {
+  const task = await findPhotoEditById(taskId);
+  if (!task) {
+    throw new PhotoEditProviderIdError('not_found', 'Task not found');
+  }
+  if (task.taskId === providerTaskId) return task;
+  if (task.taskId && task.taskId !== providerTaskId) {
+    throw new PhotoEditProviderIdError('mismatch', 'Provider task id mismatch');
+  }
+
+  // Already settled (webhook won the race): do not mutate status or force
+  // a pending rewrite. Record the id only when still null.
+  if (!isOpenStatus(task.status)) {
+    if (!task.taskId) {
+      await db()
+        .update(aiTask)
+        .set({ taskId: providerTaskId })
+        .where(
+          and(
+            eq(aiTask.id, taskId),
+            isNull(aiTask.taskId),
+            inArray(aiTask.status, [
+              AITaskStatus.SUCCESS,
+              AITaskStatus.FAILED,
+              AITaskStatus.CANCELED,
+            ])
+          )
+        );
+      const terminal = await findPhotoEditById(taskId);
+      if (!terminal) {
+        throw new PhotoEditProviderIdError('not_found', 'Task not found');
+      }
+      if (terminal.taskId && terminal.taskId !== providerTaskId) {
+        throw new PhotoEditProviderIdError(
+          'mismatch',
+          'Provider task id mismatch'
+        );
+      }
+      return terminal;
+    }
+    return task;
+  }
+
+  // Open row with null taskId — claim. Do not catch-all: real DB errors must
+  // propagate so webhooks can 5xx and retry. A concurrent claim simply
+  // updates 0 rows; we re-read and verify below.
+  await db()
+    .update(aiTask)
+    .set({ taskId: providerTaskId })
+    .where(
+      and(
+        eq(aiTask.id, taskId),
+        isNull(aiTask.taskId),
+        inArray(aiTask.status, [AITaskStatus.PENDING, AITaskStatus.PROCESSING])
+      )
+    );
+
+  const refreshed = await findPhotoEditById(taskId);
+  if (!refreshed) {
+    throw new PhotoEditProviderIdError('not_found', 'Task not found');
+  }
+  if (refreshed.taskId === providerTaskId) return refreshed;
+  if (refreshed.taskId && refreshed.taskId !== providerTaskId) {
+    throw new PhotoEditProviderIdError('mismatch', 'Provider task id mismatch');
+  }
+  // Still null after an open-row claim: either a transient write failure or
+  // the row flipped terminal with no id. Never pretend the claim succeeded.
+  throw new PhotoEditProviderIdError(
+    'attach_failed',
+    'Failed to attach provider task id'
+  );
+}
+
+/** @deprecated use attachPhotoEditProviderTaskId */
+export async function claimPhotoEditProviderTaskId(
+  taskId: string,
+  providerTaskId: string
+): Promise<AiTask | null> {
+  return attachPhotoEditProviderTaskId(taskId, providerTaskId);
 }

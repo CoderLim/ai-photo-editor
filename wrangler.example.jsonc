@@ -14,6 +14,11 @@
   "observability": {
     "enabled": true,
   },
+  // Optional: settle orphaned photo-edit jobs (missing task_id / stale pending).
+  // Handler: server/plugins/photo-edit-cron.ts via nitro `cloudflare:scheduled`.
+  // "triggers": {
+  //   "crons": ["*/5 * * * *"]
+  // },
   "vars": {
     "DATABASE_PROVIDER": "d1",
     // Server-side runtime fallbacks for the build-time VITE_* values — keep in
