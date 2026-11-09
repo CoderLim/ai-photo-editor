@@ -4,14 +4,16 @@ import {
   createPublicKey,
   timingSafeEqual,
   verify,
+  type JsonWebKey as CryptoJsonWebKey,
 } from 'node:crypto';
 
 import { AITaskStatus, type AITaskResult } from '@/core/ai';
 import { getAllConfigs } from '@/modules/config/service';
 
 import {
-  claimPhotoEditProviderTaskId,
+  attachPhotoEditProviderTaskId,
   findPhotoEditById,
+  PhotoEditProviderIdError,
   reconcilePhotoEditTask,
 } from './reconcile';
 import { verifyPhotoEditWebhookJob } from './webhook-sign';
@@ -126,7 +128,7 @@ async function getFalPublicKeys() {
   if (!resp.ok) {
     throw new PhotoEditWebhookError('Failed to load Fal JWKS', 503, true);
   }
-  const data = (await resp.json()) as { keys?: JsonWebKey[] };
+  const data = (await resp.json()) as { keys?: CryptoJsonWebKey[] };
   const keys = (data.keys || []).map((jwk) =>
     createPublicKey({ key: jwk, format: 'jwk' })
   );
@@ -344,13 +346,22 @@ export async function handlePhotoEditWebhook(params: {
   }
 
   try {
-    task = (await claimPhotoEditProviderTaskId(jobId, parsed.providerTaskId))!;
+    task = await attachPhotoEditProviderTaskId(jobId, parsed.providerTaskId);
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
-    throw new PhotoEditWebhookError(message, 409);
+    if (error instanceof PhotoEditProviderIdError) {
+      if (error.code === 'mismatch') {
+        throw new PhotoEditWebhookError(error.message, 409);
+      }
+      if (error.code === 'not_found') {
+        throw new PhotoEditWebhookError(error.message, 503, true);
+      }
+      // attach_failed — retryable so the provider can redeliver
+      throw new PhotoEditWebhookError(error.message, 503, true);
+    }
+    throw error;
   }
-  if (!task) {
-    throw new PhotoEditWebhookError('Task not found after claim', 503, true);
+  if (!task.taskId || task.taskId !== parsed.providerTaskId) {
+    throw new PhotoEditWebhookError('Provider task id not attached', 503, true);
   }
 
   // Prefer payload images; if success but no URL, fall back to a live query.
@@ -366,6 +377,15 @@ export async function handlePhotoEditWebhook(params: {
     persistOutput: deps?.persistOutput,
     queryProvider: deps?.queryProvider,
   });
+
+  // Terminal provider events must not ack 200 while the row is still open —
+  // that would stop retries and leave credits stuck / output lost.
+  if (
+    settled.status === AITaskStatus.PENDING ||
+    settled.status === AITaskStatus.PROCESSING
+  ) {
+    throw new PhotoEditWebhookError('Settle incomplete', 503, true);
+  }
 
   return {
     status: settled.status,

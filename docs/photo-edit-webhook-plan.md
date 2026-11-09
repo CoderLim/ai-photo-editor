@@ -1,6 +1,6 @@
 # Photo-edit Webhook 接入方案
 
-> 状态：已在分支 `feat/photo-edit-webhook-20261109` 实现；`pnpm test:photo-edit` 通过。
+> 状态：已在分支 `feat/photo-edit-webhook-20261109` 实现（含 Review 修复）；`pnpm test:photo-edit` 验证。
 > 解决「供应商已成功、浏览器未轮询 → 结果被清理 → Admin 显示 Failed」的问题。
 
 ## 问题
@@ -72,9 +72,19 @@ R2 object key 改为确定性 `photo-editor/{taskId}.png`，并发结算覆盖�
 
 - `sig = HMAC-SHA256(AUTH_SECRET, "{provider}:{job}")`（与 upload-token 同风格）。
 - 任务在 `generate` **之前**已 `createTask`，故按 `job` 总能查到行。
-- 验签通过后：若 `task_id` 为空，用 payload 的 provider id **认领写入**（guard：仅当仍为 null）；若已有且不一致 → 拒绝。
-- 同时校验 `task.provider === path provider`、`id` 以 `edit_` 开头。
-- **禁止**「找不到任务就无条件 200」。HMAC 无效 → 401；任务不存在（极端）→ 503 以便重试。
+- 提交与 Webhook 共用 `attachPhotoEditProviderTaskId`：只写 `task_id`，**绝不**把已 success/failed 改回 pending；已有不同 id → mismatch。
+- 认领不 `catch` 全部 DB 异常；认领后仍无匹配 `task_id` → `attach_failed` → Webhook **503**。
+- 终态 provider 事件若 reconcile 后仍为 pending/processing → **503**（禁止误 ack 200）。
+- HMAC 无效 → 401；任务不存在 → 503。
+
+### P0：提交写回不得覆盖 Webhook 终态
+
+`edits.ts` 在 `generate` 成功后只调用 `attachPhotoEditProviderTaskId`，不再 `UPDATE … SET status=pending`。响应以重读后的真实状态为准。
+
+### P1：提交结果不确定时不立即退款
+
+- `isDefiniteProviderReject`：明确 4xx（除 408/429）或未配置 → `failed` + 退款。
+- 超时 / 5xx / 网络等不确定 → **保持 pending**（文案不说已退款），等 Webhook / poll / cron；不自动重试 `generate()`。
 
 ### P1：失败退款可靠
 

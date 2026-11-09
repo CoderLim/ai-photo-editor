@@ -223,41 +223,105 @@ export async function findPhotoEditById(id: string): Promise<AiTask | null> {
   return row ?? null;
 }
 
+export class PhotoEditProviderIdError extends Error {
+  code: 'mismatch' | 'attach_failed' | 'not_found';
+
+  constructor(code: PhotoEditProviderIdError['code'], message: string) {
+    super(message);
+    this.name = 'PhotoEditProviderIdError';
+    this.code = code;
+  }
+}
+
+function isOpenStatus(status: string): boolean {
+  return status === AITaskStatus.PENDING || status === AITaskStatus.PROCESSING;
+}
+
 /**
- * Claim the provider prediction id when the webhook arrives before the
- * submit handler writes task_id. No-op when already set to the same value.
+ * Attach a provider prediction id without touching terminal status.
+ * Used by both the submit handler (after generate) and webhooks (early claim).
+ * Never overwrites an existing different taskId or reopens a settled row.
  */
+export async function attachPhotoEditProviderTaskId(
+  taskId: string,
+  providerTaskId: string
+): Promise<AiTask> {
+  const task = await findPhotoEditById(taskId);
+  if (!task) {
+    throw new PhotoEditProviderIdError('not_found', 'Task not found');
+  }
+  if (task.taskId === providerTaskId) return task;
+  if (task.taskId && task.taskId !== providerTaskId) {
+    throw new PhotoEditProviderIdError('mismatch', 'Provider task id mismatch');
+  }
+
+  // Already settled (webhook won the race): do not mutate status or force
+  // a pending rewrite. Record the id only when still null.
+  if (!isOpenStatus(task.status)) {
+    if (!task.taskId) {
+      await db()
+        .update(aiTask)
+        .set({ taskId: providerTaskId })
+        .where(
+          and(
+            eq(aiTask.id, taskId),
+            isNull(aiTask.taskId),
+            inArray(aiTask.status, [
+              AITaskStatus.SUCCESS,
+              AITaskStatus.FAILED,
+              AITaskStatus.CANCELED,
+            ])
+          )
+        );
+      const terminal = await findPhotoEditById(taskId);
+      if (!terminal) {
+        throw new PhotoEditProviderIdError('not_found', 'Task not found');
+      }
+      if (terminal.taskId && terminal.taskId !== providerTaskId) {
+        throw new PhotoEditProviderIdError(
+          'mismatch',
+          'Provider task id mismatch'
+        );
+      }
+      return terminal;
+    }
+    return task;
+  }
+
+  // Open row with null taskId — claim. Do not catch-all: real DB errors must
+  // propagate so webhooks can 5xx and retry. A concurrent claim simply
+  // updates 0 rows; we re-read and verify below.
+  await db()
+    .update(aiTask)
+    .set({ taskId: providerTaskId })
+    .where(
+      and(
+        eq(aiTask.id, taskId),
+        isNull(aiTask.taskId),
+        inArray(aiTask.status, [AITaskStatus.PENDING, AITaskStatus.PROCESSING])
+      )
+    );
+
+  const refreshed = await findPhotoEditById(taskId);
+  if (!refreshed) {
+    throw new PhotoEditProviderIdError('not_found', 'Task not found');
+  }
+  if (refreshed.taskId === providerTaskId) return refreshed;
+  if (refreshed.taskId && refreshed.taskId !== providerTaskId) {
+    throw new PhotoEditProviderIdError('mismatch', 'Provider task id mismatch');
+  }
+  // Still null after an open-row claim: either a transient write failure or
+  // the row flipped terminal with no id. Never pretend the claim succeeded.
+  throw new PhotoEditProviderIdError(
+    'attach_failed',
+    'Failed to attach provider task id'
+  );
+}
+
+/** @deprecated use attachPhotoEditProviderTaskId */
 export async function claimPhotoEditProviderTaskId(
   taskId: string,
   providerTaskId: string
 ): Promise<AiTask | null> {
-  const task = await findPhotoEditById(taskId);
-  if (!task) return null;
-  if (task.taskId === providerTaskId) return task;
-  if (task.taskId && task.taskId !== providerTaskId) {
-    throw new Error('Provider task id mismatch');
-  }
-  try {
-    await db()
-      .update(aiTask)
-      .set({ taskId: providerTaskId })
-      .where(
-        and(
-          eq(aiTask.id, taskId),
-          isNull(aiTask.taskId),
-          inArray(aiTask.status, [
-            AITaskStatus.PENDING,
-            AITaskStatus.PROCESSING,
-          ])
-        )
-      );
-  } catch {
-    // Concurrent claim — re-read below.
-  }
-  const refreshed = await findPhotoEditById(taskId);
-  if (!refreshed) return null;
-  if (refreshed.taskId && refreshed.taskId !== providerTaskId) {
-    throw new Error('Provider task id mismatch');
-  }
-  return refreshed;
+  return attachPhotoEditProviderTaskId(taskId, providerTaskId);
 }

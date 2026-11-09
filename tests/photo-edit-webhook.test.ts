@@ -39,8 +39,11 @@ const { aiTask, user } = await import('../src/config/db/schema');
 const { AITaskStatus, createTask, findTask, updateTask } =
   await import('../src/modules/ai-tasks/service');
 const { getBalance, grant } = await import('../src/modules/credits/service');
-const { reconcilePhotoEditTask } =
-  await import('../src/modules/photo-editor/reconcile');
+const {
+  attachPhotoEditProviderTaskId,
+  PhotoEditProviderIdError,
+  reconcilePhotoEditTask,
+} = await import('../src/modules/photo-editor/reconcile');
 const {
   handlePhotoEditWebhook,
   setReplicateWebhookSecretForTests,
@@ -49,6 +52,8 @@ const {
 } = await import('../src/modules/photo-editor/webhook');
 const { photoEditWebhookCallbackUrl, signPhotoEditWebhookJob } =
   await import('../src/modules/photo-editor/webhook-sign');
+const { isDefiniteProviderReject } =
+  await import('../src/routes/api/photo-editor/edits');
 
 after(async () => {
   setReplicateWebhookSecretForTests(null);
@@ -520,4 +525,218 @@ test('updateTask failure refunds atomically with status change', async () => {
   await updateTask({ taskId: pending.id, status: AITaskStatus.FAILED });
   assert.equal((await findTask(pending.id))!.status, AITaskStatus.FAILED);
   assert.equal(await getBalance('wh-atomic-fail'), 20);
+});
+
+test('submit attach after webhook success keeps success and matching taskId', async () => {
+  await seedUser('wh-submit-after-ok');
+  const pending = await seedPendingEdit({
+    userId: 'wh-submit-after-ok',
+    id: 'edit_webhook_submit_after_ok',
+    taskId: null,
+  });
+  await deliverReplicate({
+    jobId: pending.id,
+    body: {
+      id: 'pred_submit_after_ok',
+      status: 'succeeded',
+      output: 'https://cdn.example/after-ok.png',
+    },
+  });
+  assert.equal((await findTask(pending.id))!.status, AITaskStatus.SUCCESS);
+
+  const attached = await attachPhotoEditProviderTaskId(
+    pending.id,
+    'pred_submit_after_ok'
+  );
+  assert.equal(attached.status, AITaskStatus.SUCCESS);
+  assert.equal(attached.taskId, 'pred_submit_after_ok');
+  assert.equal(await getBalance('wh-submit-after-ok'), 10);
+});
+
+test('submit attach after webhook failure cannot reopen pending', async () => {
+  await seedUser('wh-submit-after-fail');
+  const pending = await seedPendingEdit({
+    userId: 'wh-submit-after-fail',
+    id: 'edit_webhook_submit_after_fail',
+    taskId: null,
+  });
+  await deliverReplicate({
+    jobId: pending.id,
+    body: {
+      id: 'pred_submit_after_fail',
+      status: 'failed',
+      error: 'boom',
+      output: null,
+    },
+  });
+  assert.equal((await findTask(pending.id))!.status, AITaskStatus.FAILED);
+
+  const attached = await attachPhotoEditProviderTaskId(
+    pending.id,
+    'pred_submit_after_fail'
+  );
+  assert.equal(attached.status, AITaskStatus.FAILED);
+  assert.equal(await getBalance('wh-submit-after-fail'), 20);
+});
+
+test('attach rejects a second conflicting provider id', async () => {
+  await seedUser('wh-attach-fail');
+  const pending = await seedPendingEdit({
+    userId: 'wh-attach-fail',
+    id: 'edit_webhook_attach_fail',
+    taskId: null,
+  });
+  await attachPhotoEditProviderTaskId(pending.id, 'pred_attach_a');
+  await assert.rejects(
+    () => attachPhotoEditProviderTaskId(pending.id, 'pred_attach_b'),
+    (err: unknown) =>
+      err instanceof PhotoEditProviderIdError && err.code === 'mismatch'
+  );
+  assert.equal((await findTask(pending.id))!.taskId, 'pred_attach_a');
+});
+
+test('terminal webhook with incomplete settle returns retryable 503', async () => {
+  await seedUser('wh-incomplete');
+  const pending = await seedPendingEdit({
+    userId: 'wh-incomplete',
+    id: 'edit_webhook_incomplete',
+    taskId: 'pred_incomplete',
+  });
+  await assert.rejects(
+    () =>
+      deliverReplicate({
+        jobId: pending.id,
+        body: {
+          id: 'pred_incomplete',
+          status: 'succeeded',
+          output: null,
+        },
+        queryProvider: async () => ({
+          taskId: 'pred_incomplete',
+          taskStatus: AITaskStatus.PENDING,
+          taskInfo: {},
+        }),
+      }),
+    (err: unknown) =>
+      err instanceof PhotoEditWebhookError &&
+      err.status === 503 &&
+      /Settle incomplete/i.test(err.message)
+  );
+  assert.equal((await findTask(pending.id))!.status, AITaskStatus.PENDING);
+});
+
+test('lost submit response still settles via webhook on pending row', async () => {
+  await seedUser('wh-lost-submit');
+  // Mimic generate accepted but local attach never ran.
+  const pending = await seedPendingEdit({
+    userId: 'wh-lost-submit',
+    id: 'edit_webhook_lost_submit',
+    taskId: null,
+  });
+  await deliverReplicate({
+    jobId: pending.id,
+    body: {
+      id: 'pred_lost_submit',
+      status: 'succeeded',
+      output: 'https://cdn.example/lost.png',
+    },
+  });
+  const settled = (await findTask(pending.id))!;
+  assert.equal(settled.status, AITaskStatus.SUCCESS);
+  assert.equal(settled.taskId, 'pred_lost_submit');
+  assert.equal(await getBalance('wh-lost-submit'), 10);
+});
+
+test('conflicting provider ids from webhook then submit are rejected', async () => {
+  await seedUser('wh-conflict');
+  const pending = await seedPendingEdit({
+    userId: 'wh-conflict',
+    id: 'edit_webhook_conflict',
+    taskId: null,
+  });
+  await deliverReplicate({
+    jobId: pending.id,
+    body: {
+      id: 'pred_conflict_a',
+      status: 'succeeded',
+      output: 'https://cdn.example/conflict.png',
+    },
+  });
+  await assert.rejects(
+    () => attachPhotoEditProviderTaskId(pending.id, 'pred_conflict_b'),
+    (err: unknown) =>
+      err instanceof PhotoEditProviderIdError && err.code === 'mismatch'
+  );
+  assert.equal((await findTask(pending.id))!.status, AITaskStatus.SUCCESS);
+  assert.equal((await findTask(pending.id))!.taskId, 'pred_conflict_a');
+});
+
+test('isDefiniteProviderReject distinguishes 4xx from uncertain errors', () => {
+  assert.equal(
+    isDefiniteProviderReject(new Error('request failed with status: 422')),
+    true
+  );
+  assert.equal(
+    isDefiniteProviderReject(new Error('request failed with status: 502')),
+    false
+  );
+  assert.equal(
+    isDefiniteProviderReject(new Error('request failed with status: 408')),
+    false
+  );
+  assert.equal(isDefiniteProviderReject(new Error('fetch failed')), false);
+  assert.equal(
+    isDefiniteProviderReject(
+      new Error('Replicate API token is not configured')
+    ),
+    true
+  );
+});
+
+test('uncertain submit leaves pending so webhook can finish', async () => {
+  await seedUser('wh-uncertain');
+  const pending = await seedPendingEdit({
+    userId: 'wh-uncertain',
+    id: 'edit_webhook_uncertain',
+    taskId: null,
+  });
+  // Do not mark failed — same posture as isDefiniteProviderReject=false path.
+  assert.equal(isDefiniteProviderReject(new Error('network timeout')), false);
+  assert.equal((await findTask(pending.id))!.status, AITaskStatus.PENDING);
+  await deliverReplicate({
+    jobId: pending.id,
+    body: {
+      id: 'pred_uncertain',
+      status: 'succeeded',
+      output: 'https://cdn.example/uncertain.png',
+    },
+  });
+  assert.equal((await findTask(pending.id))!.status, AITaskStatus.SUCCESS);
+  assert.equal(await getBalance('wh-uncertain'), 10);
+});
+
+test('duplicate webhook plus poll does not double-refund a failure', async () => {
+  await seedUser('wh-multi-fail');
+  const pending = await seedPendingEdit({
+    userId: 'wh-multi-fail',
+    id: 'edit_webhook_multi_fail',
+    taskId: 'pred_multi_fail',
+  });
+  const body = {
+    id: 'pred_multi_fail',
+    status: 'failed',
+    error: 'nope',
+    output: null,
+  };
+  await deliverReplicate({ jobId: pending.id, body });
+  await deliverReplicate({ jobId: pending.id, body });
+  await reconcilePhotoEditTask((await findTask(pending.id))!, {
+    remote: {
+      taskId: 'pred_multi_fail',
+      taskStatus: AITaskStatus.FAILED,
+      taskInfo: {},
+    },
+  });
+  assert.equal((await findTask(pending.id))!.status, AITaskStatus.FAILED);
+  assert.equal(await getBalance('wh-multi-fail'), 20);
 });
