@@ -38,6 +38,42 @@ export function falQueueModel(model?: string): string {
 }
 
 /**
+ * Pull a human-readable Fal error from webhook / queue payloads.
+ * Prefer top-level `error`; fall back to `payload_error` or `payload.detail`.
+ */
+export function extractFalErrorMessage(
+  data: Record<string, unknown> | null | undefined
+): string | undefined {
+  if (!data) return undefined;
+  if (typeof data.error === 'string' && data.error.trim()) {
+    return data.error.trim();
+  }
+  if (typeof data.payload_error === 'string' && data.payload_error.trim()) {
+    return data.payload_error.trim();
+  }
+  const payload = data.payload;
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return undefined;
+  }
+  const detail = (payload as { detail?: unknown }).detail;
+  if (typeof detail === 'string' && detail.trim()) return detail.trim();
+  if (Array.isArray(detail)) {
+    const parts = detail
+      .map((item) => {
+        if (typeof item === 'string') return item.trim();
+        if (item && typeof item === 'object') {
+          const msg = (item as { msg?: unknown }).msg;
+          if (typeof msg === 'string' && msg.trim()) return msg.trim();
+        }
+        return '';
+      })
+      .filter(Boolean);
+    if (parts.length) return parts.join('; ');
+  }
+  return undefined;
+}
+
+/**
  * Fal configs
  * @docs https://fal.ai/
  */
@@ -169,8 +205,11 @@ export class FalProvider implements AIProvider {
         taskStatus,
         taskInfo: {
           status: statusData.status,
-          errorCode: '',
-          errorMessage: '',
+          errorCode:
+            typeof statusData.error_type === 'string'
+              ? statusData.error_type
+              : '',
+          errorMessage: extractFalErrorMessage(statusData) || '',
         },
         taskResult: statusData,
       };

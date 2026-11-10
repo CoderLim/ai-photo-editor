@@ -29,6 +29,14 @@ function resultImageUrl(taskResult: string | null | undefined): string | null {
   return typeof url === 'string' && url ? url : null;
 }
 
+function resultErrorMessage(
+  taskResult: string | null | undefined
+): string | null {
+  const result = parseJson(taskResult);
+  const error = result.error;
+  return typeof error === 'string' && error.trim() ? error.trim() : null;
+}
+
 export async function GET({ request }: AdminHandlerContext) {
   try {
     // Settle orphaned photo edits whose browsers stopped polling.
@@ -120,6 +128,7 @@ export async function GET({ request }: AdminHandlerContext) {
           quality,
           originalUrl,
           resultUrl: resultImageUrl(taskResult),
+          errorMessage: resultErrorMessage(taskResult),
         };
       }
     );

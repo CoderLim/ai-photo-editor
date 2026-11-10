@@ -122,8 +122,12 @@ export async function updateTask(params: {
   taskId: string;
   status: AITaskStatus;
   taskResult?: any;
+  /** Stored on failure under taskResult.error for admin/debug display. */
+  error?: string;
 }) {
   const { taskId, status, taskResult } = params;
+  const error =
+    typeof params.error === 'string' ? params.error.trim().slice(0, 500) : '';
 
   const [task] = await db()
     .select()
@@ -143,8 +147,11 @@ export async function updateTask(params: {
     return;
   }
   const updateData: any = { status };
-  if (taskResult) {
-    updateData.taskResult = JSON.stringify(taskResult);
+  if (taskResult || error) {
+    updateData.taskResult = JSON.stringify({
+      ...(taskResult && typeof taskResult === 'object' ? taskResult : {}),
+      ...(error ? { error } : {}),
+    });
   }
 
   const shouldRefund =
@@ -167,9 +174,9 @@ export async function updateTask(params: {
       q.update(aiTask).set(updateData).where(eq(aiTask.id, taskId)),
       ...(revokePlan ? revokePlan.steps(q) : []),
     ]);
-  } catch (error) {
-    if (error instanceof AtomicGuardError) return;
-    throw error;
+  } catch (e) {
+    if (e instanceof AtomicGuardError) return;
+    throw e;
   }
 }
 

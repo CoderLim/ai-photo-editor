@@ -39,8 +39,15 @@ function createdAtMs(task: AiTask): number {
   return new Date(value).getTime();
 }
 
-async function markFailed(taskId: string): Promise<AiTask> {
-  await updateTask({ taskId, status: AITaskStatus.FAILED });
+async function markFailed(taskId: string, error?: string): Promise<AiTask> {
+  const message = typeof error === 'string' ? error.trim() : '';
+  // Only persist supplier/exception text. Do not invent cause labels
+  // (timeout / reject / missing id) when we do not have a real message.
+  await updateTask({
+    taskId,
+    status: AITaskStatus.FAILED,
+    ...(message ? { error: message } : {}),
+  });
   const settled = (await findTask(taskId))!;
   await ensureTaskRefund(settled);
   return settled;
@@ -110,7 +117,7 @@ export async function reconcilePhotoEditTask(
       if (!original) {
         // Provider finished but output is gone/unparseable (e.g. Replicate
         // data_removed). Do not leave credits held in pending forever.
-        return markFailed(task.id);
+        return markFailed(task.id, remote.taskInfo?.errorMessage);
       }
       const stored = await persistOutput(original, task.id);
       await updateTask({
@@ -124,7 +131,7 @@ export async function reconcilePhotoEditTask(
       remote.taskStatus === AITaskStatus.FAILED ||
       remote.taskStatus === AITaskStatus.CANCELED
     ) {
-      return markFailed(task.id);
+      return markFailed(task.id, remote.taskInfo?.errorMessage);
     }
     if (age > PHOTO_EDIT_STALE_MS) {
       return markFailed(task.id);
@@ -135,7 +142,7 @@ export async function reconcilePhotoEditTask(
     const message = error instanceof Error ? error.message : String(error);
     console.warn('Photo edit status query failed:', message);
     if (age > PHOTO_EDIT_STALE_MS) {
-      return markFailed(task.id);
+      return markFailed(task.id, message);
     }
     return task;
   }

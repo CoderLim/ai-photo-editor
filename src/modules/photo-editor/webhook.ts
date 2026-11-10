@@ -7,7 +7,12 @@ import {
   type JsonWebKey as CryptoJsonWebKey,
 } from 'node:crypto';
 
-import { AITaskStatus, type AITaskResult } from '@/core/ai';
+import {
+  AITaskStatus,
+  extractFalErrorMessage,
+  extractReplicateErrorMessage,
+  type AITaskResult,
+} from '@/core/ai';
 import { getAllConfigs } from '@/modules/config/service';
 
 import {
@@ -215,7 +220,7 @@ function replicateRemote(body: Record<string, unknown>): {
             }))
           : undefined,
         status,
-        errorMessage: typeof body.error === 'string' ? body.error : undefined,
+        errorMessage: extractReplicateErrorMessage(body.error),
       },
       taskResult: body,
     },
@@ -271,6 +276,7 @@ function falRemote(body: Record<string, unknown>): {
             }))
           : undefined,
         status,
+        errorMessage: extractFalErrorMessage(body),
       },
       taskResult: body,
     },

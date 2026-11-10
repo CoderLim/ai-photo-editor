@@ -133,6 +133,7 @@ async function deliverFalWebhook(params: {
       : {
           request_id: params.requestId,
           status: 'ERROR',
+          error: 'Invalid status code: 422',
           payload: { detail: 'provider failed' },
         };
   const rawBody = Buffer.from(JSON.stringify(body));
@@ -307,7 +308,9 @@ test('POST: webhook failure during generate stays failed', async () => {
     const payload = await response.json();
     assert.equal(payload.code, 0, JSON.stringify(payload));
     assert.equal(payload.data.status, 'failed');
-    assert.equal((await findTask(jobId))!.status, AITaskStatus.FAILED);
+    const failed = (await findTask(jobId))!;
+    assert.equal(failed.status, AITaskStatus.FAILED);
+    assert.match(failed.taskResult || '', /Invalid status code: 422/);
     assert.equal(await getBalance(userId), 50);
   } finally {
     globalThis.fetch = originalFetch;

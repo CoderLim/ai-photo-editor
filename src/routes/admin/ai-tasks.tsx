@@ -17,6 +17,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { UserCell } from '@/components/user-cell';
 
 type TaskStatus = 'pending' | 'processing' | 'success' | 'failed' | 'canceled';
@@ -38,6 +43,7 @@ interface AiTaskRow {
   quality: string | null;
   originalUrl: string | null;
   resultUrl: string | null;
+  errorMessage: string | null;
   taskId: string | null;
   createdAt: string;
   updatedAt: string;
@@ -63,6 +69,35 @@ const STATUS_BADGE: Record<
   failed: 'destructive',
   canceled: 'secondary',
 };
+
+function StatusBadge({ task }: { task: AiTaskRow }) {
+  const badge = (
+    <Badge variant={STATUS_BADGE[task.status] ?? 'secondary'}>
+      {tDynamic(`admin.ai_tasks.status_${task.status}`)}
+    </Badge>
+  );
+  if (task.status !== 'failed') return badge;
+  const message =
+    task.errorMessage?.trim() || m['admin.ai_tasks.error_unknown']();
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <button
+            type="button"
+            aria-label={m['admin.ai_tasks.error_label']()}
+            className="inline-flex cursor-default"
+          />
+        }
+      >
+        {badge}
+      </TooltipTrigger>
+      <TooltipContent className="block max-w-sm break-words whitespace-pre-wrap">
+        {message}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 function Thumb({
   src,
@@ -175,11 +210,7 @@ function AiTasksPage() {
     },
     {
       header: m['admin.ai_tasks.status'](),
-      cell: (t) => (
-        <Badge variant={STATUS_BADGE[t.status] ?? 'secondary'}>
-          {tDynamic(`admin.ai_tasks.status_${t.status}`)}
-        </Badge>
-      ),
+      cell: (t) => <StatusBadge task={t} />,
     },
     {
       header: m['admin.ai_tasks.tool'](),
@@ -352,6 +383,17 @@ function AiTasksPage() {
                     {active.prompt || '—'}
                   </p>
                 </div>
+                {active.status === 'failed' && (
+                  <div>
+                    <p className="text-muted-foreground mb-1 text-xs font-medium uppercase">
+                      {m['admin.ai_tasks.error_label']()}
+                    </p>
+                    <p className="bg-muted rounded-md p-3 text-sm break-words whitespace-pre-wrap">
+                      {active.errorMessage?.trim() ||
+                        m['admin.ai_tasks.error_unknown']()}
+                    </p>
+                  </div>
+                )}
               </div>
             </>
           )}

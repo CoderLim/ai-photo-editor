@@ -232,7 +232,12 @@ export async function POST({ request }: { request: Request }) {
     remoteTaskId = remote.taskId;
   } catch (error: unknown) {
     if (isDefiniteProviderReject(error)) {
-      await updateTask({ taskId: task.id, status: AITaskStatus.FAILED });
+      const message = error instanceof Error ? error.message : String(error);
+      await updateTask({
+        taskId: task.id,
+        status: AITaskStatus.FAILED,
+        ...(message.trim() ? { error: message.trim() } : {}),
+      });
       return respErr('Could not submit the edit. Credits were restored.', {
         status: 502,
       });

@@ -772,6 +772,8 @@
   "admin.ai_tasks.status_success": "Success",
   "admin.ai_tasks.status_failed": "Failed",
   "admin.ai_tasks.status_canceled": "Canceled",
+  "admin.ai_tasks.error_unknown": "No error details recorded",
+  "admin.ai_tasks.error_label": "Error",
   "admin.invite_codes.title": "Invite Codes",
   "admin.invite_codes.description": "Manage invite codes for sign-up",
   "admin.invite_codes.create_button": "New Invite Code",

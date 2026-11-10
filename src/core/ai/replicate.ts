@@ -16,6 +16,28 @@ import {
 
 const defaultUuid: UuidFunction = () => crypto.randomUUID();
 
+/** Normalize Replicate `error` (string or object) into display text. */
+export function extractReplicateErrorMessage(
+  error: unknown
+): string | undefined {
+  if (typeof error === 'string' && error.trim()) return error.trim();
+  if (!error || typeof error !== 'object') return undefined;
+  const record = error as { message?: unknown; detail?: unknown };
+  if (typeof record.message === 'string' && record.message.trim()) {
+    return record.message.trim();
+  }
+  if (typeof record.detail === 'string' && record.detail.trim()) {
+    return record.detail.trim();
+  }
+  try {
+    const text = JSON.stringify(error);
+    if (text && text !== '{}' && text !== 'null') return text.slice(0, 500);
+  } catch {
+    /* ignore */
+  }
+  return undefined;
+}
+
 /**
  * Replicate configs
  * @docs https://replicate.com/
@@ -225,7 +247,7 @@ export class ReplicateProvider implements AIProvider {
         videos,
         status: data.status,
         errorCode: '',
-        errorMessage: data.error as string,
+        errorMessage: extractReplicateErrorMessage(data.error),
         createTime: new Date(data.created_at),
       },
       taskResult: data,
