@@ -18,6 +18,8 @@ import {
   getPhotoTool,
   photoEditCharge,
   PhotoEditQualityError,
+  TEXT_EDIT_PROMPT_SUFFIX,
+  TEXT_EDIT_USER_PROMPT_MAX,
 } from '@/modules/photo-editor/config';
 import {
   attachPhotoEditProviderTaskId,
@@ -87,10 +89,25 @@ export async function POST({ request }: { request: Request }) {
   const requestId = typeof body.requestId === 'string' ? body.requestId : '';
   const tool = typeof body.tool === 'string' ? body.tool : 'general';
   const isBackgroundRemoval = tool === 'remove-background';
-  // Do not accept a user-provided prompt for automatic, unprompted segmentation.
-  const prompt = isBackgroundRemoval
-    ? 'Remove the background and preserve the original subject.'
-    : requestedPrompt;
+  const isTextEdit = tool === 'edit-text';
+  // Background removal ignores client prompts. Text edits keep the user's short
+  // instruction and append server-side lettering rules so they cannot be stripped.
+  let prompt: string;
+  if (isBackgroundRemoval) {
+    prompt = 'Remove the background and preserve the original subject.';
+  } else if (isTextEdit) {
+    if (
+      !requestedPrompt ||
+      requestedPrompt.length > TEXT_EDIT_USER_PROMPT_MAX
+    ) {
+      return respErr(
+        `Describe the text change in 1–${TEXT_EDIT_USER_PROMPT_MAX} characters`
+      );
+    }
+    prompt = `${requestedPrompt}\n\n${TEXT_EDIT_PROMPT_SUFFIX}`;
+  } else {
+    prompt = requestedPrompt;
+  }
   if (!prompt || prompt.length > 2000)
     return respErr('Prompt must be 1–2000 characters');
   if (

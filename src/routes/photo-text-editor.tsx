@@ -7,12 +7,12 @@ import { EDIT_CREDITS } from '@/modules/photo-editor/config';
 import { absoluteUrl, pageHead } from '@/lib/seo';
 import { Footer } from '@/blocks/footer';
 import { Header } from '@/blocks/header';
-import { PhotoEditorWorkspace } from '@/components/photo-editor/workspace';
+import { TextEditorWorkspace } from '@/components/photo-editor/text-editor-workspace';
 
 const PATH = '/photo-text-editor';
 const TITLE = 'Photo Text Editor: Edit Text in Image Online Free (AI)';
 const DESCRIPTION =
-  'Edit text in an image by describing the change. AI redraws the words in your picture while keeping the layout. Compare before and after. Free credits, no sign-up.';
+  'Photo Text Editor: edit text in an image by describing the change. AI redraws the words while keeping the layout. Free credits, no sign-up.';
 
 const STEPS = [
   {
@@ -44,36 +44,37 @@ const USE_CASES = [
     title: 'Product labels and packaging',
     description:
       'Update a flavour name, a size, a net weight or a model number on a packaging shot without reshooting the product.',
-    image: '/images/ai-photo-editor/photo-text-editor/use-product-label.svg',
-    alt: 'edit text on image – product label',
+    image: '/images/ai-photo-editor/photo-text-editor/before-after-coffee.webp',
+    alt: 'Coffee bag label text edited in photo',
   },
   {
     title: 'Signs, menus and posters',
     description:
       'Fix a typo on a printed menu, translate a storefront sign for another market, or move a date on an event poster.',
-    image: '/images/ai-photo-editor/photo-text-editor/use-storefront-sign.svg',
-    alt: 'edit text on image – storefront sign',
+    image: '/images/ai-photo-editor/photo-text-editor/before-after-menu.webp',
+    alt: 'Menu board lettering edited in photo',
   },
   {
     title: 'Social posts and thumbnails',
     description:
       'Refresh the headline baked into an old thumbnail or story graphic instead of rebuilding the whole layout.',
-    image: '/images/ai-photo-editor/photo-text-editor/use-social-thumbnail.svg',
-    alt: 'edit text on image – social thumbnail',
+    image: '/images/ai-photo-editor/photo-text-editor/workspace-demo.webp',
+    alt: 'Bakery poster headline edited for social use',
   },
   {
     title: 'Screenshots and app mockups',
     description:
       'Change button labels or sample values in a product screenshot for a landing page or app store listing.',
-    image: '/images/ai-photo-editor/photo-text-editor/use-app-screenshot.svg',
-    alt: 'edit text on image – app screenshot',
+    image: '/images/ai-photo-editor/photo-text-editor/edit-text-in-image.webp',
+    alt: 'Lettering rewritten inside a photo mockup',
   },
   {
     title: 'Reusing old marketing photos',
     description:
       'Take a photo shot for one campaign, swap the wording, and run it again — same image, new message.',
-    image: '/images/ai-photo-editor/photo-text-editor/use-event-poster.svg',
-    alt: 'edit text on image – event poster',
+    image:
+      '/images/ai-photo-editor/photo-text-editor/before-after-storefront.webp',
+    alt: 'Storefront sale sign text reused for a new campaign',
   },
 ] as const;
 
@@ -149,29 +150,6 @@ const FAQS = [
   ],
 ] as const;
 
-const FAQ_JSON_LD = [
-  {
-    question: 'Is this photo text editor free?',
-    answer:
-      'Yes to start. You get 10 free credits without signing in, enough for one medium-quality edit. Sign in for 10 more, and one-time packs start at $4.99.',
-  },
-  {
-    question: 'Can I edit text in an image without Photoshop?',
-    answer:
-      'Yes. It runs in a browser on desktop and mobile with nothing to install and no masking or layer work.',
-  },
-  {
-    question: 'Will the new text match the original font exactly?',
-    answer:
-      'It gets close but not identical. The model matches weight, colour and style from the photo; pixel-exact type needs the original design file.',
-  },
-  {
-    question: 'Does it work with non-English text?',
-    answer:
-      'Short strings in most languages work well. Name the language in your instruction and check every character afterwards.',
-  },
-] as const;
-
 const jsonLd = JSON.stringify({
   '@context': 'https://schema.org',
   '@graph': [
@@ -197,7 +175,7 @@ const jsonLd = JSON.stringify({
     },
     {
       '@type': 'FAQPage',
-      mainEntity: FAQ_JSON_LD.map(({ question, answer }) => ({
+      mainEntity: FAQS.map(([question, answer]) => ({
         '@type': 'Question',
         name: question,
         acceptedAnswer: { '@type': 'Answer', text: answer },
@@ -236,19 +214,41 @@ function PhotoTextEditorPage() {
       <main>
         <section className="border-b border-slate-200 bg-gradient-to-b from-[#edf4ff] via-[#f8fbff] to-[#f7f9fc] px-4 pt-9 pb-12 sm:px-6 sm:pt-12">
           <div className="mx-auto max-w-[1320px]">
+            <nav
+              aria-label="Breadcrumb"
+              className="mb-6 text-sm text-slate-500"
+            >
+              <ol className="flex flex-wrap items-center gap-1.5">
+                <li>
+                  <Link href="/" className="hover:text-blue-600">
+                    Home
+                  </Link>
+                </li>
+                <li aria-hidden="true">/</li>
+                <li>
+                  <Link href="/tools" className="hover:text-blue-600">
+                    AI Tools
+                  </Link>
+                </li>
+                <li aria-hidden="true">/</li>
+                <li className="font-medium text-slate-700">
+                  Photo Text Editor
+                </li>
+              </ol>
+            </nav>
             <div className="mx-auto mb-7 max-w-3xl text-center">
               <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl lg:text-[2.75rem]">
                 Photo Text Editor Online
               </h1>
               <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
-                Change the words already inside your picture. Upload a photo,
-                write what the new text should say, and AI redraws that
-                lettering while the rest of the image stays as it is. Start with
-                10 free credits — no sign-up.
+                Use this photo text editor to edit text in an image by
+                describing the change. AI redraws the lettering while the rest
+                of the picture stays put. Start with 10 free credits — no
+                sign-up.
               </p>
             </div>
             <div id="editor" className="scroll-mt-24">
-              <PhotoEditorWorkspace />
+              <TextEditorWorkspace />
             </div>
             <div className="mt-5 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-slate-600">
               <span className="inline-flex items-center gap-2">
@@ -590,13 +590,20 @@ function PhotoTextEditorPage() {
               className="font-semibold text-blue-600 hover:underline"
             >
               AI photo editor
-            </Link>{' '}
-            or browse{' '}
+            </Link>
+            , browse{' '}
             <Link
               href="/tools"
               className="font-semibold text-blue-600 hover:underline"
             >
               AI photo editing tools
+            </Link>
+            , or read{' '}
+            <Link
+              href="/blog/how-to-edit-photos-with-ai"
+              className="font-semibold text-blue-600 hover:underline"
+            >
+              how to edit photos with AI
             </Link>
             .
           </p>
@@ -618,7 +625,7 @@ export const Route = createFileRoute('/photo-text-editor')({
       title: TITLE,
       description: DESCRIPTION,
       path: PATH,
-      image: '/images/ai-photo-editor/photo-text-editor/hero-menu-board.svg',
+      image: '/images/ai-photo-editor/photo-text-editor/before-after-menu.webp',
     }),
   component: PhotoTextEditorPage,
 });

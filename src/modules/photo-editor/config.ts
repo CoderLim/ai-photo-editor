@@ -200,8 +200,7 @@ export const PHOTO_TOOLS: ToolConfig[] = [
     description:
       'Change words already baked into a photo by describing the new lettering. AI redraws the text while keeping the rest of the image.',
     category: 'Edit & Retouch',
-    examplePrompt:
-      'Replace the text on the label with "Fresh Roast Coffee" and keep the same font, colour, and layout.',
+    examplePrompt: 'Replace "Blueberry Muffin" with "Cinnamon Roll".',
     limitations:
       'Very small type, long paragraphs and dense scripts may need a closer crop or a second pass. Font match is close, not identical.',
     steps: [
@@ -211,6 +210,24 @@ export const PHOTO_TOOLS: ToolConfig[] = [
     ],
   },
 ];
+
+/**
+ * Appended server-side for `edit-text` jobs. The client only collects the
+ * short user instruction (change X to Y); these rules keep lettering edits
+ * local and style-matched. Keep under ~700 chars so user text + suffix ≤ 2000.
+ */
+export const TEXT_EDIT_PROMPT_SUFFIX = `Edit only the text specified in the user's instruction.
+
+- Render the replacement text exactly as provided, with correct spelling, capitalization, punctuation, and spacing.
+- Match the original lettering's font or handwriting style, size, weight, color, spacing, and alignment as closely as possible.
+- Preserve the original perspective, curvature, texture, lighting, and shadows so the new text blends naturally into the image.
+- Keep all other text, objects, logos, colors, composition, and background unchanged.
+- Do not add, remove, or rewrite anything beyond the requested text.
+- If the new text has a different length, adjust only the replacement text to fit naturally within the original area.`;
+
+/** Max length for the user-facing edit-text instruction before the suffix. */
+export const TEXT_EDIT_USER_PROMPT_MAX = 1200;
+
 export function getPhotoTool(slug: string) {
   return PHOTO_TOOLS.find((t) => t.slug === slug);
 }

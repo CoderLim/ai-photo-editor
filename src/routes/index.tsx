@@ -140,7 +140,7 @@ const FEATURES = [
 
 const FEATURE_IMAGES = [
   '/images/ai-photo-editor/remove-background.jpg',
-  '/images/ai-photo-editor/photo-text-editor/hero-menu-board.svg',
+  '/images/ai-photo-editor/photo-text-editor/before-after-menu.webp',
   '/images/ai-photo-editor/portrait-retouch.jpg',
   '/images/ai-photo-editor/enhance-photo.jpg',
   '/images/ai-photo-editor/remove-object.jpg',
