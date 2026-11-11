@@ -64,6 +64,14 @@ type ExampleId = (typeof QUICK_PROMPTS)[number]['id'];
 const BRUSH_MIN = 8;
 const BRUSH_MAX = 80;
 const BRUSH_DEFAULT = 28;
+/**
+ * Temporarily hide the precision-edit switch/toolbar; brush + API stay in place.
+ *
+ * GPT Image / Fal `mask_url` is guidance only: even with a painted mask the model
+ * often regenerates areas outside the mask, so the UI is off until that behavior
+ * is good enough to ship.
+ */
+const PRECISION_EDIT_UI_ENABLED = false;
 
 /** Homepage general editor shell — prompt, chips, and example carousel. */
 export function PhotoEditorWorkspace() {
@@ -78,7 +86,7 @@ export function PhotoEditorWorkspace() {
   const edit = usePhotoEditSession({
     toolSlug: 'general',
     getMaskFile: async () => {
-      if (!precision) return null;
+      if (!PRECISION_EDIT_UI_ENABLED || !precision) return null;
       return (await brushRef.current?.exportMaskBlob()) ?? null;
     },
   });
@@ -89,7 +97,8 @@ export function PhotoEditorWorkspace() {
     QUICK_PROMPTS.find((item) => item.id === exampleId) ?? QUICK_PROMPTS[0];
 
   // P1: only paint on the input image — never while a result is shown.
-  const canPrecision = Boolean(edit.preview && !edit.result);
+  const canPrecision =
+    PRECISION_EDIT_UI_ENABLED && Boolean(edit.preview && !edit.result);
 
   useEffect(() => {
     if (!canPrecision && precision) setPrecision(false);
@@ -391,7 +400,7 @@ export function PhotoEditorWorkspace() {
                     className="max-h-full max-w-full rounded-lg object-contain shadow-lg"
                   />
                 </div>
-              ) : (
+              ) : PRECISION_EDIT_UI_ENABLED ? (
                 <MaskBrushCanvas
                   imageSrc={edit.preview}
                   enabled={precision && !edit.loading}
@@ -400,6 +409,14 @@ export function PhotoEditorWorkspace() {
                   onStateChange={setBrushState}
                   onMaskChange={edit.invalidateRequest}
                 />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(ellipse_at_top,#f8fafc,#eef2f7)] p-3 sm:p-4">
+                  <img
+                    src={edit.preview}
+                    alt="Original photo"
+                    className="max-h-full max-w-full rounded-lg object-contain shadow-lg"
+                  />
+                </div>
               )
             ) : (
               <div className="absolute inset-0 overflow-hidden bg-slate-950">
