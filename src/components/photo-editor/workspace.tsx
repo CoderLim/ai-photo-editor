@@ -280,59 +280,99 @@ export function PhotoEditorWorkspace() {
               </div>
             )}
             {canPrecision && !edit.loading && (
-              <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
-                <label className="flex items-center gap-2 text-xs font-medium text-slate-700">
-                  <span className="whitespace-nowrap">Precision edit</span>
+              <div className="flex h-8 items-center rounded-lg bg-slate-100 p-0.5 text-xs">
+                <label className="flex h-full cursor-pointer items-center gap-1.5 rounded-md px-2.5 font-medium text-slate-700">
+                  Precision
                   <Switch
                     size="sm"
                     checked={precision}
                     onCheckedChange={(checked) => setPrecision(checked)}
                     aria-label="Precision edit"
+                    className="data-checked:bg-slate-900 data-unchecked:bg-slate-300"
                   />
                 </label>
                 {precision && (
                   <>
-                    <label className="flex items-center gap-1.5 text-[11px] text-slate-500">
-                      Brush
+                    <span
+                      aria-hidden
+                      className="mx-0.5 h-4 w-px shrink-0 bg-slate-200"
+                    />
+                    <label className="flex h-full items-center gap-2 px-2">
+                      <span
+                        aria-hidden
+                        className="rounded-full border border-red-400/70 bg-red-400/40"
+                        style={{
+                          width:
+                            6 +
+                            ((brushSize - BRUSH_MIN) /
+                              (BRUSH_MAX - BRUSH_MIN)) *
+                              10,
+                          height:
+                            6 +
+                            ((brushSize - BRUSH_MIN) /
+                              (BRUSH_MAX - BRUSH_MIN)) *
+                              10,
+                        }}
+                      />
                       <input
                         type="range"
                         min={BRUSH_MIN}
                         max={BRUSH_MAX}
                         value={brushSize}
                         onChange={(e) => setBrushSize(Number(e.target.value))}
-                        className="h-1.5 w-16 accent-blue-600"
                         aria-label="Brush size"
+                        className={cn(
+                          'h-1 w-[72px] cursor-pointer appearance-none rounded-full bg-slate-200',
+                          '[&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:appearance-none',
+                          '[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-slate-700',
+                          '[&::-webkit-slider-thumb]:shadow-none [&::-webkit-slider-thumb]:ring-0',
+                          '[&::-moz-range-thumb]:size-3 [&::-moz-range-thumb]:rounded-full',
+                          '[&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-slate-700',
+                          '[&::-moz-range-track]:h-1 [&::-moz-range-track]:rounded-full',
+                          '[&::-moz-range-track]:bg-slate-200'
+                        )}
                       />
                     </label>
-                    <div className="flex items-center gap-0.5">
-                      <Button
+                    <span
+                      aria-hidden
+                      className="mx-0.5 h-4 w-px shrink-0 bg-slate-200"
+                    />
+                    <div className="flex h-full items-center">
+                      <button
                         type="button"
-                        variant="ghost"
-                        size="icon-sm"
                         disabled={!brushState.canUndo}
                         onClick={() => {
                           brushRef.current?.undo();
                           edit.invalidateRequest();
                         }}
                         aria-label="Undo brush stroke"
-                        className="size-7"
+                        className="flex size-7 items-center justify-center rounded-md text-slate-600 transition-colors hover:bg-white hover:text-slate-900 disabled:pointer-events-none disabled:opacity-35"
                       >
                         <Undo2 className="size-3.5" />
-                      </Button>
-                      <Button
+                      </button>
+                      <button
                         type="button"
-                        variant="ghost"
-                        size="icon-sm"
                         disabled={!brushState.canRedo}
                         onClick={() => {
                           brushRef.current?.redo();
                           edit.invalidateRequest();
                         }}
                         aria-label="Redo brush stroke"
-                        className="size-7"
+                        className="flex size-7 items-center justify-center rounded-md text-slate-600 transition-colors hover:bg-white hover:text-slate-900 disabled:pointer-events-none disabled:opacity-35"
                       >
                         <Redo2 className="size-3.5" />
-                      </Button>
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!brushState.hasMask}
+                        onClick={() => {
+                          brushRef.current?.clear();
+                          edit.invalidateRequest();
+                        }}
+                        className="flex h-7 items-center rounded-md px-2 font-medium text-slate-600 transition-colors hover:bg-white hover:text-slate-900 disabled:pointer-events-none disabled:opacity-35"
+                      >
+                        Clear
+                      </button>
                     </div>
                   </>
                 )}

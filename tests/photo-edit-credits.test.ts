@@ -147,18 +147,17 @@ test('provider input uses GPT Image 2.6 fields, not Nano Banana resolution', () 
   assert.throws(() => photoModelInput('other', url, 'medium'), /Unsupported/);
 });
 
-test('fal queue keeps the four-part GPT Image edit id', () => {
-  assert.equal(falQueueModel(FAL_EDIT_MODEL), FAL_EDIT_MODEL);
-  // Bria endpoint path is for submit only; status/result use owner/app.
+test('fal queue status/result URLs use owner/app only', () => {
+  // Submit uses the full endpoint; poll must drop /flare/edit or Fal returns 405.
+  assert.equal(falQueueModel(FAL_EDIT_MODEL), 'openai/gpt-image-2.6');
   assert.equal(falQueueModel(FAL_BACKGROUND_REMOVAL_MODEL), 'fal-ai/bria');
   assert.equal(
     falQueueModel('openai/gpt-image-2.6/sunburst/edit'),
-    'openai/gpt-image-2.6/sunburst/edit'
+    'openai/gpt-image-2.6'
   );
-  // In-flight Nano Banana edits submitted before the switch can still be polled.
   assert.equal(
     falQueueModel('google/nano-banana-2.1/edit'),
-    'google/nano-banana-2.1/edit'
+    'google/nano-banana-2.1'
   );
   assert.equal(falQueueModel('fal-ai/flux/schnell'), 'fal-ai/flux');
   assert.equal(falQueueModel('owner/name'), 'owner/name');
