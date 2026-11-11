@@ -89,11 +89,16 @@ export function PhotoEditorWorkspace() {
     QUICK_PROMPTS.find((item) => item.id === exampleId) ?? QUICK_PROMPTS[0];
 
   // P1: only paint on the input image — never while a result is shown.
-  const canPrecision = Boolean(edit.preview && !edit.result && !edit.loading);
+  const canPrecision = Boolean(edit.preview && !edit.result);
 
   useEffect(() => {
     if (!canPrecision && precision) setPrecision(false);
   }, [canPrecision, precision]);
+
+  // A new source (including Edit Again) always starts with a fresh mask.
+  useEffect(() => {
+    setPrecision(false);
+  }, [edit.preview]);
 
   useEffect(() => {
     if (!precision) {
@@ -274,7 +279,7 @@ export function PhotoEditorWorkspace() {
                 </button>
               </div>
             )}
-            {canPrecision && (
+            {canPrecision && !edit.loading && (
               <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
                 <label className="flex items-center gap-2 text-xs font-medium text-slate-700">
                   <span className="whitespace-nowrap">Precision edit</span>
@@ -349,13 +354,11 @@ export function PhotoEditorWorkspace() {
               ) : (
                 <MaskBrushCanvas
                   imageSrc={edit.preview}
-                  enabled={precision}
+                  enabled={precision && !edit.loading}
                   brushSize={brushSize}
                   handleRef={brushRef}
-                  onStateChange={(next) => {
-                    setBrushState(next);
-                    edit.invalidateRequest();
-                  }}
+                  onStateChange={setBrushState}
+                  onMaskChange={edit.invalidateRequest}
                 />
               )
             ) : (
