@@ -1,4 +1,8 @@
-import { type Ref } from 'react';
+import {
+  useState,
+  type PointerEvent as ReactPointerEvent,
+  type Ref,
+} from 'react';
 
 import { cn } from '@/lib/utils';
 import {
@@ -35,6 +39,19 @@ export function MaskBrushCanvas({
     onStateChange,
     onMaskChange,
   });
+  const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null);
+
+  const trackCursor = (event: ReactPointerEvent<HTMLCanvasElement>) => {
+    if (!enabled) {
+      setCursor(null);
+      return;
+    }
+    const rect = event.currentTarget.getBoundingClientRect();
+    setCursor({
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    });
+  };
 
   return (
     <div
@@ -53,23 +70,46 @@ export function MaskBrushCanvas({
         draggable={false}
       />
       {brush.layout.width > 0 && (
-        <canvas
-          ref={brush.overlayRef}
-          className={cn(
-            'absolute touch-none rounded-lg',
-            enabled ? 'cursor-crosshair' : 'pointer-events-none'
+        <>
+          <canvas
+            ref={brush.overlayRef}
+            className={cn(
+              'absolute touch-none rounded-lg',
+              enabled ? 'cursor-none' : 'pointer-events-none'
+            )}
+            style={{
+              left: brush.layout.left,
+              top: brush.layout.top,
+              width: brush.layout.width,
+              height: brush.layout.height,
+            }}
+            onPointerDown={(event) => {
+              trackCursor(event);
+              brush.onPointerDown(event);
+            }}
+            onPointerMove={(event) => {
+              trackCursor(event);
+              brush.onPointerMove(event);
+            }}
+            onPointerUp={brush.onPointerUp}
+            onPointerCancel={brush.onPointerUp}
+            onPointerEnter={trackCursor}
+            onPointerLeave={() => setCursor(null)}
+          />
+          {enabled && cursor && (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute rounded-full border border-red-500/70 bg-red-500/35 shadow-[0_0_0_1px_rgba(255,255,255,0.55)]"
+              style={{
+                left: brush.layout.left + cursor.x,
+                top: brush.layout.top + cursor.y,
+                width: brushSize,
+                height: brushSize,
+                transform: 'translate(-50%, -50%)',
+              }}
+            />
           )}
-          style={{
-            left: brush.layout.left,
-            top: brush.layout.top,
-            width: brush.layout.width,
-            height: brush.layout.height,
-          }}
-          onPointerDown={brush.onPointerDown}
-          onPointerMove={brush.onPointerMove}
-          onPointerUp={brush.onPointerUp}
-          onPointerCancel={brush.onPointerUp}
-        />
+        </>
       )}
     </div>
   );
