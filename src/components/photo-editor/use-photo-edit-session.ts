@@ -23,6 +23,11 @@ type UsePhotoEditSessionOptions = {
   restoreDraftPrompt?: boolean;
   /** Override the quality-table credit charge (e.g. background removal). */
   creditCost?: number;
+  /**
+   * Optional precision-edit mask (PNG). Return null when empty.
+   * Uploaded with the source in one FormData when both are new.
+   */
+  getMaskFile?: () => Promise<Blob | null>;
 };
 
 function saveDraft(file: File, prompt: string, quality: PhotoEditQuality) {
@@ -66,6 +71,7 @@ export function usePhotoEditSession({
   toolSlug = 'general',
   restoreDraftPrompt = true,
   creditCost,
+  getMaskFile,
 }: UsePhotoEditSessionOptions = {}) {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
@@ -245,6 +251,11 @@ export function usePhotoEditSession({
     if (file) saveDraft(file, next, quality);
   };
 
+  /** Call when the precision mask changes so idempotent edit ids stay fresh. */
+  const invalidateRequest = () => {
+    requestId.current = null;
+  };
+
   const submit = async () => {
     if (!preview) return toast.error('Upload a photo first.');
     const editPrompt = (fixedPrompt || prompt).trim();
@@ -255,6 +266,9 @@ export function usePhotoEditSession({
     let step: 'anonymous' | 'trial' | 'credits' | 'upload' | 'edits' =
       'anonymous';
     try {
+      // Snapshot before any async auth / credit checks. Loading must not
+      // clear the canvas while we are preparing a precision edit.
+      const maskBlob = getMaskFile ? await getMaskFile() : null;
       if (!session?.user) {
         step = 'anonymous';
         const anonymous = await authClient.signIn.anonymous();
@@ -290,8 +304,36 @@ export function usePhotoEditSession({
 
       let imageUrl = upload?.url || preview;
       let uploadToken = upload?.token || '';
-      if (file && !upload) {
-        step = 'upload';
+      let maskUrl = '';
+      let maskUploadToken = '';
+      const maskFile = maskBlob
+        ? new File([maskBlob], 'precision-mask.png', { type: 'image/png' })
+        : null;
+
+      step = 'upload';
+      if (file && !upload && maskFile) {
+        // One request for source + mask — upload-image rate-limits to 1s.
+        const data = new FormData();
+        data.append('files', file);
+        data.append('files', maskFile);
+        const stored = await dataOrThrow(
+          await fetch('/api/storage/upload-image', {
+            method: 'POST',
+            body: data,
+          })
+        );
+        const source = stored.results?.[0];
+        const mask = stored.results?.[1];
+        if (!source?.url || !source?.token)
+          throw new Error('Image upload did not return authorization');
+        if (!mask?.url || !mask?.token)
+          throw new Error('Mask upload did not return authorization');
+        imageUrl = source.url;
+        uploadToken = source.token;
+        maskUrl = mask.url;
+        maskUploadToken = mask.token;
+        setUpload({ url: imageUrl, token: uploadToken });
+      } else if (file && !upload) {
         const data = new FormData();
         data.append('files', file);
         const stored = await dataOrThrow(
@@ -306,6 +348,21 @@ export function usePhotoEditSession({
         imageUrl = first.url;
         uploadToken = first.token;
         setUpload({ url: imageUrl, token: uploadToken });
+      } else if (maskFile) {
+        // Source already uploaded or from a prior job — mask only.
+        const data = new FormData();
+        data.append('files', maskFile);
+        const stored = await dataOrThrow(
+          await fetch('/api/storage/upload-image', {
+            method: 'POST',
+            body: data,
+          })
+        );
+        const mask = stored.results?.[0];
+        if (!mask?.url || !mask?.token)
+          throw new Error('Mask upload did not return authorization');
+        maskUrl = mask.url;
+        maskUploadToken = mask.token;
       }
 
       if (!requestId.current)
@@ -323,6 +380,7 @@ export function usePhotoEditSession({
             tool: toolSlug,
             quality,
             requestId: requestId.current,
+            ...(maskUrl ? { maskUrl, maskUploadToken } : {}),
           }),
         })
       );
@@ -398,6 +456,7 @@ export function usePhotoEditSession({
     clearFile,
     changeQuality,
     changePrompt,
+    invalidateRequest,
     submit,
     editAgain,
   };

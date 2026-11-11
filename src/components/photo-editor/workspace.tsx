@@ -1,5 +1,12 @@
-import { useEffect, useState } from 'react';
-import { Download, LoaderCircle, RotateCcw, Sparkles } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import {
+  Download,
+  LoaderCircle,
+  Redo2,
+  RotateCcw,
+  Sparkles,
+  Undo2,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 import { PHOTO_EDIT_MODEL_LABEL } from '@/modules/photo-editor/config';
@@ -7,9 +14,15 @@ import { downloadPhotoResult } from '@/lib/download';
 import { cn } from '@/lib/utils';
 import { CreditGateDialog } from '@/components/photo-editor/credit-gate-dialog';
 import { ImageUploadField } from '@/components/photo-editor/image-upload-field';
+import {
+  MaskBrushCanvas,
+  type MaskBrushHandle,
+  type MaskBrushState,
+} from '@/components/photo-editor/mask-brush-canvas';
 import { QualitySelector } from '@/components/photo-editor/quality-selector';
 import { usePhotoEditSession } from '@/components/photo-editor/use-photo-edit-session';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 
 const QUICK_PROMPTS = [
   {
@@ -48,14 +61,60 @@ const QUICK_PROMPTS = [
 
 type ExampleId = (typeof QUICK_PROMPTS)[number]['id'];
 
+const BRUSH_MIN = 8;
+const BRUSH_MAX = 80;
+const BRUSH_DEFAULT = 28;
+/**
+ * Temporarily hide the precision-edit switch/toolbar; brush + API stay in place.
+ *
+ * GPT Image / Fal `mask_url` is guidance only: even with a painted mask the model
+ * often regenerates areas outside the mask, so the UI is off until that behavior
+ * is good enough to ship.
+ */
+const PRECISION_EDIT_UI_ENABLED = false;
+
 /** Homepage general editor shell — prompt, chips, and example carousel. */
 export function PhotoEditorWorkspace() {
-  const edit = usePhotoEditSession({ toolSlug: 'general' });
+  const brushRef = useRef<MaskBrushHandle | null>(null);
+  const [precision, setPrecision] = useState(false);
+  const [brushSize, setBrushSize] = useState(BRUSH_DEFAULT);
+  const [brushState, setBrushState] = useState<MaskBrushState>({
+    canUndo: false,
+    canRedo: false,
+    hasMask: false,
+  });
+  const edit = usePhotoEditSession({
+    toolSlug: 'general',
+    getMaskFile: async () => {
+      if (!PRECISION_EDIT_UI_ENABLED || !precision) return null;
+      return (await brushRef.current?.exportMaskBlob()) ?? null;
+    },
+  });
   const [exampleId, setExampleId] = useState<ExampleId>('change-background');
   const [examplePaused, setExamplePaused] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const example =
     QUICK_PROMPTS.find((item) => item.id === exampleId) ?? QUICK_PROMPTS[0];
+
+  // P1: only paint on the input image — never while a result is shown.
+  const canPrecision =
+    PRECISION_EDIT_UI_ENABLED && Boolean(edit.preview && !edit.result);
+
+  useEffect(() => {
+    if (!canPrecision && precision) setPrecision(false);
+  }, [canPrecision, precision]);
+
+  // A new source (including Edit Again) always starts with a fresh mask.
+  useEffect(() => {
+    setPrecision(false);
+  }, [edit.preview]);
+
+  useEffect(() => {
+    if (!precision) {
+      brushRef.current?.clear();
+      setBrushState({ canUndo: false, canRedo: false, hasMask: false });
+    }
+  }, [precision]);
 
   async function handleDownload() {
     if (!edit.result) return;
@@ -189,9 +248,9 @@ export function PhotoEditorWorkspace() {
           }}
           onMouseLeave={() => setExamplePaused(false)}
         >
-          <div className="flex h-11 shrink-0 items-center justify-between border-b border-slate-100 px-4">
-            <div className="flex items-center gap-2">
-              <span className="size-2 rounded-full bg-blue-500" />
+          <div className="flex h-11 shrink-0 items-center justify-between gap-2 border-b border-slate-100 px-4">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="size-2 shrink-0 rounded-full bg-blue-500" />
               <span className="text-sm font-semibold text-slate-900">
                 Workspace
               </span>
@@ -229,24 +288,136 @@ export function PhotoEditorWorkspace() {
                 </button>
               </div>
             )}
+            {canPrecision && !edit.loading && (
+              <div className="flex h-8 items-center rounded-lg bg-slate-100 p-0.5 text-xs">
+                <label className="flex h-full cursor-pointer items-center gap-1.5 rounded-md px-2.5 font-medium text-slate-700">
+                  Precision
+                  <Switch
+                    size="sm"
+                    checked={precision}
+                    onCheckedChange={(checked) => setPrecision(checked)}
+                    aria-label="Precision edit"
+                    className="data-checked:bg-slate-900 data-unchecked:bg-slate-300"
+                  />
+                </label>
+                {precision && (
+                  <>
+                    <span
+                      aria-hidden
+                      className="mx-0.5 h-4 w-px shrink-0 bg-slate-200"
+                    />
+                    <label className="flex h-full items-center gap-2 px-2">
+                      <span
+                        aria-hidden
+                        className="rounded-full border border-red-400/70 bg-red-400/40"
+                        style={{
+                          width:
+                            6 +
+                            ((brushSize - BRUSH_MIN) /
+                              (BRUSH_MAX - BRUSH_MIN)) *
+                              10,
+                          height:
+                            6 +
+                            ((brushSize - BRUSH_MIN) /
+                              (BRUSH_MAX - BRUSH_MIN)) *
+                              10,
+                        }}
+                      />
+                      <input
+                        type="range"
+                        min={BRUSH_MIN}
+                        max={BRUSH_MAX}
+                        value={brushSize}
+                        onChange={(e) => setBrushSize(Number(e.target.value))}
+                        aria-label="Brush size"
+                        className={cn(
+                          'h-1 w-[72px] cursor-pointer appearance-none rounded-full bg-slate-200',
+                          '[&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:appearance-none',
+                          '[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-slate-700',
+                          '[&::-webkit-slider-thumb]:shadow-none [&::-webkit-slider-thumb]:ring-0',
+                          '[&::-moz-range-thumb]:size-3 [&::-moz-range-thumb]:rounded-full',
+                          '[&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-slate-700',
+                          '[&::-moz-range-track]:h-1 [&::-moz-range-track]:rounded-full',
+                          '[&::-moz-range-track]:bg-slate-200'
+                        )}
+                      />
+                    </label>
+                    <span
+                      aria-hidden
+                      className="mx-0.5 h-4 w-px shrink-0 bg-slate-200"
+                    />
+                    <div className="flex h-full items-center">
+                      <button
+                        type="button"
+                        disabled={!brushState.canUndo}
+                        onClick={() => {
+                          brushRef.current?.undo();
+                          edit.invalidateRequest();
+                        }}
+                        aria-label="Undo brush stroke"
+                        className="flex size-7 items-center justify-center rounded-md text-slate-600 transition-colors hover:bg-white hover:text-slate-900 disabled:pointer-events-none disabled:opacity-35"
+                      >
+                        <Undo2 className="size-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!brushState.canRedo}
+                        onClick={() => {
+                          brushRef.current?.redo();
+                          edit.invalidateRequest();
+                        }}
+                        aria-label="Redo brush stroke"
+                        className="flex size-7 items-center justify-center rounded-md text-slate-600 transition-colors hover:bg-white hover:text-slate-900 disabled:pointer-events-none disabled:opacity-35"
+                      >
+                        <Redo2 className="size-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!brushState.hasMask}
+                        onClick={() => {
+                          brushRef.current?.clear();
+                          edit.invalidateRequest();
+                        }}
+                        className="flex h-7 items-center rounded-md px-2 font-medium text-slate-600 transition-colors hover:bg-white hover:text-slate-900 disabled:pointer-events-none disabled:opacity-35"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
           <div className="relative min-h-[min(70vh,560px)] flex-1 lg:min-h-[520px]">
             {edit.preview ? (
-              <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(ellipse_at_top,#f8fafc,#eef2f7)] p-3 sm:p-4">
-                <img
-                  src={
-                    edit.result && !edit.showOriginal
-                      ? edit.result
-                      : edit.preview
-                  }
-                  alt={
-                    edit.result && !edit.showOriginal
-                      ? 'AI edited photo'
-                      : 'Original photo'
-                  }
-                  className="max-h-full max-w-full rounded-lg object-contain shadow-lg"
+              edit.result ? (
+                <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(ellipse_at_top,#f8fafc,#eef2f7)] p-3 sm:p-4">
+                  <img
+                    src={edit.showOriginal ? edit.preview : edit.result}
+                    alt={
+                      edit.showOriginal ? 'Original photo' : 'AI edited photo'
+                    }
+                    className="max-h-full max-w-full rounded-lg object-contain shadow-lg"
+                  />
+                </div>
+              ) : PRECISION_EDIT_UI_ENABLED ? (
+                <MaskBrushCanvas
+                  imageSrc={edit.preview}
+                  enabled={precision && !edit.loading}
+                  brushSize={brushSize}
+                  handleRef={brushRef}
+                  onStateChange={setBrushState}
+                  onMaskChange={edit.invalidateRequest}
                 />
-              </div>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(ellipse_at_top,#f8fafc,#eef2f7)] p-3 sm:p-4">
+                  <img
+                    src={edit.preview}
+                    alt="Original photo"
+                    className="max-h-full max-w-full rounded-lg object-contain shadow-lg"
+                  />
+                </div>
+              )
             ) : (
               <div className="absolute inset-0 overflow-hidden bg-slate-950">
                 <img
@@ -282,7 +453,9 @@ export function PhotoEditorWorkspace() {
               {edit.result
                 ? 'Edit complete — review every detail.'
                 : edit.preview
-                  ? 'Ready to generate your first edit.'
+                  ? precision
+                    ? 'Paint the area to change, then generate.'
+                    : 'Ready to generate your first edit.'
                   : 'Upload your photo to replace this example.'}
             </p>
             <div className="flex items-center gap-2">

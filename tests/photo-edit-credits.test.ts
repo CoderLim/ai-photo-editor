@@ -46,7 +46,7 @@ const {
   REPLICATE_EDIT_MODEL,
   photoEditCharge,
 } = await import('../src/modules/photo-editor/config');
-const { createPhotoProvider, photoModelInput } =
+const { createPhotoProvider, getSelectedPhotoProvider, photoModelInput } =
   await import('../src/modules/photo-editor/service');
 const { issueUploadToken } =
   await import('../src/modules/photo-editor/upload-token');
@@ -102,14 +102,27 @@ test('unknown or omitted quality is rejected', () => {
   }
 });
 
+test('new photo edits always select fal', async () => {
+  assert.equal(await getSelectedPhotoProvider(), 'fal');
+});
+
 test('provider input uses GPT Image 2.6 fields, not Nano Banana resolution', () => {
   const url = 'https://cdn.example.test/photo.png';
+  const mask = 'https://cdn.example.test/mask.png';
   assert.deepEqual(photoModelInput('fal', url, 'high'), {
     image_urls: [url],
     image_size: 'auto',
     quality: 'high',
     num_images: 1,
     output_format: 'png',
+  });
+  assert.deepEqual(photoModelInput('fal', url, 'high', mask), {
+    image_urls: [url],
+    image_size: 'auto',
+    quality: 'high',
+    num_images: 1,
+    output_format: 'png',
+    mask_url: mask,
   });
   assert.equal('resolution' in photoModelInput('fal', url, 'low'), false);
   assert.deepEqual(photoModelInput('replicate', url, 'max'), {
@@ -127,21 +140,24 @@ test('provider input uses GPT Image 2.6 fields, not Nano Banana resolution', () 
     'image_input' in photoModelInput('replicate', url, 'medium'),
     false
   );
+  assert.equal(
+    'mask_url' in photoModelInput('replicate', url, 'medium', mask),
+    false
+  );
   assert.throws(() => photoModelInput('other', url, 'medium'), /Unsupported/);
 });
 
-test('fal queue keeps the four-part GPT Image edit id', () => {
-  assert.equal(falQueueModel(FAL_EDIT_MODEL), FAL_EDIT_MODEL);
-  // Bria endpoint path is for submit only; status/result use owner/app.
+test('fal queue status/result URLs use owner/app only', () => {
+  // Submit uses the full endpoint; poll must drop /flare/edit or Fal returns 405.
+  assert.equal(falQueueModel(FAL_EDIT_MODEL), 'openai/gpt-image-2.6');
   assert.equal(falQueueModel(FAL_BACKGROUND_REMOVAL_MODEL), 'fal-ai/bria');
   assert.equal(
     falQueueModel('openai/gpt-image-2.6/sunburst/edit'),
-    'openai/gpt-image-2.6/sunburst/edit'
+    'openai/gpt-image-2.6'
   );
-  // In-flight Nano Banana edits submitted before the switch can still be polled.
   assert.equal(
     falQueueModel('google/nano-banana-2.1/edit'),
-    'google/nano-banana-2.1/edit'
+    'google/nano-banana-2.1'
   );
   assert.equal(falQueueModel('fal-ai/flux/schnell'), 'fal-ai/flux');
   assert.equal(falQueueModel('owner/name'), 'owner/name');
@@ -345,6 +361,51 @@ test('edit API charges the server quality price and ignores client amounts', asy
       JSON.parse(backgroundTask.options || '{}').tool,
       'remove-background'
     );
+
+    // Only the owner of an uploaded mask can submit it. Rejected masks
+    // must not spend credits or create a provider task.
+    const maskUrl = 'https://cdn.example.test/photo-editor/precision-mask.png';
+    const balanceBeforeMask = await getBalance(userId);
+    const callsBeforeMask = calls.length;
+    const rejectedMask = await post({
+      requestId: 'request-mask-rejected-0001',
+      quality: 'low',
+      maskUrl,
+      maskUploadToken: 'invalid',
+    });
+    assert.equal(rejectedMask.status, 403);
+    assert.match(rejectedMask.payload.message, /mask you own/i);
+    assert.equal(await getBalance(userId), balanceBeforeMask);
+    assert.equal(calls.length, callsBeforeMask);
+
+    const maskUploadToken = await issueUploadToken(userId, maskUrl);
+    const maskedEdit = await post({
+      requestId: 'request-mask-accepted-0001',
+      quality: 'low',
+      maskUrl,
+      maskUploadToken,
+    });
+    assert.equal(maskedEdit.status, 200);
+    assert.equal(maskedEdit.payload.code, 0);
+    assert.equal(calls.length, callsBeforeMask + 1);
+    assert.equal(calls.at(-1)?.body.mask_url, maskUrl);
+    balance -= CREDIT_TABLE.low;
+    assert.equal(await getBalance(userId), balance);
+    const [maskedTask] = await db()
+      .select()
+      .from(aiTask)
+      .where(eq(aiTask.id, maskedEdit.payload.data.jobId));
+    assert.equal(JSON.parse(maskedTask.options || '{}').maskUrl, maskUrl);
+
+    // Unprompted segmentation never accepts masks, even with a valid token.
+    const maskOnRemoval = await post({
+      requestId: 'request-mask-rmbg-0001',
+      tool: 'remove-background',
+      maskUrl,
+      maskUploadToken,
+    });
+    assert.equal(maskOnRemoval.status, 400);
+    assert.equal(await getBalance(userId), balance);
 
     const first = await post({
       requestId: 'request-replay-0001',

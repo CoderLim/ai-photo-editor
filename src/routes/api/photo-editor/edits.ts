@@ -83,6 +83,7 @@ export async function POST({ request }: { request: Request }) {
   const requestedPrompt =
     typeof body.prompt === 'string' ? body.prompt.trim() : '';
   const imageUrl = typeof body.imageUrl === 'string' ? body.imageUrl : '';
+  const maskUrl = typeof body.maskUrl === 'string' ? body.maskUrl.trim() : '';
   const requestId = typeof body.requestId === 'string' ? body.requestId : '';
   const tool = typeof body.tool === 'string' ? body.tool : 'general';
   const isBackgroundRemoval = tool === 'remove-background';
@@ -98,6 +99,17 @@ export async function POST({ request }: { request: Request }) {
     (!/^https?:\/\//.test(imageUrl) && !imageUrl.startsWith('/uploads/'))
   ) {
     return respErr('Invalid image URL');
+  }
+  if (maskUrl) {
+    if (isBackgroundRemoval) {
+      return respErr('Mask is not supported for this tool', { status: 400 });
+    }
+    if (
+      maskUrl.length > 2048 ||
+      (!/^https?:\/\//.test(maskUrl) && !maskUrl.startsWith('/uploads/'))
+    ) {
+      return respErr('Invalid mask URL', { status: 400 });
+    }
   }
   if (!/^[a-zA-Z0-9_-]{12,100}$/.test(requestId))
     return respErr('Invalid request ID');
@@ -141,6 +153,16 @@ export async function POST({ request }: { request: Request }) {
   }
   if (!imageAuthorized)
     return respErr('Upload or select an image you own', { status: 403 });
+
+  if (maskUrl) {
+    const maskAuthorized = await verifyUploadToken(
+      user.id,
+      maskUrl,
+      String(body.maskUploadToken || '')
+    );
+    if (!maskAuthorized)
+      return respErr('Upload a mask you own', { status: 403 });
+  }
 
   const stableId =
     'edit_' + md5(user.id + ':' + requestId + ':' + charge.quality);
@@ -187,7 +209,12 @@ export async function POST({ request }: { request: Request }) {
       model: instance.model,
       prompt,
       costCredits: charge.credits,
-      options: { imageUrl, tool, quality: charge.quality },
+      options: {
+        imageUrl,
+        tool,
+        quality: charge.quality,
+        ...(maskUrl ? { maskUrl } : {}),
+      },
     });
   } catch (err: any) {
     if (/insufficient credits/i.test(err?.message || '')) {
@@ -224,7 +251,12 @@ export async function POST({ request }: { request: Request }) {
         prompt,
         options: isBackgroundRemoval
           ? { image_url: imageUrl }
-          : photoModelInput(provider, imageUrl, charge.quality),
+          : photoModelInput(
+              provider,
+              imageUrl,
+              charge.quality,
+              maskUrl || undefined
+            ),
         async: true,
         callbackUrl,
       },
