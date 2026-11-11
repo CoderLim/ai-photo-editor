@@ -266,6 +266,9 @@ export function usePhotoEditSession({
     let step: 'anonymous' | 'trial' | 'credits' | 'upload' | 'edits' =
       'anonymous';
     try {
+      // Snapshot before any async auth / credit checks. Loading must not
+      // clear the canvas while we are preparing a precision edit.
+      const maskBlob = getMaskFile ? await getMaskFile() : null;
       if (!session?.user) {
         step = 'anonymous';
         const anonymous = await authClient.signIn.anonymous();
@@ -303,7 +306,6 @@ export function usePhotoEditSession({
       let uploadToken = upload?.token || '';
       let maskUrl = '';
       let maskUploadToken = '';
-      const maskBlob = getMaskFile ? await getMaskFile() : null;
       const maskFile = maskBlob
         ? new File([maskBlob], 'precision-mask.png', { type: 'image/png' })
         : null;
