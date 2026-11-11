@@ -13,6 +13,7 @@ type Props = {
   brushSize: number;
   handleRef?: Ref<MaskBrushHandle | null>;
   onStateChange?: (state: MaskBrushState) => void;
+  onMaskChange?: () => void;
   className?: string;
 };
 
@@ -23,6 +24,7 @@ export function MaskBrushCanvas({
   brushSize,
   handleRef,
   onStateChange,
+  onMaskChange,
   className,
 }: Props) {
   const brush = useMaskBrush({
@@ -31,6 +33,7 @@ export function MaskBrushCanvas({
     brushSize,
     handleRef,
     onStateChange,
+    onMaskChange,
   });
 
   return (
