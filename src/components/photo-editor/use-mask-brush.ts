@@ -2,13 +2,12 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
   type Ref,
 } from 'react';
-
-const MAX_HISTORY = 40;
 
 export type MaskBrushHandle = {
   undo: () => void;
@@ -25,33 +24,50 @@ export type MaskBrushState = {
   hasMask: boolean;
 };
 
+type Point = { x: number; y: number };
+type Stroke = { radius: number; points: Point[] };
+
 type Options = {
   imageSrc: string;
   enabled: boolean;
   brushSize: number;
   handleRef?: Ref<MaskBrushHandle | null>;
   onStateChange?: (state: MaskBrushState) => void;
+  onMaskChange?: () => void;
 };
 
-function emptyState(): MaskBrushState {
-  return { canUndo: false, canRedo: false, hasMask: false };
-}
+const emptyState = (): MaskBrushState => ({
+  canUndo: false,
+  canRedo: false,
+  hasMask: false,
+});
 
-/** Precision-edit mask stroke history at the source image's natural size. */
+/**
+ * Store source-image-space stroke paths, not a full ImageData snapshot after
+ * each stroke. On a 12 MP image, 40 RGBA snapshots would consume ~1.8 GiB.
+ */
 export function useMaskBrush({
   imageSrc,
   enabled,
   brushSize,
   handleRef,
   onStateChange,
+  onMaskChange,
 }: Options) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const overlayRef = useRef<HTMLCanvasElement | null>(null);
+  // Transparent canvas: only the painted strokes have alpha.
   const maskRef = useRef<HTMLCanvasElement | null>(null);
-  const drawing = useRef(false);
-  const history = useRef<ImageData[]>([]);
-  const redoStack = useRef<ImageData[]>([]);
+  const strokes = useRef<Stroke[]>([]);
+  const redoStack = useRef<Stroke[]>([]);
+  const activeStroke = useRef<Stroke | null>(null);
+  const activePointer = useRef<number | null>(null);
+  const onStateChangeRef = useRef(onStateChange);
+  const onMaskChangeRef = useRef(onMaskChange);
+  onStateChangeRef.current = onStateChange;
+  onMaskChangeRef.current = onMaskChange;
+
   const [layout, setLayout] = useState({
     left: 0,
     top: 0,
@@ -61,76 +77,61 @@ export function useMaskBrush({
     naturalHeight: 0,
   });
   const [state, setState] = useState<MaskBrushState>(emptyState);
+  const stateRef = useRef<MaskBrushState>(emptyState());
 
   const publish = useCallback(() => {
-    const mask = maskRef.current;
-    let hasMask = false;
-    if (mask && mask.width > 0) {
-      const data = mask
-        .getContext('2d')!
-        .getImageData(0, 0, mask.width, mask.height).data;
-      for (let i = 0; i < data.length; i += 4) {
-        if (data[i] > 8) {
-          hasMask = true;
-          break;
-        }
-      }
-    }
     const next = {
-      canUndo: history.current.length > 1,
+      canUndo: strokes.current.length > 0,
       canRedo: redoStack.current.length > 0,
-      hasMask,
+      hasMask: strokes.current.length > 0,
     };
+    const previous = stateRef.current;
+    if (
+      previous.canUndo === next.canUndo &&
+      previous.canRedo === next.canRedo &&
+      previous.hasMask === next.hasMask
+    ) {
+      return;
+    }
+    stateRef.current = next;
     setState(next);
-    onStateChange?.(next);
-  }, [onStateChange]);
+    onStateChangeRef.current?.(next);
+  }, []);
+
+  const notifyMaskChange = useCallback(() => {
+    onMaskChangeRef.current?.();
+  }, []);
 
   const paintOverlay = useCallback(() => {
     const overlay = overlayRef.current;
     const mask = maskRef.current;
-    if (!overlay || !mask || overlay.width === 0) return;
+    if (!overlay) return;
     const ctx = overlay.getContext('2d');
     if (!ctx) return;
     ctx.clearRect(0, 0, overlay.width, overlay.height);
+    if (!mask) return;
+    // Recolor the white strokes without per-pixel getImageData on every move.
     ctx.drawImage(mask, 0, 0, overlay.width, overlay.height);
-    const image = ctx.getImageData(0, 0, overlay.width, overlay.height);
-    const data = image.data;
-    for (let i = 0; i < data.length; i += 4) {
-      const v = data[i];
-      if (v > 8) {
-        data[i] = 239;
-        data[i + 1] = 68;
-        data[i + 2] = 68;
-        data[i + 3] = Math.min(180, 40 + v);
-      } else {
-        data[i + 3] = 0;
-      }
-    }
-    ctx.putImageData(image, 0, 0);
+    ctx.globalCompositeOperation = 'source-in';
+    ctx.fillStyle = 'rgba(239, 68, 68, 0.58)';
+    ctx.fillRect(0, 0, overlay.width, overlay.height);
+    ctx.globalCompositeOperation = 'source-over';
   }, []);
 
-  const ensureMask = useCallback(
-    (naturalWidth: number, naturalHeight: number) => {
-      let mask = maskRef.current;
-      if (
-        !mask ||
-        mask.width !== naturalWidth ||
-        mask.height !== naturalHeight
-      ) {
-        mask = document.createElement('canvas');
-        mask.width = naturalWidth;
-        mask.height = naturalHeight;
-        const ctx = mask.getContext('2d')!;
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, naturalWidth, naturalHeight);
-        maskRef.current = mask;
-        history.current = [ctx.getImageData(0, 0, naturalWidth, naturalHeight)];
-        redoStack.current = [];
-      }
-      return mask;
-    },
-    []
-  );
+  const ensureMask = useCallback((width: number, height: number) => {
+    let mask = maskRef.current;
+    if (!mask || mask.width !== width || mask.height !== height) {
+      mask = document.createElement('canvas');
+      mask.width = width;
+      mask.height = height;
+      maskRef.current = mask;
+      strokes.current = [];
+      redoStack.current = [];
+      activeStroke.current = null;
+      activePointer.current = null;
+    }
+    return mask;
+  }, []);
 
   const measure = useCallback(() => {
     const container = containerRef.current;
@@ -146,78 +147,150 @@ export function useMaskBrush({
       naturalWidth: image.naturalWidth,
       naturalHeight: image.naturalHeight,
     };
-    setLayout(next);
     ensureMask(next.naturalWidth, next.naturalHeight);
-    const overlay = overlayRef.current;
-    if (overlay) {
-      overlay.width = Math.max(1, Math.round(next.width));
-      overlay.height = Math.max(1, Math.round(next.height));
-      paintOverlay();
-    }
+    setLayout((previous) =>
+      Object.keys(next).every(
+        (key) =>
+          previous[key as keyof typeof previous] ===
+          next[key as keyof typeof next]
+      )
+        ? previous
+        : next
+    );
+  }, [ensureMask]);
+
+  useEffect(() => {
+    strokes.current = [];
+    redoStack.current = [];
+    activeStroke.current = null;
+    activePointer.current = null;
+    maskRef.current = null;
     publish();
-  }, [ensureMask, paintOverlay, publish]);
+    paintOverlay();
+    measure();
+  }, [imageSrc, measure, paintOverlay, publish]);
 
   useEffect(() => {
     measure();
     const container = containerRef.current;
     if (!container) return;
-    const observer = new ResizeObserver(() => measure());
+    const observer = new ResizeObserver(measure);
     observer.observe(container);
     return () => observer.disconnect();
   }, [measure, imageSrc]);
 
-  useEffect(() => {
-    history.current = [];
-    redoStack.current = [];
-    maskRef.current = null;
-    setState(emptyState());
-    onStateChange?.(emptyState());
-    measure();
-  }, [imageSrc]); // eslint-disable-line react-hooks/exhaustive-deps -- reset on new source only
+  // The overlay is conditionally mounted after the first image measurement.
+  // Paint it after that commit, not only from the earlier onLoad callback.
+  useLayoutEffect(() => {
+    const overlay = overlayRef.current;
+    if (!overlay || layout.width <= 0 || layout.height <= 0) return;
+    const width = Math.max(1, Math.round(layout.width));
+    const height = Math.max(1, Math.round(layout.height));
+    if (overlay.width !== width) overlay.width = width;
+    if (overlay.height !== height) overlay.height = height;
+    paintOverlay();
+  }, [layout.width, layout.height, paintOverlay]);
+
+  const paintPoint = (
+    ctx: CanvasRenderingContext2D,
+    point: Point,
+    radius: number
+  ) => {
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, Math.max(1, radius), 0, Math.PI * 2);
+    ctx.fill();
+  };
+
+  const paintSegment = (
+    ctx: CanvasRenderingContext2D,
+    from: Point,
+    to: Point,
+    radius: number
+  ) => {
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = Math.max(2, radius * 2);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
+    ctx.stroke();
+  };
+
+  const replayStrokes = () => {
+    const mask = maskRef.current;
+    if (!mask) return;
+    const ctx = mask.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, mask.width, mask.height);
+    for (const stroke of strokes.current) {
+      if (!stroke.points.length) continue;
+      paintPoint(ctx, stroke.points[0], stroke.radius);
+      for (let i = 1; i < stroke.points.length; i++) {
+        paintSegment(ctx, stroke.points[i - 1], stroke.points[i], stroke.radius);
+      }
+    }
+    paintOverlay();
+  };
 
   const strokeAt = (clientX: number, clientY: number) => {
     const overlay = overlayRef.current;
     const mask = maskRef.current;
-    if (!overlay || !mask || layout.width <= 0) return;
+    const stroke = activeStroke.current;
+    if (!overlay || !mask || !stroke) return;
     const rect = overlay.getBoundingClientRect();
-    const x = ((clientX - rect.left) / rect.width) * mask.width;
-    const y = ((clientY - rect.top) / rect.height) * mask.height;
-    const radius = (brushSize / 2) * (mask.width / Math.max(layout.width, 1));
-    const ctx = mask.getContext('2d')!;
-    ctx.fillStyle = '#fff';
-    ctx.beginPath();
-    ctx.arc(x, y, Math.max(1, radius), 0, Math.PI * 2);
-    ctx.fill();
+    if (rect.width <= 0 || rect.height <= 0) return;
+    const point = {
+      x: Math.max(0, Math.min(mask.width, ((clientX - rect.left) / rect.width) * mask.width)),
+      y: Math.max(0, Math.min(mask.height, ((clientY - rect.top) / rect.height) * mask.height)),
+    };
+    const previous = stroke.points.at(-1);
+    if (previous && previous.x === point.x && previous.y === point.y) return;
+    stroke.points.push(point);
+    const ctx = mask.getContext('2d');
+    if (!ctx) return;
+    if (previous) paintSegment(ctx, previous, point, stroke.radius);
+    else paintPoint(ctx, point, stroke.radius);
     paintOverlay();
   };
 
   const commitStroke = () => {
-    const mask = maskRef.current;
-    if (!mask) return;
-    const snapshot = mask
-      .getContext('2d')!
-      .getImageData(0, 0, mask.width, mask.height);
-    history.current = [...history.current.slice(-(MAX_HISTORY - 1)), snapshot];
+    const stroke = activeStroke.current;
+    activeStroke.current = null;
+    activePointer.current = null;
+    if (!stroke?.points.length) return;
+    strokes.current.push(stroke);
     redoStack.current = [];
     publish();
+    notifyMaskChange();
   };
 
   const onPointerDown = (event: ReactPointerEvent<HTMLCanvasElement>) => {
-    if (!enabled) return;
+    if (!enabled || activeStroke.current) return;
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    const mask = maskRef.current;
+    const overlay = overlayRef.current;
+    if (!mask || !overlay) return;
+    const displayedWidth = overlay.getBoundingClientRect().width;
+    if (displayedWidth <= 0) return;
     event.preventDefault();
     event.currentTarget.setPointerCapture(event.pointerId);
-    drawing.current = true;
+    activePointer.current = event.pointerId;
+    activeStroke.current = {
+      radius: Math.max(1, (brushSize / 2) * (mask.width / displayedWidth)),
+      points: [],
+    };
     strokeAt(event.clientX, event.clientY);
   };
 
   const onPointerMove = (event: ReactPointerEvent<HTMLCanvasElement>) => {
-    if (!enabled || !drawing.current) return;
+    if (!enabled || activePointer.current !== event.pointerId) return;
     strokeAt(event.clientX, event.clientY);
   };
 
   const onPointerUp = (event: ReactPointerEvent<HTMLCanvasElement>) => {
-    if (!drawing.current) return;
-    drawing.current = false;
+    if (activePointer.current !== event.pointerId) return;
     try {
       event.currentTarget.releasePointerCapture(event.pointerId);
     } catch {
@@ -226,60 +299,64 @@ export function useMaskBrush({
     commitStroke();
   };
 
-  const maskHasPaint = () => {
-    const mask = maskRef.current;
-    if (!mask || mask.width === 0) return false;
-    const data = mask
-      .getContext('2d')!
-      .getImageData(0, 0, mask.width, mask.height).data;
-    for (let i = 0; i < data.length; i += 4) {
-      if (data[i] > 8) return true;
-    }
-    return false;
-  };
-
   const undo = useCallback(() => {
-    const mask = maskRef.current;
-    if (!mask || history.current.length <= 1) return;
-    const current = history.current.pop()!;
-    redoStack.current.push(current);
-    const prev = history.current[history.current.length - 1];
-    mask.getContext('2d')!.putImageData(prev, 0, 0);
-    paintOverlay();
+    if (!strokes.current.length) return;
+    redoStack.current.push(strokes.current.pop()!);
+    replayStrokes();
     publish();
-  }, [paintOverlay, publish]);
+    notifyMaskChange();
+  }, [publish, notifyMaskChange]);
 
   const redo = useCallback(() => {
-    const mask = maskRef.current;
     const next = redoStack.current.pop();
-    if (!mask || !next) return;
-    history.current.push(next);
-    mask.getContext('2d')!.putImageData(next, 0, 0);
-    paintOverlay();
+    if (!next) return;
+    strokes.current.push(next);
+    replayStrokes();
     publish();
-  }, [paintOverlay, publish]);
+    notifyMaskChange();
+  }, [publish, notifyMaskChange]);
 
   const clear = useCallback(() => {
-    const mask = maskRef.current;
-    if (!mask) return;
-    const ctx = mask.getContext('2d')!;
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, mask.width, mask.height);
-    history.current = [ctx.getImageData(0, 0, mask.width, mask.height)];
+    if (!strokes.current.length && !redoStack.current.length) return;
+    strokes.current = [];
     redoStack.current = [];
+    activeStroke.current = null;
+    activePointer.current = null;
+    maskRef.current?.getContext('2d')?.clearRect(
+      0,
+      0,
+      maskRef.current.width,
+      maskRef.current.height
+    );
     paintOverlay();
     publish();
-  }, [paintOverlay, publish]);
+    notifyMaskChange();
+  }, [paintOverlay, publish, notifyMaskChange]);
 
-  const exportMaskBlob = useCallback(async () => {
+  const exportMaskBlob = useCallback(async (): Promise<Blob | null> => {
     const mask = maskRef.current;
-    if (!mask || !maskHasPaint()) return null;
-    return new Promise<Blob | null>((resolve) => {
-      mask.toBlob((blob) => resolve(blob), 'image/png');
+    if (!mask || strokes.current.length === 0) return null;
+    // Fal requires opaque black where the source must be kept.
+    const output = document.createElement('canvas');
+    output.width = mask.width;
+    output.height = mask.height;
+    const ctx = output.getContext('2d');
+    if (!ctx) throw new Error('Unable to create the precision mask');
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, output.width, output.height);
+    ctx.drawImage(mask, 0, 0);
+    return new Promise<Blob>((resolve, reject) => {
+      output.toBlob(
+        (blob) =>
+          blob
+            ? resolve(blob)
+            : reject(new Error('Unable to export the precision mask')),
+        'image/png'
+      );
     });
   }, []);
 
-  const hasMask = useCallback(() => maskHasPaint(), []);
+  const hasMask = useCallback(() => strokes.current.length > 0, []);
 
   useImperativeHandle(
     handleRef,
