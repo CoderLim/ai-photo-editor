@@ -46,7 +46,7 @@ const {
   REPLICATE_EDIT_MODEL,
   photoEditCharge,
 } = await import('../src/modules/photo-editor/config');
-const { createPhotoProvider, photoModelInput } =
+const { createPhotoProvider, getSelectedPhotoProvider, photoModelInput } =
   await import('../src/modules/photo-editor/service');
 const { issueUploadToken } =
   await import('../src/modules/photo-editor/upload-token');
@@ -102,14 +102,27 @@ test('unknown or omitted quality is rejected', () => {
   }
 });
 
+test('new photo edits always select fal', async () => {
+  assert.equal(await getSelectedPhotoProvider(), 'fal');
+});
+
 test('provider input uses GPT Image 2.6 fields, not Nano Banana resolution', () => {
   const url = 'https://cdn.example.test/photo.png';
+  const mask = 'https://cdn.example.test/mask.png';
   assert.deepEqual(photoModelInput('fal', url, 'high'), {
     image_urls: [url],
     image_size: 'auto',
     quality: 'high',
     num_images: 1,
     output_format: 'png',
+  });
+  assert.deepEqual(photoModelInput('fal', url, 'high', mask), {
+    image_urls: [url],
+    image_size: 'auto',
+    quality: 'high',
+    num_images: 1,
+    output_format: 'png',
+    mask_url: mask,
   });
   assert.equal('resolution' in photoModelInput('fal', url, 'low'), false);
   assert.deepEqual(photoModelInput('replicate', url, 'max'), {
@@ -125,6 +138,10 @@ test('provider input uses GPT Image 2.6 fields, not Nano Banana resolution', () 
   );
   assert.equal(
     'image_input' in photoModelInput('replicate', url, 'medium'),
+    false
+  );
+  assert.equal(
+    'mask_url' in photoModelInput('replicate', url, 'medium', mask),
     false
   );
   assert.throws(() => photoModelInput('other', url, 'medium'), /Unsupported/);

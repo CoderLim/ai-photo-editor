@@ -36,11 +36,10 @@ export async function createPhotoProvider(
   };
 }
 
+/** New photo edits always use fal (mask_url + token pricing). Replicate remains
+ * for creating/reconciling historical tasks that already stored provider=replicate. */
 export async function getSelectedPhotoProvider() {
-  const configs = await getAllConfigs();
-  // Manual operator setting. Do NOT automatically create another paid job if
-  // the first provider accepted a request but failed to return a response.
-  return configs.photo_editor_provider === 'fal' ? 'fal' : 'replicate';
+  return 'fal' as const;
 }
 
 /**
@@ -48,11 +47,13 @@ export async function getSelectedPhotoProvider() {
  * and `image_size` (not Nano Banana's `resolution` / `aspect_ratio`).
  * Replicate's Flare model edits through `input_images` and the same `quality`
  * enum. `auto` keeps the source aspect ratio near a 1024px output.
+ * Optional `maskUrl` maps to Fal `mask_url` (white = edit, black = keep).
  */
 export function photoModelInput(
   provider: string,
   imageUrl: string,
-  quality: PhotoEditQuality
+  quality: PhotoEditQuality,
+  maskUrl?: string
 ) {
   if (provider === 'fal') {
     return {
@@ -61,6 +62,7 @@ export function photoModelInput(
       quality,
       num_images: 1,
       output_format: 'png',
+      ...(maskUrl ? { mask_url: maskUrl } : {}),
     };
   }
   if (provider === 'replicate') {

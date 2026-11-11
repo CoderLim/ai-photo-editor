@@ -1,6 +1,6 @@
 # 整站迁 Fal + 首页精准编辑（Mask）
 
-> 状态：方案待实现。
+> 状态：已落地；`pnpm test:photo-edit` + `tsc` 通过。
 > 目标：新建照片编辑统一走 Fal；首页支持精准涂抹，生成时把 mask 以 Fal `mask_url` 交给供应商。
 
 ## 现状

@@ -1076,13 +1076,13 @@ export function getSettings(): Setting[] {
       title: 'Photo editor primary provider',
       type: 'select',
       options: [
-        { label: 'Replicate', value: 'replicate' },
         { label: 'fal.ai', value: 'fal' },
+        { label: 'Replicate (legacy)', value: 'replicate' },
       ],
       group: 'replicate',
       tab: 'ai',
-      defaultValue: 'replicate',
-      tip: 'GPT Image 2.6 on either provider (fal: openai/gpt-image-2.6/flare/edit, Replicate: openai/gpt-image-2.6-flare). Do not re-run already submitted jobs when switching.',
+      defaultValue: 'fal',
+      tip: 'New photo edits always use fal (openai/gpt-image-2.6/flare/edit), including precision masks. This setting is ignored for new jobs; keep Replicate token only to settle older pending tasks.',
     },
 
     {

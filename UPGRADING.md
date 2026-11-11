@@ -46,6 +46,24 @@ exports, permission codes, and behavior that changes for end users.
 
 ---
 
+## 2026-11-11: Photo edits always use fal (+ homepage precision mask)
+
+New photo-edit jobs (homepage, enhance, tools — everything except historical
+rows) always submit to fal (`openai/gpt-image-2.6/flare/edit`). Admin
+`photo_editor_provider` no longer switches the create path; configure
+`fal_api_key`. Replicate webhook / reconcile stay so older `provider=replicate`
+tasks can still settle. Homepage precision edit uploads an optional mask and
+passes Fal `mask_url` (white = edit, black = keep).
+
+### Action required
+
+1. Pull the code and redeploy.
+2. Confirm `fal_api_key` is set in Admin → Settings → AI (fal).
+3. Optional: leave `replicate_api_token` for in-flight legacy jobs; new edits
+   do not need it.
+
+---
+
 ## 2026-11-09: Photo-edit provider webhooks
 
 Completed Replicate / Fal photo edits are settled by a signed webhook at
