@@ -81,24 +81,24 @@ const BEFORE_AFTER = [
   {
     title: 'Menu board',
     description:
-      'Soup of the Day → Pumpkin Soup, same chalk-style lettering and board texture.',
-    image: '/images/ai-photo-editor/photo-text-editor/before-after-menu.svg',
+      'Blueberry Muffin → Cinnamon Roll, same chalk lettering and board texture.',
+    image: '/images/ai-photo-editor/photo-text-editor/before-after-menu.webp',
     alt: 'Menu board before and after text edit',
   },
   {
     title: 'Coffee bag',
     description:
-      'Roast name changed, front label untouched apart from the words.',
-    image: '/images/ai-photo-editor/photo-text-editor/before-after-coffee.svg',
+      'House Blend → Espresso Blend, bag design and beans unchanged apart from the words.',
+    image: '/images/ai-photo-editor/photo-text-editor/before-after-coffee.webp',
     alt: 'Coffee bag label before and after text edit',
   },
   {
     title: 'Storefront',
     description:
-      'Opening hours updated on the glass decal, reflections and street behind unchanged.',
+      'Weekend → Holiday on the sale sign, window display and reflections unchanged.',
     image:
-      '/images/ai-photo-editor/photo-text-editor/before-after-storefront.svg',
-    alt: 'Storefront hours before and after text edit',
+      '/images/ai-photo-editor/photo-text-editor/before-after-storefront.webp',
+    alt: 'Storefront sale sign before and after text edit',
   },
 ] as const;
 
@@ -267,6 +267,50 @@ function PhotoTextEditorPage() {
           </div>
         </section>
 
+        <section className="border-y border-slate-200 bg-white px-4 py-16 sm:px-6 sm:py-20">
+          <div className="mx-auto max-w-6xl">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              Before and After
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
+              Same photo, new lettering — the subject, lighting and layout stay
+              put.
+            </p>
+            <div className="mt-10 space-y-14 sm:space-y-16">
+              {BEFORE_AFTER.map((item, index) => (
+                <article
+                  key={item.title}
+                  className={
+                    'flex flex-col items-center gap-6 lg:items-start lg:gap-12 ' +
+                    (index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse')
+                  }
+                >
+                  <img
+                    src={item.image}
+                    alt={item.alt}
+                    width={1254}
+                    height={1254}
+                    loading="lazy"
+                    decoding="async"
+                    className="aspect-square w-full max-w-[32rem] shrink-0 object-contain"
+                  />
+                  <div className="w-full max-w-md min-w-0 lg:max-w-lg lg:flex-1 lg:pt-6">
+                    <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
+                      Example {String(index + 1).padStart(2, '0')}
+                    </p>
+                    <h3 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+                      {item.title}
+                    </h3>
+                    <p className="mt-4 text-base leading-7 text-slate-600">
+                      {item.description}
+                    </p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
           <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
             Three simple steps
@@ -274,44 +318,31 @@ function PhotoTextEditorPage() {
           <h2 className="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">
             Edit Text in Image: Three Steps
           </h2>
-          <div className="mt-9 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="space-y-5">
-              {STEPS.map((step) => (
-                <article
-                  key={step.number}
-                  className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-                >
-                  <p className="text-sm font-bold text-blue-600">
-                    {step.number}
-                  </p>
-                  <h3 className="mt-3 text-lg font-semibold">{step.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-slate-600">
-                    {step.description}
-                  </p>
-                  {'examples' in step && step.examples ? (
-                    <ul className="mt-4 space-y-2 text-sm leading-7 text-slate-600">
-                      {step.examples.map((example) => (
-                        <li
-                          key={example}
-                          className="rounded-xl bg-slate-50 px-4 py-3"
-                        >
-                          {example}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                </article>
-              ))}
-            </div>
-            <img
-              src="/images/ai-photo-editor/photo-text-editor/prompt-quote-example.svg"
-              alt="describing a text replacement with the new words in quotation marks"
-              width={1100}
-              height={640}
-              loading="lazy"
-              decoding="async"
-              className="h-fit w-full rounded-2xl border border-slate-200 bg-white shadow-sm"
-            />
+          <div className="mt-9 space-y-5">
+            {STEPS.map((step) => (
+              <article
+                key={step.number}
+                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+              >
+                <p className="text-sm font-bold text-blue-600">{step.number}</p>
+                <h3 className="mt-3 text-lg font-semibold">{step.title}</h3>
+                <p className="mt-3 text-sm leading-7 text-slate-600">
+                  {step.description}
+                </p>
+                {'examples' in step && step.examples ? (
+                  <ul className="mt-4 space-y-2 text-sm leading-7 text-slate-600">
+                    {step.examples.map((example) => (
+                      <li
+                        key={example}
+                        className="rounded-xl bg-slate-50 px-4 py-3"
+                      >
+                        {example}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </article>
+            ))}
           </div>
         </section>
 
@@ -367,36 +398,6 @@ function PhotoTextEditorPage() {
           </div>
         </section>
 
-        <section className="border-y border-slate-200 bg-white px-4 py-16 sm:px-6 sm:py-20">
-          <div className="mx-auto max-w-6xl">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              Before and After
-            </h2>
-            <div className="mt-9 grid gap-5 lg:grid-cols-3">
-              {BEFORE_AFTER.map((item) => (
-                <article
-                  key={item.title}
-                  className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-5"
-                >
-                  <img
-                    src={item.image}
-                    alt={item.alt}
-                    width={1100}
-                    height={560}
-                    loading="lazy"
-                    decoding="async"
-                    className="aspect-[11/5.6] w-full rounded-xl bg-white object-cover"
-                  />
-                  <h3 className="mt-5 text-lg font-semibold">{item.title}</h3>
-                  <p className="mt-2 text-sm leading-7 text-slate-600">
-                    {item.description}
-                  </p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
         <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
           <h2 className="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">
             Photo Text Editor vs a Text Box
@@ -442,15 +443,42 @@ function PhotoTextEditorPage() {
             words are already flattened into the pixels and you have no source
             file.
           </p>
-          <img
-            src="/images/ai-photo-editor/photo-text-editor/text-layer-vs-in-image.svg"
-            alt="adding a text layer compared with editing text inside the photo"
-            width={1200}
-            height={640}
-            loading="lazy"
-            decoding="async"
-            className="mt-8 w-full rounded-2xl border border-slate-200 bg-white shadow-sm"
-          />
+          <div className="mt-8 grid gap-5 md:grid-cols-2">
+            <figure className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <p className="mb-3 text-center text-xs font-bold tracking-widest text-slate-700 uppercase">
+                Text box / overlay
+              </p>
+              <img
+                src="/images/ai-photo-editor/photo-text-editor/text-box-overlay.webp"
+                alt="adding a text layer over a bakery storefront photo"
+                width={1448}
+                height={1086}
+                loading="lazy"
+                decoding="async"
+                className="aspect-[1448/1086] w-full rounded-xl object-cover"
+              />
+              <figcaption className="mt-3 text-center text-sm text-slate-500">
+                A separate block covers the photo
+              </figcaption>
+            </figure>
+            <figure className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <p className="mb-3 text-center text-xs font-bold tracking-widest text-slate-700 uppercase">
+                Edit text in image
+              </p>
+              <img
+                src="/images/ai-photo-editor/photo-text-editor/edit-text-in-image.webp"
+                alt="editing text inside the photo so lettering belongs to the sign surface"
+                width={1448}
+                height={1126}
+                loading="lazy"
+                decoding="async"
+                className="aspect-[1448/1086] w-full rounded-xl object-cover"
+              />
+              <figcaption className="mt-3 text-center text-sm text-slate-500">
+                Lettering belongs to the surface
+              </figcaption>
+            </figure>
+          </div>
         </section>
 
         <section className="border-y border-slate-200 bg-white px-4 py-16 sm:px-6 sm:py-20">
