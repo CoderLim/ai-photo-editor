@@ -101,13 +101,14 @@ export async function POST({ request }: { request: Request }) {
     return respErr('Invalid image URL');
   }
   if (maskUrl) {
-    if (isBackgroundRemoval)
-      return respErr('Mask is not supported for this tool');
+    if (isBackgroundRemoval) {
+      return respErr('Mask is not supported for this tool', { status: 400 });
+    }
     if (
       maskUrl.length > 2048 ||
       (!/^https?:\/\//.test(maskUrl) && !maskUrl.startsWith('/uploads/'))
     ) {
-      return respErr('Invalid mask URL');
+      return respErr('Invalid mask URL', { status: 400 });
     }
   }
   if (!/^[a-zA-Z0-9_-]{12,100}$/.test(requestId))
