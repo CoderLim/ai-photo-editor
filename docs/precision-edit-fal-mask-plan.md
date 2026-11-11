@@ -29,6 +29,20 @@
 3. 开启但未涂抹 → 不传 mask。
 4. 关开关 / 换图 / Edit Again → 清空笔刷历史。
 
+### C. Review P1（定死）
+
+1. **原图 + mask 合并上传，避开 1s 限流**
+   - `/api/storage/upload-image` 对 IP/账号有 **1s** `enforceMinIntervalRateLimit`。若先传原图再立刻传 mask，第二次会被限流，精准编辑提交失败。
+   - **首次**两者都未上传：同一 `FormData` 一次 `files` 带上原图 + mask，单次请求拿回两条 `url`/`token`（按返回顺序或明确字段区分：`results[0]` 原图、`results[1]` mask）。
+   - 原图已有 `upload`（或 `sourceJobId` 复用历史结果）：**只上传 mask**。
+   - 实现时在 `use-photo-edit-session` 提交路径写清分支，禁止「有 mask 时无条件再打一次 upload」。
+
+2. **有 `result` 时禁止涂抹，避免画在结果图上却按输入图交 mask**
+   - 成功后默认展示 `result`，`preview` 仍在；若仍开笔刷，用户会以为在画结果，提交却相对输入图，canvas / 预览 / 提交源不一致。
+   - **定死**：存在 `result`（未点 Edit Again）时：**隐藏或禁用** Precision Switch 与笔刷；仅 `Edit Again` 清掉 `result`、输入切到新底图后再允许精准编辑。
+   - 不采用「开精准编辑时自动切回 Original」——易误触改结果视图；统一要求先 Edit Again。
+   - Canvas 尺寸、预览底图、提交 `imageUrl` 必须始终同一张输入图。
+
 ## 数据流
 
 ```mermaid
@@ -39,9 +53,13 @@ sequenceDiagram
   participant API as edits_POST
   participant Fal as fal_gpt_image
 
-  UI->>UI: paint strokes undo_redo
-  Sess->>Up: upload source + mask PNG
-  Up-->>Sess: url + token each
+  UI->>UI: paint only when no result
+  alt source_and_mask_both_new
+    Sess->>Up: one FormData source plus mask
+  else source_already_uploaded
+    Sess->>Up: mask only
+  end
+  Up-->>Sess: urls and tokens
   Sess->>API: imageUrl maskUrl tokens prompt
   API->>API: verify tokens provider=fal
   API->>Fal: image_urls + mask_url
@@ -61,8 +79,9 @@ sequenceDiagram
 
 ### UI（Workspace 右上角）
 
-- 有原图预览且非 loading：右侧 **Precision edit** Switch。
-- 开启后：笔刷大小（约 8–80px）、Undo、Redo。
+- **仅** `preview` 存在、无 `result`、非 loading：右侧 **Precision edit** Switch。
+- 开启后：笔刷大小（约 8–80px）、Undo、Redo；笔刷叠在**当前输入图**上。
+- 有 `result`：不展示 Switch / 笔刷工具（须 Edit Again 后才能再涂）。
 - 新建 `src/components/photo-editor/mask-brush-canvas.tsx`（+ 可选 `use-mask-brush.ts`）：object-contain 对齐、stroke 栈 undo/redo、`exportMaskBlob()`。
 - 文案可与现有 workspace 一样先硬编码英文。
 
@@ -70,8 +89,12 @@ sequenceDiagram
 
 `use-photo-edit-session.ts`：
 
-- 可选 `getMaskFile`；有 mask 则上传拿 `maskUrl` + `maskUploadToken`。
-- POST 增加上述字段；笔刷变化时清空 `requestId`。
+- 可选 `getMaskFile`。
+- 上传分支（P1）：
+  - `file && !upload` 且有 mask → **一次** FormData：`files` = [原图, mask]。
+  - 已有 `upload` / `sourceJobId` 且有 mask → 只传 mask。
+  - 无 mask → 保持现有单文件上传。
+- POST 增加 `maskUrl` / `maskUploadToken`；笔刷变化时清空 `requestId`。
 
 ## 测试
 
