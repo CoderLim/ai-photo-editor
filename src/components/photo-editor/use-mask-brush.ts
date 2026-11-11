@@ -42,6 +42,33 @@ const emptyState = (): MaskBrushState => ({
   hasMask: false,
 });
 
+function paintPoint(
+  ctx: CanvasRenderingContext2D,
+  point: Point,
+  radius: number
+) {
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(point.x, point.y, Math.max(1, radius), 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function paintSegment(
+  ctx: CanvasRenderingContext2D,
+  from: Point,
+  to: Point,
+  radius: number
+) {
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = Math.max(2, radius * 2);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(from.x, from.y);
+  ctx.lineTo(to.x, to.y);
+  ctx.stroke();
+}
+
 /**
  * Store source-image-space stroke paths, not a full ImageData snapshot after
  * each stroke. On a 12 MP image, 40 RGBA snapshots would consume ~1.8 GiB.
@@ -191,34 +218,7 @@ export function useMaskBrush({
     paintOverlay();
   }, [layout.width, layout.height, paintOverlay]);
 
-  const paintPoint = (
-    ctx: CanvasRenderingContext2D,
-    point: Point,
-    radius: number
-  ) => {
-    ctx.fillStyle = '#fff';
-    ctx.beginPath();
-    ctx.arc(point.x, point.y, Math.max(1, radius), 0, Math.PI * 2);
-    ctx.fill();
-  };
-
-  const paintSegment = (
-    ctx: CanvasRenderingContext2D,
-    from: Point,
-    to: Point,
-    radius: number
-  ) => {
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = Math.max(2, radius * 2);
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.beginPath();
-    ctx.moveTo(from.x, from.y);
-    ctx.lineTo(to.x, to.y);
-    ctx.stroke();
-  };
-
-  const replayStrokes = () => {
+  const replayStrokes = useCallback(() => {
     const mask = maskRef.current;
     if (!mask) return;
     const ctx = mask.getContext('2d');
@@ -232,7 +232,7 @@ export function useMaskBrush({
       }
     }
     paintOverlay();
-  };
+  }, [paintOverlay]);
 
   const strokeAt = (clientX: number, clientY: number) => {
     const overlay = overlayRef.current;
@@ -305,7 +305,7 @@ export function useMaskBrush({
     replayStrokes();
     publish();
     notifyMaskChange();
-  }, [publish, notifyMaskChange]);
+  }, [replayStrokes, publish, notifyMaskChange]);
 
   const redo = useCallback(() => {
     const next = redoStack.current.pop();
@@ -314,20 +314,18 @@ export function useMaskBrush({
     replayStrokes();
     publish();
     notifyMaskChange();
-  }, [publish, notifyMaskChange]);
+  }, [replayStrokes, publish, notifyMaskChange]);
 
   const clear = useCallback(() => {
-    if (!strokes.current.length && !redoStack.current.length) return;
+    if (!strokes.current.length && !redoStack.current.length && !activeStroke.current) return;
     strokes.current = [];
     redoStack.current = [];
     activeStroke.current = null;
     activePointer.current = null;
-    maskRef.current?.getContext('2d')?.clearRect(
-      0,
-      0,
-      maskRef.current.width,
-      maskRef.current.height
-    );
+    const mask = maskRef.current;
+    if (mask) {
+      mask.getContext('2d')?.clearRect(0, 0, mask.width, mask.height);
+    }
     paintOverlay();
     publish();
     notifyMaskChange();
