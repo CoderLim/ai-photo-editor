@@ -46,7 +46,9 @@ function ToolsPage() {
                     ? '/ai-photo-enhancer'
                     : tool.slug === 'change-background'
                       ? '/photo-background-changer'
-                    : '/#editor'
+                      : tool.slug === 'edit-text'
+                        ? '/photo-text-editor'
+                        : '/#editor'
               }
               className="group rounded-2xl border border-slate-200 bg-white p-7 hover:border-blue-300 hover:shadow-lg"
             >

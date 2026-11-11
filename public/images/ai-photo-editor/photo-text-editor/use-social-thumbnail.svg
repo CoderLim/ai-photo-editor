@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="700" viewBox="0 0 900 700" role="img" aria-label="edit text on image  social thumbnail">
+  <rect width="900" height="700" fill="#0f172a"/>
+  <rect x="60" y="80" width="780" height="540" rx="28" fill="#1e293b"/>
+  <circle cx="220" cy="280" r="90" fill="#334155"/>
+  <rect x="360" y="220" width="400" height="28" rx="8" fill="#475569"/>
+  <rect x="360" y="270" width="320" height="22" rx="8" fill="#334155"/>
+  <text x="450" y="430" text-anchor="middle" fill="#f8fafc" font-family="system-ui,sans-serif" font-size="54" font-weight="800">NEW DROP</text>
+  <text x="450" y="490" text-anchor="middle" fill="#93c5fd" font-family="system-ui,sans-serif" font-size="24">Weekend edit · same layout</text>
+</svg>

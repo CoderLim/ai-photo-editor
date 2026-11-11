@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="560" viewBox="0 0 1100 560" role="img" aria-label="Storefront hours before and after text edit">
+  <rect width="1100" height="560" fill="#eef5ff"/>
+  <rect x="80" y="80" width="400" height="320" fill="#d9e7f5" stroke="#94a3b8" stroke-width="6"/>
+  <rect x="140" y="160" width="280" height="80" rx="8" fill="#111827" opacity="0.85"/>
+  <text x="280" y="210" text-anchor="middle" fill="#f8fafc" font-family="system-ui,sans-serif" font-size="28" font-weight="700">MonSat 96</text>
+  <text x="280" y="460" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif" font-size="18" font-weight="700">Before</text>
+  <rect x="620" y="80" width="400" height="320" fill="#d9e7f5" stroke="#94a3b8" stroke-width="6"/>
+  <rect x="680" y="160" width="280" height="80" rx="8" fill="#111827" opacity="0.85"/>
+  <text x="820" y="210" text-anchor="middle" fill="#f8fafc" font-family="system-ui,sans-serif" font-size="28" font-weight="700">Open Sunday</text>
+  <text x="820" y="460" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif" font-size="18" font-weight="700">After</text>
+</svg>

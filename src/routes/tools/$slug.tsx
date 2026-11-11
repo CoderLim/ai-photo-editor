@@ -14,6 +14,9 @@ export const Route = createFileRoute('/tools/$slug')({
     if (params.slug === 'remove-background') {
       throw redirect({ to: '/ai-background-remover' });
     }
+    if (params.slug === 'edit-text') {
+      throw redirect({ to: '/photo-text-editor' });
+    }
     if (!getPhotoTool(params.slug)) {
       throw redirect({ to: '/' });
     }

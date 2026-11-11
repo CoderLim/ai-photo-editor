@@ -193,6 +193,23 @@ export const PHOTO_TOOLS: ToolConfig[] = [
       'Compare the output carefully before downloading.',
     ],
   },
+  {
+    slug: 'edit-text',
+    title: 'Photo Text Editor',
+    heading: 'Edit Text in Image Online',
+    description:
+      'Change words already baked into a photo by describing the new lettering. AI redraws the text while keeping the rest of the image.',
+    category: 'Edit & Retouch',
+    examplePrompt:
+      'Replace the text on the label with "Fresh Roast Coffee" and keep the same font, colour, and layout.',
+    limitations:
+      'Very small type, long paragraphs and dense scripts may need a closer crop or a second pass. Font match is close, not identical.',
+    steps: [
+      'Upload a photo that already contains text.',
+      'Quote the new words and say what must stay unchanged.',
+      'Generate, zoom in on the lettering, then download or refine.',
+    ],
+  },
 ];
 export function getPhotoTool(slug: string) {
   return PHOTO_TOOLS.find((t) => t.slug === slug);

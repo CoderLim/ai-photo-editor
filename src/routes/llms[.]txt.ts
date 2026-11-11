@@ -33,6 +33,12 @@ const STATIC_PAGES: { path: string; title: string; description: string }[] = [
     description: 'Change photo backgrounds to a color, preset, or custom image',
   },
   {
+    path: '/photo-text-editor',
+    title: 'Photo Text Editor',
+    description:
+      'Edit text already inside a photo by describing the change; AI redraws the lettering',
+  },
+  {
     path: '/examples',
     title: 'AI Photo Edit Examples',
     description:

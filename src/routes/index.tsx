@@ -103,6 +103,13 @@ const FEATURES = [
     cta: 'Open Photo Background Changer',
   },
   {
+    title: 'Edit Text in Image',
+    description:
+      'Change lettering already baked into a photo by describing the new words. AI redraws the text while keeping the rest of the image.',
+    href: '/photo-text-editor',
+    cta: 'Open Photo Text Editor',
+  },
+  {
     title: 'Retouch Portraits and Skin',
     description:
       'Ask for subtle skin cleanup, softer lighting, or a polished headshot while keeping the person recognizable.',
@@ -133,6 +140,7 @@ const FEATURES = [
 
 const FEATURE_IMAGES = [
   '/images/ai-photo-editor/remove-background.jpg',
+  '/images/ai-photo-editor/photo-text-editor/hero-menu-board.svg',
   '/images/ai-photo-editor/portrait-retouch.jpg',
   '/images/ai-photo-editor/enhance-photo.jpg',
   '/images/ai-photo-editor/remove-object.jpg',
@@ -393,8 +401,10 @@ function HomePage() {
                       : tool.slug === 'enhance-photo'
                         ? '/ai-photo-enhancer'
                         : tool.slug === 'change-background'
-                           ? '/photo-background-changer'
-                           : '#editor'
+                          ? '/photo-background-changer'
+                          : tool.slug === 'edit-text'
+                            ? '/photo-text-editor'
+                            : '#editor'
                   }
                   className="group overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg"
                 >

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="560" viewBox="0 0 1100 560" role="img" aria-label="Menu board before and after text edit">
+  <rect width="1100" height="560" fill="#f7f9fc"/>
+  <rect x="40" y="40" width="480" height="480" rx="24" fill="#3a3126"/>
+  <text x="280" y="180" text-anchor="middle" fill="#f8f1e3" font-family="Georgia,serif" font-size="36">Soup of the Day</text>
+  <text x="280" y="500" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif" font-size="18" font-weight="700">Before</text>
+  <rect x="580" y="40" width="480" height="480" rx="24" fill="#3a3126"/>
+  <text x="820" y="180" text-anchor="middle" fill="#f8f1e3" font-family="Georgia,serif" font-size="36">Pumpkin Soup</text>
+  <text x="820" y="500" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif" font-size="18" font-weight="700">After</text>
+</svg>

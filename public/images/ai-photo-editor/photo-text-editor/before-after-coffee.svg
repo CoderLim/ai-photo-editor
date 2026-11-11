@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="560" viewBox="0 0 1100 560" role="img" aria-label="Coffee bag label before and after text edit">
+  <rect width="1100" height="560" fill="#f7f9fc"/>
+  <ellipse cx="280" cy="300" rx="150" ry="190" fill="#6b3f24"/>
+  <rect x="190" y="220" width="180" height="120" rx="12" fill="#f7f1e6"/>
+  <text x="280" y="290" text-anchor="middle" fill="#5b3a1f" font-family="Georgia,serif" font-size="24">House Blend</text>
+  <text x="280" y="520" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif" font-size="18" font-weight="700">Before</text>
+  <ellipse cx="820" cy="300" rx="150" ry="190" fill="#6b3f24"/>
+  <rect x="730" y="220" width="180" height="120" rx="12" fill="#f7f1e6"/>
+  <text x="820" y="290" text-anchor="middle" fill="#5b3a1f" font-family="Georgia,serif" font-size="22">Fresh Roast</text>
+  <text x="820" y="520" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif" font-size="18" font-weight="700">After</text>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="700" viewBox="0 0 900 700" role="img" aria-label="edit text on image  app screenshot">
+  <rect width="900" height="700" fill="#eef2ff"/>
+  <rect x="260" y="50" width="380" height="600" rx="36" fill="#0f172a"/>
+  <rect x="280" y="80" width="340" height="540" rx="24" fill="#f8fafc"/>
+  <text x="450" y="150" text-anchor="middle" fill="#0f172a" font-family="system-ui,sans-serif" font-size="28" font-weight="700">Checkout</text>
+  <rect x="310" y="190" width="280" height="70" rx="14" fill="#e2e8f0"/>
+  <text x="450" y="235" text-anchor="middle" fill="#334155" font-family="system-ui,sans-serif" font-size="22">Sample value: $24</text>
+  <rect x="310" y="300" width="280" height="64" rx="16" fill="#2563eb"/>
+  <text x="450" y="340" text-anchor="middle" fill="#ffffff" font-family="system-ui,sans-serif" font-size="22" font-weight="700">Buy Now</text>
+</svg>

@@ -60,6 +60,9 @@ export function Footer() {
             <Link href="/ai-photo-enhancer" className="hover:text-blue-600">
               Photo Enhancer
             </Link>
+            <Link href="/photo-text-editor" className="hover:text-blue-600">
+              Photo Text Editor
+            </Link>
           </div>
         </div>
         <div>

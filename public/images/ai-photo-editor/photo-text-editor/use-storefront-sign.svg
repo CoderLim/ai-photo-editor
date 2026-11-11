@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="700" viewBox="0 0 900 700" role="img" aria-label="edit text on image  storefront sign">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#cfe4ff"/>
+      <stop offset="100%" stop-color="#eef5ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="700" fill="url(#sky)"/>
+  <rect x="120" y="120" width="660" height="480" fill="#d9e7f5" stroke="#94a3b8" stroke-width="8"/>
+  <rect x="210" y="220" width="480" height="120" rx="10" fill="#111827" opacity="0.85"/>
+  <text x="450" y="295" text-anchor="middle" fill="#f8fafc" font-family="Impact,Haettenschweiler,sans-serif" font-size="48" letter-spacing="4">OPEN SUNDAY</text>
+  <rect x="0" y="600" width="900" height="100" fill="#94a3b8"/>
+</svg>

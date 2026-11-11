@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="640" viewBox="0 0 1200 640" role="img" aria-label="adding a text layer compared with editing text inside the photo">
+  <rect width="1200" height="640" fill="#f7f9fc"/>
+  <text x="300" y="48" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif" font-size="20" font-weight="700">TEXT BOX / LAYER</text>
+  <text x="900" y="48" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif" font-size="20" font-weight="700">EDIT TEXT IN IMAGE</text>
+
+  <rect x="60" y="80" width="480" height="480" rx="24" fill="#ffffff" stroke="#dbe4f3" stroke-width="2"/>
+  <rect x="110" y="140" width="380" height="260" rx="16" fill="#cbd5e1"/>
+  <rect x="150" y="250" width="300" height="70" rx="8" fill="#ffffff" stroke="#2563eb" stroke-width="3" stroke-dasharray="8 6"/>
+  <text x="300" y="295" text-anchor="middle" fill="#2563eb" font-family="system-ui,sans-serif" font-size="28" font-weight="700">Caption here</text>
+  <text x="300" y="450" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif" font-size="18">Separate layer over the photo</text>
+
+  <rect x="660" y="80" width="480" height="480" rx="24" fill="#ffffff" stroke="#dbe4f3" stroke-width="2"/>
+  <rect x="710" y="140" width="380" height="260" rx="16" fill="#334155"/>
+  <rect x="760" y="220" width="280" height="90" rx="10" fill="#1e293b"/>
+  <text x="900" y="275" text-anchor="middle" fill="#f8fafc" font-family="Impact,Haettenschweiler,sans-serif" font-size="34" letter-spacing="2">OPEN SUNDAY</text>
+  <text x="900" y="450" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif" font-size="18">Words redrawn inside the pixels</text>
+</svg>

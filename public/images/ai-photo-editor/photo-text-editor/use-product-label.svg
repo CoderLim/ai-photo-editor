@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="700" viewBox="0 0 900 700" role="img" aria-label="edit text on image  product label">
+  <rect width="900" height="700" fill="#f4efe6"/>
+  <ellipse cx="450" cy="390" rx="210" ry="250" fill="#6b3f24"/>
+  <ellipse cx="450" cy="180" rx="170" ry="70" fill="#4d2c18"/>
+  <rect x="300" y="250" width="300" height="220" rx="18" fill="#f7f1e6" stroke="#d7c7ad" stroke-width="3"/>
+  <text x="450" y="330" text-anchor="middle" fill="#5b3a1f" font-family="Georgia,serif" font-size="34" font-weight="700">Fresh Roast</text>
+  <text x="450" y="380" text-anchor="middle" fill="#5b3a1f" font-family="Georgia,serif" font-size="34" font-weight="700">Coffee</text>
+  <text x="450" y="430" text-anchor="middle" fill="#8a6a4a" font-family="system-ui,sans-serif" font-size="18">12 oz · Dark</text>
+</svg>
