@@ -363,6 +363,51 @@ test('edit API charges the server quality price and ignores client amounts', asy
       'remove-background'
     );
 
+    // Only the owner of an uploaded mask can submit it. Rejected masks
+    // must not spend credits or create a provider task.
+    const maskUrl = 'https://cdn.example.test/photo-editor/precision-mask.png';
+    const balanceBeforeMask = await getBalance(userId);
+    const callsBeforeMask = calls.length;
+    const rejectedMask = await post({
+      requestId: 'request-mask-rejected-0001',
+      quality: 'low',
+      maskUrl,
+      maskUploadToken: 'invalid',
+    });
+    assert.equal(rejectedMask.status, 403);
+    assert.match(rejectedMask.payload.message, /mask you own/i);
+    assert.equal(await getBalance(userId), balanceBeforeMask);
+    assert.equal(calls.length, callsBeforeMask);
+
+    const maskUploadToken = await issueUploadToken(userId, maskUrl);
+    const maskedEdit = await post({
+      requestId: 'request-mask-accepted-0001',
+      quality: 'low',
+      maskUrl,
+      maskUploadToken,
+    });
+    assert.equal(maskedEdit.status, 200);
+    assert.equal(maskedEdit.payload.code, 0);
+    assert.equal(calls.length, callsBeforeMask + 1);
+    assert.equal(calls.at(-1)?.body.mask_url, maskUrl);
+    balance -= CREDIT_TABLE.low;
+    assert.equal(await getBalance(userId), balance);
+    const [maskedTask] = await db()
+      .select()
+      .from(aiTask)
+      .where(eq(aiTask.id, maskedEdit.payload.data.jobId));
+    assert.equal(JSON.parse(maskedTask.options || '{}').maskUrl, maskUrl);
+
+    // Unprompted segmentation never accepts masks, even with a valid token.
+    const maskOnRemoval = await post({
+      requestId: 'request-mask-rmbg-0001',
+      tool: 'remove-background',
+      maskUrl,
+      maskUploadToken,
+    });
+    assert.equal(maskOnRemoval.status, 400);
+    assert.equal(await getBalance(userId), balance);
+
     const first = await post({
       requestId: 'request-replay-0001',
       quality: 'medium',
