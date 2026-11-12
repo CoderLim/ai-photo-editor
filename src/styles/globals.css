@@ -338,6 +338,12 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Soft sky-blue selection. Keep a single global rule — marketing pages
+     stay visually light while <html> may still have .dark, so a nested
+     `.dark ::selection` would wrongly paint a deep teal highlight. */
+  ::selection {
+    background-color: #cffafe;
+  }
   /* Tailwind v4 dropped the pointer cursor on buttons; bring it back for
      anything clickable (disabled buttons keep the default cursor). */
   button:not(:disabled),
