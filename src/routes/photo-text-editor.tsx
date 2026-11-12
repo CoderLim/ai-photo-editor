@@ -65,8 +65,15 @@ const USE_CASES = [
     title: 'Screenshots and app mockups',
     description:
       'Change button labels or sample values in a product screenshot for a landing page or app store listing.',
-    image: '/images/ai-photo-editor/photo-text-editor/edit-text-in-image.webp',
-    alt: 'Lettering rewritten inside a photo mockup',
+    image: '/images/ai-photo-editor/photo-text-editor/use-app-screenshot.webp',
+    alt: 'Checkout button label before and after text edit',
+  },
+  {
+    title: 'Invitations and greeting cards',
+    description:
+      'Update names, dates, and personal messages on invitations or greeting cards while keeping the original fonts, decorations, and layout.',
+    image: '/images/ai-photo-editor/photo-text-editor/use-invitation-card.webp',
+    alt: 'Birthday invitation name and date edited in photo',
   },
   {
     title: 'Reusing old marketing photos',
@@ -276,15 +283,9 @@ function PhotoTextEditorPage() {
               Same photo, new lettering — the subject, lighting and layout stay
               put.
             </p>
-            <div className="mt-10 space-y-14 sm:space-y-16">
+            <div className="mt-10 grid gap-10 sm:gap-12 md:grid-cols-3">
               {BEFORE_AFTER.map((item, index) => (
-                <article
-                  key={item.title}
-                  className={
-                    'flex flex-col items-center gap-6 lg:items-start lg:gap-12 ' +
-                    (index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse')
-                  }
-                >
+                <article key={item.title} className="min-w-0">
                   <img
                     src={item.image}
                     alt={item.alt}
@@ -292,16 +293,16 @@ function PhotoTextEditorPage() {
                     height={1254}
                     loading="lazy"
                     decoding="async"
-                    className="aspect-square w-full max-w-[32rem] shrink-0 object-contain"
+                    className="aspect-square w-full rounded-2xl object-contain"
                   />
-                  <div className="w-full max-w-md min-w-0 lg:max-w-lg lg:flex-1 lg:pt-6">
-                    <p className="mb-3 text-xs font-semibold tracking-widest text-blue-600 uppercase">
+                  <div className="mt-5">
+                    <p className="mb-2 text-xs font-semibold tracking-widest text-blue-600 uppercase">
                       Example {String(index + 1).padStart(2, '0')}
                     </p>
-                    <h3 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+                    <h3 className="text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">
                       {item.title}
                     </h3>
-                    <p className="mt-4 text-base leading-7 text-slate-600">
+                    <p className="mt-3 text-sm leading-7 text-slate-600">
                       {item.description}
                     </p>
                   </div>
@@ -451,11 +452,11 @@ function PhotoTextEditorPage() {
               <img
                 src="/images/ai-photo-editor/photo-text-editor/text-box-overlay.webp"
                 alt="adding a text layer over a bakery storefront photo"
-                width={1448}
-                height={1086}
+                width={887}
+                height={684}
                 loading="lazy"
                 decoding="async"
-                className="aspect-[1448/1086] w-full rounded-xl object-cover"
+                className="aspect-[887/684] w-full rounded-xl object-cover"
               />
               <figcaption className="mt-3 text-center text-sm text-slate-500">
                 A separate block covers the photo
@@ -468,11 +469,11 @@ function PhotoTextEditorPage() {
               <img
                 src="/images/ai-photo-editor/photo-text-editor/edit-text-in-image.webp"
                 alt="editing text inside the photo so lettering belongs to the sign surface"
-                width={1448}
-                height={1126}
+                width={887}
+                height={684}
                 loading="lazy"
                 decoding="async"
-                className="aspect-[1448/1086] w-full rounded-xl object-cover"
+                className="aspect-[887/684] w-full rounded-xl object-cover"
               />
               <figcaption className="mt-3 text-center text-sm text-slate-500">
                 Lettering belongs to the surface

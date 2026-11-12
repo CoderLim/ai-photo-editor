@@ -14,6 +14,24 @@ import type { CreditGate } from '@/components/photo-editor/credit-gate-dialog';
 
 type Draft = { file: File; prompt: string; quality?: PhotoEditQuality };
 
+/** Decode the result URL before we flip the UI off "loading" / onto Edited. */
+function preloadImage(url: string, timeoutMs = 20_000): Promise<void> {
+  if (typeof Image === 'undefined') return Promise.resolve();
+  return new Promise((resolve) => {
+    const img = new Image();
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      resolve();
+    };
+    img.onload = finish;
+    img.onerror = finish;
+    img.src = url;
+    window.setTimeout(finish, timeoutMs);
+  });
+}
+
 type UsePhotoEditSessionOptions = {
   /** Built-in prompt when the surface does not expose a textarea. */
   fixedPrompt?: string;
@@ -178,6 +196,9 @@ export function usePhotoEditSession({
         const response = await fetch('/api/photo-editor/edits/' + jobId);
         const job = await dataOrThrow(response);
         if (job.status === 'success' && job.imageUrl) {
+          // Keep the loading overlay until the bytes are in cache, otherwise
+          // Edited briefly still shows the original and looks like a no-op.
+          await preloadImage(job.imageUrl);
           setResult(job.imageUrl);
           setStatus('success');
           setShowOriginal(false);
