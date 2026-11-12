@@ -26,20 +26,20 @@ import { Switch } from '@/components/ui/switch';
 
 const QUICK_PROMPTS = [
   {
+    id: 'change-clothes',
+    label: 'Change Clothes',
+    caption: 'Outfit change',
+    image: '/images/ai-photo-editor/change-clothes-outfits.jpg',
+    alt: 'Before and after changing a white top into a rose satin dress',
+    text: 'Change her outfit to a deep rose satin dress with a soft draped neckline. Keep her face, hair, pose, body shape, and pink background unchanged.',
+  },
+  {
     id: 'change-style',
     label: 'Change Style',
     caption: 'Style change',
     image: '/images/ai-photo-editor/restyle-photo.jpg',
     alt: 'Before and after restyling a portrait with cinematic sunset colors',
     text: 'Give this photo a cinematic look with refined lighting and colors. Preserve the main subject and composition.',
-  },
-  {
-    id: 'change-background',
-    label: 'Change Background',
-    caption: 'Background change',
-    image: '/images/ai-photo-editor/remove-background.jpg',
-    alt: 'Before and after placing a portrait on a beach background',
-    text: 'Replace the background with a clean professional studio backdrop while preserving the original subject and details.',
   },
   {
     id: 'remove-object',
@@ -90,7 +90,7 @@ export function PhotoEditorWorkspace() {
       return (await brushRef.current?.exportMaskBlob()) ?? null;
     },
   });
-  const [exampleId, setExampleId] = useState<ExampleId>('change-style');
+  const [exampleId, setExampleId] = useState<ExampleId>('change-clothes');
   const [examplePaused, setExamplePaused] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const example =
@@ -423,8 +423,8 @@ export function PhotoEditorWorkspace() {
                 <img
                   src={example.image}
                   alt={example.alt}
-                  width={1672}
-                  height={941}
+                  width={1774}
+                  height={887}
                   data-example-id={example.id}
                   className="size-full object-cover object-center"
                 />

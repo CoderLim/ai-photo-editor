@@ -136,6 +136,16 @@ const FEATURES = [
     description:
       'Smooth creases and wrinkles in shirts, dresses, or other garments while keeping the fabric texture, fit, and overall look natural.',
   },
+  {
+    title: 'Change Hair Color',
+    description:
+      'Try a new hair color in seconds, from natural shades to bold new looks. Keep your hairstyle, facial features, and background consistent.',
+  },
+  {
+    title: 'Change Clothes and Outfits',
+    description:
+      'Try different outfits without changing clothes. Swap dresses, tops, or entire looks while keeping your face, pose, and background consistent.',
+  },
 ] as const;
 
 const FEATURE_IMAGES = [
@@ -146,6 +156,8 @@ const FEATURE_IMAGES = [
   '/images/ai-photo-editor/remove-object.jpg',
   '/images/ai-photo-editor/restyle-photo.jpg',
   '/images/ai-photo-editor/remove-clothing-wrinkles.jpg',
+  '/images/ai-photo-editor/change-hair-color.jpg',
+  '/images/ai-photo-editor/change-clothes-outfits.jpg',
 ] as const;
 
 const USE_CASES = [

@@ -195,7 +195,8 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
               href={authHref('/sign-in')}
               className={cn(
                 buttonVariants({ size: 'lg' }),
-                'ml-1.5 h-10 rounded-lg bg-blue-600 px-5 text-sm font-medium text-white hover:bg-blue-700'
+                // `[a]:hover:bg-primary/80` beats `hover:bg-blue-700`; dark primary ≈ white.
+                'ml-1.5 h-10 rounded-lg bg-blue-600 px-5 text-sm font-medium text-white hover:bg-blue-700 hover:text-white [a]:hover:bg-blue-700'
               )}
             >
               {m['common.nav.sign_in']()}
@@ -239,7 +240,7 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
                 href={authHref('/sign-in')}
                 className={cn(
                   buttonVariants({ size: 'lg' }),
-                  'h-10 rounded-lg bg-blue-600 px-5 text-sm font-medium text-white hover:bg-blue-700'
+                  'h-10 rounded-lg bg-blue-600 px-5 text-sm font-medium text-white hover:bg-blue-700 hover:text-white [a]:hover:bg-blue-700'
                 )}
                 onClick={() => setMobileOpen(false)}
               >
