@@ -76,6 +76,11 @@ function clearDraft() {
   };
 }
 
+const PROMPT_SAFETY_TOAST: Record<string, string> = {
+  PROMPT_BLOCKED: 'This prompt doesn’t meet our content guidelines.',
+  PROMPT_REVIEW: 'This prompt needs a quick review. Please try again later.',
+};
+
 async function dataOrThrow(response: Response) {
   const payload = await response.json();
   if (!response.ok || payload.code !== 0)
@@ -434,7 +439,7 @@ export function usePhotoEditSession({
         quality,
         ...(file ? { fileKb: Math.round(file.size / 1024) } : {}),
       });
-      toast.error(message);
+      toast.error(PROMPT_SAFETY_TOAST[message] || message);
     }
   };
 

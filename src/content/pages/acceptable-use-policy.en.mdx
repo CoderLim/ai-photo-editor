@@ -55,10 +55,11 @@ Photo editing and generation on GetAIPhotoEditor currently use **GPT Image 2.6**
 
 We operate a layered moderation process:
 
-1. **Provider / model safety filters** — prompts and outputs pass through the underlying model provider’s safety systems (OpenAI safety controls for GPT Image 2.6 on fal.ai or Replicate).
-2. **Automated refusal** — requests that clearly match prohibited categories may be refused by the model or provider without completing a generation.
-3. **Human review** — reports submitted by users are reviewed manually by our trust & safety contacts. Critical cases (child safety, terrorism, clear illegal content) are prioritized.
-4. **Account action** — confirmed violations may result in content removal, credit forfeiture, account suspension, or permanent ban, and may be reported to law enforcement where required.
+1. **Pre-generation prompt scan** — before credits are charged, user prompts are checked with Waffo content-safety scanning. Clear policy violations are refused without starting a generation. If the scan service is unavailable or degraded, the request may proceed and still faces provider-side filters below.
+2. **Provider / model safety filters** — prompts and outputs pass through the underlying model provider’s safety systems (OpenAI safety controls for GPT Image 2.6 on fal.ai or Replicate).
+3. **Automated refusal** — requests that clearly match prohibited categories may be refused by the model or provider without completing a generation.
+4. **Human review** — reports submitted by users are reviewed manually by our trust & safety contacts. Critical cases (child safety, terrorism, clear illegal content) are prioritized.
+5. **Account action** — confirmed violations may result in content removal, credit forfeiture, account suspension, or permanent ban, and may be reported to law enforcement where required.
 
 We do not guarantee that every prohibited request will be blocked automatically. Users remain responsible for their prompts, uploads, and use of outputs.
 

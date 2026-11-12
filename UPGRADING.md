@@ -46,6 +46,23 @@ exports, permission codes, and behavior that changes for end users.
 
 ---
 
+## 2026-11-12: Waffo pre-generation prompt scan
+
+Photo-edit create (`POST /api/photo-editor/edits`) scans the prompt with
+Waffo `contentSafety.scanPrompt` before `createTask` deducts credits.
+Background-removal (fixed server prompt) is skipped. `block` and
+`review_required` refuse the request; missing Waffo credentials, HTTP/network
+errors, rate limits, and `service_degraded` **fail open** so generation still
+runs. Uses existing `waffo_merchant_id` / `waffo_private_key` (no new toggle).
+
+### Action required
+
+1. Pull the code and redeploy.
+2. Ensure Waffo merchant ID + private key are set in admin Payment → Waffo
+   (or `WAFFO_MERCHANT_ID` / `WAFFO_PRIVATE_KEY`). Without them, edits still
+   work but skip the pre-scan.
+3. Run `pnpm test:photo-edit` (includes prompt-safety unit tests).
+
 ## 2026-11-11: Photo edits always use fal (+ homepage precision mask)
 
 New photo-edit jobs (homepage, enhance, tools — everything except historical

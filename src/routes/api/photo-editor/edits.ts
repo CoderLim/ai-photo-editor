@@ -22,6 +22,10 @@ import {
   TEXT_EDIT_USER_PROMPT_MAX,
 } from '@/modules/photo-editor/config';
 import {
+  assertPromptAllowed,
+  PromptSafetyError,
+} from '@/modules/photo-editor/prompt-safety';
+import {
   attachPhotoEditProviderTaskId,
   PhotoEditProviderIdError,
 } from '@/modules/photo-editor/reconcile';
@@ -214,6 +218,21 @@ export async function POST({ request }: { request: Request }) {
     );
   } catch {
     return respErr('Image editing service is not configured', { status: 503 });
+  }
+
+  // Pre-generation Waffo prompt scan (skip fixed server prompt for bg removal).
+  // Fail-open on outage; block/review_required refuse before credits are taken.
+  if (!isBackgroundRemoval) {
+    try {
+      await assertPromptAllowed(prompt, configs);
+    } catch (error) {
+      if (error instanceof PromptSafetyError) {
+        return respErr(error.code, {
+          status: error.code === 'PROMPT_BLOCKED' ? 400 : 503,
+        });
+      }
+      throw error;
+    }
   }
 
   let task: any;
