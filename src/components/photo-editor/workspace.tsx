@@ -26,6 +26,14 @@ import { Switch } from '@/components/ui/switch';
 
 const QUICK_PROMPTS = [
   {
+    id: 'change-style',
+    label: 'Change Style',
+    caption: 'Style change',
+    image: '/images/ai-photo-editor/restyle-photo.jpg',
+    alt: 'Before and after restyling a portrait with cinematic sunset colors',
+    text: 'Give this photo a cinematic look with refined lighting and colors. Preserve the main subject and composition.',
+  },
+  {
     id: 'change-background',
     label: 'Change Background',
     caption: 'Background change',
@@ -48,14 +56,6 @@ const QUICK_PROMPTS = [
     image: '/images/ai-photo-editor/enhance-photo.jpg',
     alt: 'Before and after sharpening a soft mountain lake into a clear landscape',
     text: 'Improve lighting, sharpness and colors naturally without changing the subject.',
-  },
-  {
-    id: 'change-style',
-    label: 'Change Style',
-    caption: 'Style change',
-    image: '/images/ai-photo-editor/restyle-photo.jpg',
-    alt: 'Before and after restyling a portrait with cinematic sunset colors',
-    text: 'Give this photo a cinematic look with refined lighting and colors. Preserve the main subject and composition.',
   },
 ] as const;
 
@@ -90,7 +90,7 @@ export function PhotoEditorWorkspace() {
       return (await brushRef.current?.exportMaskBlob()) ?? null;
     },
   });
-  const [exampleId, setExampleId] = useState<ExampleId>('change-background');
+  const [exampleId, setExampleId] = useState<ExampleId>('change-style');
   const [examplePaused, setExamplePaused] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const example =
