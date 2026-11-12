@@ -419,16 +419,16 @@ export function PhotoEditorWorkspace() {
                 </div>
               )
             ) : (
-              <div className="absolute inset-0 overflow-hidden bg-slate-950">
+              <div className="absolute inset-0 flex items-center justify-center overflow-hidden bg-[radial-gradient(ellipse_at_top,#f8fafc,#eef2f7)] p-3 sm:p-4">
                 <img
                   src={example.image}
                   alt={example.alt}
                   width={1774}
                   height={887}
                   data-example-id={example.id}
-                  className="size-full object-cover object-center"
+                  className="max-h-full max-w-full rounded-lg object-contain shadow-lg"
                 />
-                <div className="pointer-events-none absolute inset-x-0 top-3 flex justify-between px-3">
+                <div className="pointer-events-none absolute inset-x-0 top-3 flex justify-between px-3 sm:px-4">
                   <span className="rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-semibold tracking-[0.14em] text-white uppercase backdrop-blur-sm">
                     Before
                   </span>
