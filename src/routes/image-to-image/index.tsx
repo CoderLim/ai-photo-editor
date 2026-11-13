@@ -122,7 +122,8 @@ const USE_CASES = [
     title: 'Multiple looks from one shot',
     description:
       'Explore a minimalist fashion look and a dramatic editorial version using the same portrait as a starting point.',
-    image: '/images/ai-photo-editor/image-to-image/i2i-fashion-multiple-looks.jpg',
+    image:
+      '/images/ai-photo-editor/image-to-image/i2i-fashion-multiple-looks.jpg',
     alt: 'One fashion portrait transformed into two editorial looks',
     triple: true,
   },
@@ -282,19 +283,27 @@ function FaqAnswer({ question, answer }: { question: string; answer: string }) {
   return answer;
 }
 
-
 function ComparisonImage({
   src,
   alt,
   triple = false,
+  className,
 }: {
   src: string;
   alt: string;
   triple?: boolean;
+  className?: string;
 }) {
-  const labels = triple ? ['Original', 'Look A', 'Look B'] : ['Before', 'After'];
+  const labels = triple
+    ? ['Original', 'Look A', 'Look B']
+    : ['Before', 'After'];
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-slate-100">
+    <div
+      className={
+        'relative overflow-hidden rounded-2xl bg-slate-100' +
+        (className ? ` ${className}` : '')
+      }
+    >
       <img
         src={src}
         alt={alt}
@@ -398,28 +407,41 @@ function ImageToImagePage() {
               file, not invented.
             </p>
             <div className="mt-10 space-y-12">
-              {BEFORE_AFTER.map((item, index) => (
-                <article
-                  key={item.title}
-                  className="grid items-center gap-6 md:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] md:gap-10"
-                >
-                  <ComparisonImage src={item.image} alt={item.alt} />
-                  <div>
-                    <p className="mb-2 text-xs font-semibold tracking-widest text-blue-600 uppercase">
-                      Example {String(index + 1).padStart(2, '0')}
-                    </p>
-                    <h3 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
-                      {item.title}
-                    </h3>
-                    <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">
-                      {item.description}
-                    </p>
-                  </div>
-                </article>
-              ))}
+              {BEFORE_AFTER.map((item, index) => {
+                const imageRight = index % 2 === 1;
+                return (
+                  <article
+                    key={item.title}
+                    className={
+                      'grid items-center gap-6 md:gap-10 ' +
+                      (imageRight
+                        ? 'md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]'
+                        : 'md:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]')
+                    }
+                  >
+                    <ComparisonImage
+                      src={item.image}
+                      alt={item.alt}
+                      className={imageRight ? 'md:order-2' : undefined}
+                    />
+                    <div className={imageRight ? 'md:order-1' : undefined}>
+                      <p className="mb-2 text-xs font-semibold tracking-widest text-blue-600 uppercase">
+                        Example {String(index + 1).padStart(2, '0')}
+                      </p>
+                      <h3 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+                        {item.title}
+                      </h3>
+                      <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">
+                        {item.description}
+                      </p>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
             <p className="mt-8 text-xs leading-6 text-slate-500">
-              Illustrative transformations; actual results depend on the photo and prompt.
+              Illustrative transformations; actual results depend on the photo
+              and prompt.
             </p>
           </div>
         </section>
