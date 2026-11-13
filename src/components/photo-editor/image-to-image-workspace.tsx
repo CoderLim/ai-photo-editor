@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 
 import { PHOTO_EDIT_MODEL_LABEL } from '@/modules/photo-editor/config';
 import { downloadPhotoResult } from '@/lib/download';
+import { AspectRatioSelector } from '@/components/photo-editor/aspect-ratio-selector';
 import { CreditGateDialog } from '@/components/photo-editor/credit-gate-dialog';
 import { ImageUploadField } from '@/components/photo-editor/image-upload-field';
 import { QualitySelector } from '@/components/photo-editor/quality-selector';
@@ -69,6 +70,12 @@ export function ImageToImageWorkspace() {
               className="w-full resize-y rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm leading-relaxed text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </div>
+          <AspectRatioSelector
+            className="mt-3.5"
+            value={edit.imageSize}
+            disabled={edit.loading}
+            onChange={edit.changeImageSize}
+          />
           <QualitySelector
             className="mt-3.5"
             value={edit.quality}

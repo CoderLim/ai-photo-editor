@@ -9,6 +9,7 @@ import {
   FAL_TEXT_TO_IMAGE_MODEL,
   REPLICATE_EDIT_MODEL,
   type PhotoEditQuality,
+  type PhotoImageSize,
 } from './config';
 
 export type PhotoProviderTask = 'edit' | 'remove-background' | 'text-to-image';
@@ -60,12 +61,13 @@ export function photoModelInput(
   provider: string,
   imageUrl: string,
   quality: PhotoEditQuality,
-  maskUrl?: string
+  maskUrl?: string,
+  imageSize: PhotoImageSize = 'auto'
 ) {
   if (provider === 'fal') {
     return {
       image_urls: [imageUrl],
-      image_size: 'auto',
+      image_size: imageSize,
       quality,
       num_images: 1,
       output_format: 'png',
@@ -73,6 +75,7 @@ export function photoModelInput(
     };
   }
   if (provider === 'replicate') {
+    // Historical Replicate path only — new edits use fal. Keep auto sizing.
     return {
       input_images: [imageUrl],
       aspect_ratio: 'auto',
@@ -84,10 +87,13 @@ export function photoModelInput(
   throw new Error('Unsupported image provider');
 }
 
-/** Fal GPT Image 2.6 Flare text-to-image — no source image. Fixed landscape. */
-export function photoTextToImageInput(quality: PhotoEditQuality) {
+/** Fal GPT Image 2.6 Flare text-to-image — no source image. */
+export function photoTextToImageInput(
+  quality: PhotoEditQuality,
+  imageSize: PhotoImageSize = 'auto'
+) {
   return {
-    image_size: 'landscape_4_3' as const,
+    image_size: imageSize,
     quality,
     num_images: 1,
     output_format: 'png' as const,

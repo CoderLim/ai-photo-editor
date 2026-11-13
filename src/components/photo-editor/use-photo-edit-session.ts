@@ -5,9 +5,11 @@ import { toast } from 'sonner';
 import { authClient, useSession } from '@/core/auth/client';
 import {
   DEFAULT_PHOTO_EDIT_QUALITY,
+  DEFAULT_PHOTO_IMAGE_SIZE,
   isPhotoEditQuality,
   PHOTO_EDIT_QUALITIES,
   type PhotoEditQuality,
+  type PhotoImageSize,
 } from '@/modules/photo-editor/config';
 import { track } from '@/lib/track';
 import type { CreditGate } from '@/components/photo-editor/credit-gate-dialog';
@@ -113,6 +115,9 @@ export function usePhotoEditSession({
   const [prompt, setPrompt] = useState(fixedPrompt || '');
   const [quality, setQuality] = useState<PhotoEditQuality>(
     DEFAULT_PHOTO_EDIT_QUALITY
+  );
+  const [imageSize, setImageSize] = useState<PhotoImageSize>(
+    DEFAULT_PHOTO_IMAGE_SIZE
   );
   const [upload, setUpload] = useState<{ url: string; token: string } | null>(
     null
@@ -296,6 +301,11 @@ export function usePhotoEditSession({
     if (file) saveDraft(file, fixedPrompt || prompt, next);
   };
 
+  const changeImageSize = (next: PhotoImageSize) => {
+    setImageSize(next);
+    requestId.current = null;
+  };
+
   const changePrompt = (next: string) => {
     setPrompt(next);
     requestId.current = null;
@@ -446,6 +456,7 @@ export function usePhotoEditSession({
             prompt: editPrompt,
             tool: toolSlug,
             quality,
+            imageSize,
             requestId: requestId.current,
           }),
         })
@@ -511,6 +522,7 @@ export function usePhotoEditSession({
     preview,
     prompt,
     quality,
+    imageSize,
     jobId,
     status,
     result,
@@ -523,6 +535,7 @@ export function usePhotoEditSession({
     resetMedia,
     clearResult,
     changeQuality,
+    changeImageSize,
     changePrompt,
     invalidateRequest,
     submit,

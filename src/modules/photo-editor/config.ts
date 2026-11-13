@@ -55,6 +55,47 @@ export type PhotoEditQuality = (typeof PHOTO_EDIT_QUALITIES)[number]['id'];
 
 export const DEFAULT_PHOTO_EDIT_QUALITY: PhotoEditQuality = 'medium';
 
+/**
+ * Fal GPT Image 2.6 `image_size` presets (named enums only — no 3:2 / 2:3).
+ * Homepage Photo Editor / Text to Image and Image to Image share these.
+ * Default `auto` keeps the source aspect (edit) or lets the model pick (t2i).
+ */
+export const PHOTO_IMAGE_SIZES = [
+  { id: 'auto', label: 'auto', icon: 'landscape' },
+  { id: 'square', label: '1:1', icon: 'square' },
+  { id: 'landscape_4_3', label: '4:3', icon: 'landscape_4_3' },
+  { id: 'portrait_4_3', label: '3:4', icon: 'portrait_4_3' },
+  { id: 'landscape_16_9', label: '16:9', icon: 'landscape_16_9' },
+  { id: 'portrait_16_9', label: '9:16', icon: 'portrait_16_9' },
+] as const;
+
+export type PhotoImageSize = (typeof PHOTO_IMAGE_SIZES)[number]['id'];
+
+export const DEFAULT_PHOTO_IMAGE_SIZE: PhotoImageSize = 'auto';
+
+export function isPhotoImageSize(value: unknown): value is PhotoImageSize {
+  return (
+    typeof value === 'string' &&
+    PHOTO_IMAGE_SIZES.some((item) => item.id === value)
+  );
+}
+
+export class PhotoImageSizeError extends Error {
+  constructor() {
+    super('Choose a valid aspect ratio: auto, 1:1, 4:3, 3:4, 16:9, or 9:16');
+    this.name = 'PhotoImageSizeError';
+  }
+}
+
+/** Validate a client image_size for text-to-image. Defaults to `auto`. */
+export function photoImageSize(value: unknown): PhotoImageSize {
+  if (value === undefined || value === null || value === '') {
+    return DEFAULT_PHOTO_IMAGE_SIZE;
+  }
+  if (!isPhotoImageSize(value)) throw new PhotoImageSizeError();
+  return value;
+}
+
 /** Medium / standard edit. Other qualities use `photoEditCharge`. */
 export const EDIT_CREDITS = PHOTO_EDIT_QUALITIES.find(
   (item) => item.id === DEFAULT_PHOTO_EDIT_QUALITY

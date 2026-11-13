@@ -3,6 +3,7 @@ import { SiteHeader } from '@/components/site-header';
 
 export function Header() {
   const navLinks = [
+    { href: '/', label: 'AI Photo Editor' },
     { href: '/image-to-image/', label: 'Image To Image' },
     {
       label: 'AI Tools',

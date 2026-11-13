@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 
 import { downloadPhotoResult } from '@/lib/download';
 import { cn } from '@/lib/utils';
+import { AspectRatioSelector } from '@/components/photo-editor/aspect-ratio-selector';
 import { CreditGateDialog } from '@/components/photo-editor/credit-gate-dialog';
 import { ImageUploadField } from '@/components/photo-editor/image-upload-field';
 import {
@@ -246,6 +247,12 @@ export function PhotoEditorWorkspace() {
               </div>
             )}
           </div>
+          <AspectRatioSelector
+            className="mt-3.5"
+            value={edit.imageSize}
+            disabled={edit.loading}
+            onChange={edit.changeImageSize}
+          />
           <QualitySelector
             className="mt-3.5"
             value={edit.quality}

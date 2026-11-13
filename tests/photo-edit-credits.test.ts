@@ -44,8 +44,10 @@ const {
   PHOTO_EDIT_MODEL_LABEL,
   PHOTO_EDIT_QUALITIES,
   PhotoEditQualityError,
+  PhotoImageSizeError,
   REPLICATE_EDIT_MODEL,
   photoEditCharge,
+  photoImageSize,
 } = await import('../src/modules/photo-editor/config');
 const {
   createPhotoProvider,
@@ -133,6 +135,16 @@ test('provider input uses GPT Image 2.6 fields, not Nano Banana resolution', () 
     output_format: 'png',
     mask_url: mask,
   });
+  assert.deepEqual(
+    photoModelInput('fal', url, 'medium', undefined, 'landscape_16_9'),
+    {
+      image_urls: [url],
+      image_size: 'landscape_16_9',
+      quality: 'medium',
+      num_images: 1,
+      output_format: 'png',
+    }
+  );
   assert.equal('resolution' in photoModelInput('fal', url, 'low'), false);
   assert.deepEqual(photoModelInput('replicate', url, 'max'), {
     input_images: [url],
@@ -156,14 +168,38 @@ test('provider input uses GPT Image 2.6 fields, not Nano Banana resolution', () 
   assert.throws(() => photoModelInput('other', url, 'medium'), /Unsupported/);
 });
 
-test('text-to-image input uses landscape_4_3 and no image_urls', () => {
+test('text-to-image input uses image_size preset and no image_urls', () => {
   assert.deepEqual(photoTextToImageInput('medium'), {
-    image_size: 'landscape_4_3',
+    image_size: 'auto',
     quality: 'medium',
     num_images: 1,
     output_format: 'png',
   });
+  assert.deepEqual(photoTextToImageInput('high', 'square'), {
+    image_size: 'square',
+    quality: 'high',
+    num_images: 1,
+    output_format: 'png',
+  });
+  assert.deepEqual(photoTextToImageInput('low', 'landscape_16_9'), {
+    image_size: 'landscape_16_9',
+    quality: 'low',
+    num_images: 1,
+    output_format: 'png',
+  });
   assert.equal('image_urls' in photoTextToImageInput('high'), false);
+});
+
+test('photoImageSize accepts Fal presets and rejects unknown ratios', () => {
+  assert.equal(photoImageSize(undefined), 'auto');
+  assert.equal(photoImageSize(''), 'auto');
+  assert.throws(() => photoImageSize('3:2'), PhotoImageSizeError);
+  assert.throws(() => photoImageSize('portrait_9_16'), PhotoImageSizeError);
+  assert.equal(photoImageSize('square'), 'square');
+  assert.equal(photoImageSize('landscape_4_3'), 'landscape_4_3');
+  assert.equal(photoImageSize('portrait_4_3'), 'portrait_4_3');
+  assert.equal(photoImageSize('landscape_16_9'), 'landscape_16_9');
+  assert.equal(photoImageSize('portrait_16_9'), 'portrait_16_9');
 });
 
 test('fal queue status/result URLs use owner/app only', () => {
@@ -464,7 +500,7 @@ test('edit API charges the server quality price and ignores client amounts', asy
     assert.equal(calls.length, callsBeforeT2i + 1);
     const t2iCall = calls.at(-1)!;
     assert.match(t2iCall.url, /openai\/gpt-image-2\.6\/flare\/text-to-image$/);
-    assert.equal(t2iCall.body.image_size, 'landscape_4_3');
+    assert.equal(t2iCall.body.image_size, 'auto');
     assert.equal(t2iCall.body.quality, 'medium');
     assert.equal('image_urls' in t2iCall.body, false);
     const [t2iTask] = await db()
@@ -473,7 +509,30 @@ test('edit API charges the server quality price and ignores client amounts', asy
       .where(eq(aiTask.id, t2i.payload.data.jobId));
     assert.equal(t2iTask.model, FAL_TEXT_TO_IMAGE_MODEL);
     assert.equal(JSON.parse(t2iTask.options || '{}').mode, 'text-to-image');
+    assert.equal(JSON.parse(t2iTask.options || '{}').imageSize, 'auto');
     assert.equal('imageUrl' in JSON.parse(t2iTask.options || '{}'), false);
+
+    const t2iSquare = await post({
+      requestId: 'request-t2i-square-0001',
+      quality: 'low',
+      imageUrl: '',
+      uploadToken: '',
+      imageSize: 'square',
+      prompt: 'A square sticker of a fox.',
+    });
+    assert.equal(t2iSquare.payload.code, 0, JSON.stringify(t2iSquare.payload));
+    assert.equal(calls.at(-1)!.body.image_size, 'square');
+
+    const t2iBadSize = await post({
+      requestId: 'request-t2i-bad-size-0001',
+      quality: 'low',
+      imageUrl: '',
+      uploadToken: '',
+      imageSize: '3:2',
+      prompt: 'Should reject this ratio.',
+    });
+    assert.equal(t2iBadSize.status, 400);
+    assert.match(t2iBadSize.payload.message, /aspect ratio/i);
 
     const t2iWithMask = await post({
       requestId: 'request-t2i-mask-0001',

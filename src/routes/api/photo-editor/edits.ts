@@ -18,8 +18,11 @@ import {
   getPhotoTool,
   photoEditCharge,
   PhotoEditQualityError,
+  photoImageSize,
+  PhotoImageSizeError,
   TEXT_EDIT_PROMPT_SUFFIX,
   TEXT_EDIT_USER_PROMPT_MAX,
+  type PhotoImageSize,
 } from '@/modules/photo-editor/config';
 import {
   assertPromptAllowed,
@@ -163,6 +166,20 @@ export async function POST({ request }: { request: Request }) {
     throw error;
   }
 
+  // Aspect ratio for GPT Image 2.6 (Fal `image_size`). Background removal
+  // ignores it — that model has no size control.
+  let imageSize: PhotoImageSize | undefined;
+  if (!isBackgroundRemoval) {
+    try {
+      imageSize = photoImageSize(body.imageSize);
+    } catch (error) {
+      if (error instanceof PhotoImageSizeError) {
+        return respErr(error.message, { status: 400 });
+      }
+      throw error;
+    }
+  }
+
   if (!isTextToImage) {
     let imageAuthorized = await verifyUploadToken(
       user.id,
@@ -200,7 +217,15 @@ export async function POST({ request }: { request: Request }) {
   }
 
   const stableId =
-    'edit_' + md5(user.id + ':' + requestId + ':' + charge.quality);
+    'edit_' +
+    md5(
+      user.id +
+        ':' +
+        requestId +
+        ':' +
+        charge.quality +
+        (imageSize ? ':' + imageSize : '')
+    );
   const previous = await findTask(stableId);
   if (previous) {
     if (previous.userId !== user.id)
@@ -268,6 +293,7 @@ export async function POST({ request }: { request: Request }) {
         ...(isTextToImage ? {} : { imageUrl }),
         tool,
         quality: charge.quality,
+        ...(imageSize ? { imageSize } : {}),
         ...(isTextToImage ? { mode: 'text-to-image' } : {}),
         ...(maskUrl ? { maskUrl } : {}),
       },
@@ -308,12 +334,13 @@ export async function POST({ request }: { request: Request }) {
         options: isBackgroundRemoval
           ? { image_url: imageUrl }
           : isTextToImage
-            ? photoTextToImageInput(charge.quality)
+            ? photoTextToImageInput(charge.quality, imageSize!)
             : photoModelInput(
                 provider,
                 imageUrl,
                 charge.quality,
-                maskUrl || undefined
+                maskUrl || undefined,
+                imageSize
               ),
         async: true,
         callbackUrl,
