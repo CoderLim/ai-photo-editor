@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 
 import { Link } from '@/core/i18n/navigation';
+import { envConfigs } from '@/config';
 import { EDIT_CREDITS } from '@/modules/photo-editor/config';
 import { absoluteUrl, pageHead } from '@/lib/seo';
 import { Footer } from '@/blocks/footer';
@@ -9,8 +10,7 @@ import { Header } from '@/blocks/header';
 import { ImageToImageWorkspace } from '@/components/photo-editor/image-to-image-workspace';
 
 const PATH = '/image-to-image/';
-const TITLE =
-  'Image to Image: Free AI Image to Image Editor Online, No Sign-Up';
+const TITLE = 'Image to Image: Free AI Editor Online, No Sign-Up';
 const DESCRIPTION =
   'Image to image editing: upload a photo, describe the new look, and AI redraws it while the composition stays put. Free credits, no sign-up, no presets.';
 
@@ -156,7 +156,7 @@ const FAQS = [
   ],
   [
     'What is the difference between image to image and text to image?',
-    "Text to image invents the whole picture from a description. Image to image keeps your photo's composition, subject and proportions and changes the look — style, light, material, setting. If you need a specific pose or a real product angle preserved, image to image is the one that can do it.",
+    'Text to image invents a picture from words alone, with no source photo. Image to image starts from a photo you upload and keeps composition, subject and proportions while changing the look — style, light, material, setting. On this site both the homepage editor and this page start from an uploaded photo; this page is the focused restyle workflow when you need a specific pose or product angle preserved.',
   ],
   [
     'Can I upload a second image as a style reference?',
@@ -179,6 +179,26 @@ const FAQS = [
 const jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
+    {
+      '@type': 'SoftwareApplication',
+      name: 'AI Image to Image Editor',
+      url: absoluteUrl(PATH),
+      applicationCategory: 'MultimediaApplication',
+      operatingSystem: 'Web browser (Windows, macOS, iOS, Android)',
+      description:
+        'Upload a photo, describe the new look, and AI redraws style, light or setting while the composition stays put.',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD',
+        description: '10 free credits, no sign-up',
+      },
+      provider: {
+        '@type': 'Organization',
+        name: envConfigs.app_name,
+        url: envConfigs.app_url,
+      },
+    },
     {
       '@type': 'FAQPage',
       mainEntity: FAQS.map(([question, answer]) => ({
@@ -358,6 +378,9 @@ function ImageToImagePage() {
               <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl lg:text-[2.75rem]">
                 Image to Image Online
               </h1>
+              <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-600">
+                Upload a photo, describe the new look, and keep the composition.
+              </p>
             </div>
             <div id="editor" className="scroll-mt-24">
               <ImageToImageWorkspace />
@@ -491,9 +514,10 @@ function ImageToImagePage() {
               file. Subject placement, perspective, proportions and the number
               of objects are all inherited from the photo you uploaded — what
               you are steering is style, light, material and setting. That is
-              the whole difference from text to image, where the model invents
-              the composition from nothing and you cannot keep a specific pose
-              or product angle.
+              different from blank-canvas text to image, where the model invents
+              the composition from nothing. On this site the homepage editor
+              also starts from an uploaded photo for general edits; use this
+              page when you specifically want a composition-preserving restyle.
             </p>
             <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white">
               <table className="w-full text-left text-sm">
@@ -668,9 +692,9 @@ function ImageToImagePage() {
               href="/blog/how-to-edit-photos-with-ai"
               className="font-semibold text-blue-600 hover:underline"
             >
-              AI photo editing tools
-            </Link>{' '}
-            on the blog.
+              how to edit photos with AI
+            </Link>
+            .
           </p>
         </section>
       </main>
