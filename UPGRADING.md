@@ -46,6 +46,21 @@ exports, permission codes, and behavior that changes for end users.
 
 ---
 
+## 2026-11-13: Homepage text-to-image tab
+
+Homepage `PhotoEditorWorkspace` adds **Photo Editor | Text to Image** tabs.
+Text to Image hides the upload field and submits `POST /api/photo-editor/edits`
+with an empty `imageUrl` for `tool: 'general'`, which routes to fal
+`openai/gpt-image-2.6/flare/text-to-image` (`image_size: landscape_4_3`).
+Photo Editor and every dedicated tool page still require a source image.
+Credits use the same `PHOTO_EDIT_QUALITIES` table as edits.
+
+### Action required
+
+1. Pull the code and redeploy.
+2. Confirm `fal_api_key` is set (same as edit). No new env vars.
+3. Run `pnpm test:photo-edit` (credits suite covers the t2i path).
+
 ## 2026-11-12: Waffo pre-generation prompt scan
 
 Photo-edit create (`POST /api/photo-editor/edits`) scans the prompt with

@@ -62,6 +62,9 @@ export const EDIT_CREDITS = PHOTO_EDIT_QUALITIES.find(
 
 export const REPLICATE_EDIT_MODEL = 'openai/gpt-image-2.6-flare';
 export const FAL_EDIT_MODEL = 'openai/gpt-image-2.6/flare/edit';
+/** Homepage text-to-image (no source photo). Same Flare family / quality table as edit. */
+export const FAL_TEXT_TO_IMAGE_MODEL =
+  'openai/gpt-image-2.6/flare/text-to-image';
 /** Dedicated segmentation model: real alpha-channel PNG rather than a generated backdrop. */
 export const FAL_BACKGROUND_REMOVAL_MODEL = 'fal-ai/bria/background/remove';
 /** Fixed server-side cost (model charges about $0.018 per unprompted image). */

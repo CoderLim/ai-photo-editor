@@ -6,27 +6,34 @@ import { isCloudflareWorker, isProduction } from '@/lib/env';
 import {
   FAL_BACKGROUND_REMOVAL_MODEL,
   FAL_EDIT_MODEL,
+  FAL_TEXT_TO_IMAGE_MODEL,
   REPLICATE_EDIT_MODEL,
   type PhotoEditQuality,
 } from './config';
 
+export type PhotoProviderTask = 'edit' | 'remove-background' | 'text-to-image';
+
 export async function createPhotoProvider(
   provider: string,
-  task: 'edit' | 'remove-background' = 'edit'
+  task: PhotoProviderTask = 'edit'
 ): Promise<{ instance: AIProvider; model: string }> {
   const configs = await getAllConfigs();
   if (provider === 'fal') {
     if (!configs.fal_api_key) throw new Error('fal API key is not configured');
+    const model =
+      task === 'remove-background'
+        ? FAL_BACKGROUND_REMOVAL_MODEL
+        : task === 'text-to-image'
+          ? FAL_TEXT_TO_IMAGE_MODEL
+          : FAL_EDIT_MODEL;
     return {
       instance: new FalProvider({ apiKey: configs.fal_api_key }),
-      model:
-        task === 'remove-background'
-          ? FAL_BACKGROUND_REMOVAL_MODEL
-          : FAL_EDIT_MODEL,
+      model,
     };
   }
   if (task === 'remove-background')
     throw new Error('Background removal requires fal');
+  if (task === 'text-to-image') throw new Error('Text-to-image requires fal');
   if (provider !== 'replicate') throw new Error('Unsupported image provider');
   if (!configs.replicate_api_token)
     throw new Error('Replicate API token is not configured');
@@ -75,6 +82,16 @@ export function photoModelInput(
     };
   }
   throw new Error('Unsupported image provider');
+}
+
+/** Fal GPT Image 2.6 Flare text-to-image — no source image. Fixed landscape. */
+export function photoTextToImageInput(quality: PhotoEditQuality) {
+  return {
+    image_size: 'landscape_4_3' as const,
+    quality,
+    num_images: 1,
+    output_format: 'png' as const,
+  };
 }
 
 export async function persistPhotoOutput(sourceUrl: string, taskId: string) {

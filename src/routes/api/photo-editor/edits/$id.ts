@@ -22,7 +22,7 @@ async function GET({
 
   task = await reconcilePhotoEditTask(task);
 
-  let output: { images?: { imageUrl?: string }[] } = {};
+  let output: { images?: { imageUrl?: string }[]; error?: string } = {};
   let options: { imageUrl?: string } = {};
   try {
     output = JSON.parse(task.taskResult || '{}');
@@ -42,6 +42,7 @@ async function GET({
     originalUrl: options.imageUrl || null,
     prompt: task.prompt,
     credits: task.costCredits,
+    error: typeof output.error === 'string' ? output.error : null,
   });
 }
 

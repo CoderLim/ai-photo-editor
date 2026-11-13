@@ -42,6 +42,11 @@ type UsePhotoEditSessionOptions = {
   /** Override the quality-table credit charge (e.g. background removal). */
   creditCost?: number;
   /**
+   * When true (default), submit requires a source image. Homepage text-to-image
+   * sets this false and POSTs without imageUrl.
+   */
+  requireImage?: boolean;
+  /**
    * Optional precision-edit mask (PNG). Return null when empty.
    * Uploaded with the source in one FormData when both are new.
    */
@@ -94,6 +99,7 @@ export function usePhotoEditSession({
   toolSlug = 'general',
   restoreDraftPrompt = true,
   creditCost,
+  requireImage = true,
   getMaskFile,
 }: UsePhotoEditSessionOptions = {}) {
   const { data: session } = useSession();
@@ -211,7 +217,12 @@ export function usePhotoEditSession({
         } else if (job.status === 'failed' || job.status === 'canceled') {
           setStatus('failed');
           requestId.current = null;
-          toast.error('Edit failed. Your credits have been restored.');
+          const detail = typeof job.error === 'string' ? job.error.trim() : '';
+          toast.error(
+            detail
+              ? `${detail} Credits were restored.`
+              : 'Generation failed. Your credits have been restored.'
+          );
         }
       } catch {
         /* transient provider status failure: retry */
@@ -265,6 +276,20 @@ export function usePhotoEditSession({
     clearDraft();
   };
 
+  /** Clear media + job when switching homepage Photo Editor / Text to Image tabs. */
+  const resetMedia = () => {
+    clearFile();
+  };
+
+  /** Drop a finished result so the user can generate again (text-to-image). */
+  const clearResult = () => {
+    setResult('');
+    setJobId(null);
+    setShowOriginal(false);
+    setStatus('idle');
+    requestId.current = null;
+  };
+
   const changeQuality = (next: PhotoEditQuality) => {
     setQuality(next);
     requestId.current = null;
@@ -283,9 +308,15 @@ export function usePhotoEditSession({
   };
 
   const submit = async () => {
-    if (!preview) return toast.error('Upload a photo first.');
+    if (requireImage && !preview) return toast.error('Upload a photo first.');
     const editPrompt = (fixedPrompt || prompt).trim();
-    if (!editPrompt) return toast.error('Describe your edit first.');
+    if (!editPrompt) {
+      return toast.error(
+        requireImage
+          ? 'Describe your edit first.'
+          : 'Describe what to generate first.'
+      );
+    }
     setStatus('submitting');
     let guest = Boolean(session?.user?.isAnonymous);
     // Names the failing fetch when submit throws before an ai_task exists.
@@ -294,7 +325,7 @@ export function usePhotoEditSession({
     try {
       // Snapshot before any async auth / credit checks. Loading must not
       // clear the canvas while we are preparing a precision edit.
-      const maskBlob = getMaskFile ? await getMaskFile() : null;
+      const maskBlob = requireImage && getMaskFile ? await getMaskFile() : null;
       if (!session?.user) {
         step = 'anonymous';
         const anonymous = await authClient.signIn.anonymous();
@@ -328,67 +359,72 @@ export function usePhotoEditSession({
         return;
       }
 
-      let imageUrl = upload?.url || preview;
-      let uploadToken = upload?.token || '';
+      let imageUrl = '';
+      let uploadToken = '';
       let maskUrl = '';
       let maskUploadToken = '';
-      const maskFile = maskBlob
-        ? new File([maskBlob], 'precision-mask.png', { type: 'image/png' })
-        : null;
 
-      step = 'upload';
-      if (file && !upload && maskFile) {
-        // One request for source + mask — upload-image rate-limits to 1s.
-        const data = new FormData();
-        data.append('files', file);
-        data.append('files', maskFile);
-        const stored = await dataOrThrow(
-          await fetch('/api/storage/upload-image', {
-            method: 'POST',
-            body: data,
-          })
-        );
-        const source = stored.results?.[0];
-        const mask = stored.results?.[1];
-        if (!source?.url || !source?.token)
-          throw new Error('Image upload did not return authorization');
-        if (!mask?.url || !mask?.token)
-          throw new Error('Mask upload did not return authorization');
-        imageUrl = source.url;
-        uploadToken = source.token;
-        maskUrl = mask.url;
-        maskUploadToken = mask.token;
-        setUpload({ url: imageUrl, token: uploadToken });
-      } else if (file && !upload) {
-        const data = new FormData();
-        data.append('files', file);
-        const stored = await dataOrThrow(
-          await fetch('/api/storage/upload-image', {
-            method: 'POST',
-            body: data,
-          })
-        );
-        const first = stored.results?.[0];
-        if (!first?.url || !first?.token)
-          throw new Error('Image upload did not return authorization');
-        imageUrl = first.url;
-        uploadToken = first.token;
-        setUpload({ url: imageUrl, token: uploadToken });
-      } else if (maskFile) {
-        // Source already uploaded or from a prior job — mask only.
-        const data = new FormData();
-        data.append('files', maskFile);
-        const stored = await dataOrThrow(
-          await fetch('/api/storage/upload-image', {
-            method: 'POST',
-            body: data,
-          })
-        );
-        const mask = stored.results?.[0];
-        if (!mask?.url || !mask?.token)
-          throw new Error('Mask upload did not return authorization');
-        maskUrl = mask.url;
-        maskUploadToken = mask.token;
+      if (requireImage) {
+        imageUrl = upload?.url || preview;
+        uploadToken = upload?.token || '';
+        const maskFile = maskBlob
+          ? new File([maskBlob], 'precision-mask.png', { type: 'image/png' })
+          : null;
+
+        step = 'upload';
+        if (file && !upload && maskFile) {
+          // One request for source + mask — upload-image rate-limits to 1s.
+          const data = new FormData();
+          data.append('files', file);
+          data.append('files', maskFile);
+          const stored = await dataOrThrow(
+            await fetch('/api/storage/upload-image', {
+              method: 'POST',
+              body: data,
+            })
+          );
+          const source = stored.results?.[0];
+          const mask = stored.results?.[1];
+          if (!source?.url || !source?.token)
+            throw new Error('Image upload did not return authorization');
+          if (!mask?.url || !mask?.token)
+            throw new Error('Mask upload did not return authorization');
+          imageUrl = source.url;
+          uploadToken = source.token;
+          maskUrl = mask.url;
+          maskUploadToken = mask.token;
+          setUpload({ url: imageUrl, token: uploadToken });
+        } else if (file && !upload) {
+          const data = new FormData();
+          data.append('files', file);
+          const stored = await dataOrThrow(
+            await fetch('/api/storage/upload-image', {
+              method: 'POST',
+              body: data,
+            })
+          );
+          const first = stored.results?.[0];
+          if (!first?.url || !first?.token)
+            throw new Error('Image upload did not return authorization');
+          imageUrl = first.url;
+          uploadToken = first.token;
+          setUpload({ url: imageUrl, token: uploadToken });
+        } else if (maskFile) {
+          // Source already uploaded or from a prior job — mask only.
+          const data = new FormData();
+          data.append('files', maskFile);
+          const stored = await dataOrThrow(
+            await fetch('/api/storage/upload-image', {
+              method: 'POST',
+              body: data,
+            })
+          );
+          const mask = stored.results?.[0];
+          if (!mask?.url || !mask?.token)
+            throw new Error('Mask upload did not return authorization');
+          maskUrl = mask.url;
+          maskUploadToken = mask.token;
+        }
       }
 
       if (!requestId.current)
@@ -399,14 +435,18 @@ export function usePhotoEditSession({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            imageUrl,
-            uploadToken,
-            sourceJobId,
+            ...(requireImage
+              ? {
+                  imageUrl,
+                  uploadToken,
+                  sourceJobId,
+                  ...(maskUrl ? { maskUrl, maskUploadToken } : {}),
+                }
+              : { imageUrl: '' }),
             prompt: editPrompt,
             tool: toolSlug,
             quality,
             requestId: requestId.current,
-            ...(maskUrl ? { maskUrl, maskUploadToken } : {}),
           }),
         })
       );
@@ -480,6 +520,8 @@ export function usePhotoEditSession({
     loading,
     chooseFile,
     clearFile,
+    resetMedia,
+    clearResult,
     changeQuality,
     changePrompt,
     invalidateRequest,

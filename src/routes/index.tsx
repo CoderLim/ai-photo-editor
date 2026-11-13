@@ -30,7 +30,7 @@ const FAQS = [
   ],
   [
     'Can I use it without signing up?',
-    'Yes. Upload a photo, write a prompt, and generate with your 10 guest credits — no account required. Sign in anytime for 10 more credits and to keep results in My Creations.',
+    'Yes. Edit a photo you upload, or switch to Text to Image and generate from a prompt — 10 guest credits, no account required. Sign in anytime for 10 more credits and to keep results in My Creations.',
   ],
   [
     AREA_EDIT_FAQ,
@@ -86,7 +86,7 @@ function FaqAnswer({ question, answer }: { question: string; answer: string }) {
 
 const HOME_TITLE = 'AI Photo Editor: Free AI Image Editor Online, No Sign-Up';
 const HOME_DESCRIPTION =
-  'Free AI photo editor online. Remove objects, retouch portraits, enhance photos, and restyle images with text prompts — No Sign-Up.';
+  'Free AI photo editor online. Edit photos with prompts, or generate images from text. Remove objects, retouch, enhance, and restyle — No Sign-Up.';
 
 const structuredDataJsonLd = JSON.stringify({
   '@context': 'https://schema.org',
@@ -225,8 +225,7 @@ function HomePage() {
                 AI Photo Editor Online
               </h1>
               <p className="mt-1 text-sm leading-5 text-slate-600">
-                Upload a photo and describe the edit — 10 free credits, no
-                signup.
+                Edit a photo or generate from text — 10 free credits, no signup.
               </p>
             </div>
             <div id="editor">
@@ -500,7 +499,7 @@ export const Route = createFileRoute('/')({
       path: '/',
       socialTitle: 'GetAIPhotoEditor – Edit Photos with a Simple Prompt',
       socialDescription:
-        'Remove objects, replace backgrounds, retouch and enhance photos with AI. Just upload, describe the change and generate.',
+        'Edit photos with AI prompts or generate images from text. Remove objects, replace backgrounds, retouch and enhance — free credits to start.',
     }),
   component: HomePage,
 });

@@ -33,6 +33,7 @@ import {
   createPhotoProvider,
   getSelectedPhotoProvider,
   photoModelInput,
+  photoTextToImageInput,
 } from '@/modules/photo-editor/service';
 import { verifyUploadToken } from '@/modules/photo-editor/upload-token';
 import { photoEditWebhookCallbackUrl } from '@/modules/photo-editor/webhook-sign';
@@ -114,7 +115,15 @@ export async function POST({ request }: { request: Request }) {
   }
   if (!prompt || prompt.length > 2000)
     return respErr('Prompt must be 1–2000 characters');
-  if (
+  // Homepage general with no image → text-to-image. Dedicated tools still require a photo.
+  const isTextToImage = tool === 'general' && !imageUrl;
+  if (isTextToImage) {
+    if (maskUrl) {
+      return respErr('Mask is not supported for text-to-image', {
+        status: 400,
+      });
+    }
+  } else if (
     !imageUrl ||
     imageUrl.length > 2048 ||
     (!/^https?:\/\//.test(imageUrl) && !imageUrl.startsWith('/uploads/'))
@@ -154,26 +163,31 @@ export async function POST({ request }: { request: Request }) {
     throw error;
   }
 
-  let imageAuthorized = await verifyUploadToken(
-    user.id,
-    imageUrl,
-    String(body.uploadToken || '')
-  );
-  if (!imageAuthorized && typeof body.sourceJobId === 'string') {
-    const source = await findTask(body.sourceJobId);
-    if (source?.userId === user.id && source.status === AITaskStatus.SUCCESS) {
-      try {
-        const output = JSON.parse(source.taskResult || '{}');
-        imageAuthorized =
-          output.images?.some((item: any) => item.imageUrl === imageUrl) ===
-          true;
-      } catch {
-        /* Invalid source job */
+  if (!isTextToImage) {
+    let imageAuthorized = await verifyUploadToken(
+      user.id,
+      imageUrl,
+      String(body.uploadToken || '')
+    );
+    if (!imageAuthorized && typeof body.sourceJobId === 'string') {
+      const source = await findTask(body.sourceJobId);
+      if (
+        source?.userId === user.id &&
+        source.status === AITaskStatus.SUCCESS
+      ) {
+        try {
+          const output = JSON.parse(source.taskResult || '{}');
+          imageAuthorized =
+            output.images?.some((item: any) => item.imageUrl === imageUrl) ===
+            true;
+        } catch {
+          /* Invalid source job */
+        }
       }
     }
+    if (!imageAuthorized)
+      return respErr('Upload or select an image you own', { status: 403 });
   }
-  if (!imageAuthorized)
-    return respErr('Upload or select an image you own', { status: 403 });
 
   if (maskUrl) {
     const maskAuthorized = await verifyUploadToken(
@@ -207,14 +221,19 @@ export async function POST({ request }: { request: Request }) {
       { status: 503 }
     );
   }
-  const provider = isBackgroundRemoval
-    ? 'fal'
-    : await getSelectedPhotoProvider();
+  const provider =
+    isBackgroundRemoval || isTextToImage
+      ? 'fal'
+      : await getSelectedPhotoProvider();
   let instance: Awaited<ReturnType<typeof createPhotoProvider>>;
   try {
     instance = await createPhotoProvider(
       provider,
-      isBackgroundRemoval ? 'remove-background' : 'edit'
+      isBackgroundRemoval
+        ? 'remove-background'
+        : isTextToImage
+          ? 'text-to-image'
+          : 'edit'
     );
   } catch {
     return respErr('Image editing service is not configured', { status: 503 });
@@ -246,9 +265,10 @@ export async function POST({ request }: { request: Request }) {
       prompt,
       costCredits: charge.credits,
       options: {
-        imageUrl,
+        ...(isTextToImage ? {} : { imageUrl }),
         tool,
         quality: charge.quality,
+        ...(isTextToImage ? { mode: 'text-to-image' } : {}),
         ...(maskUrl ? { maskUrl } : {}),
       },
     });
@@ -287,12 +307,14 @@ export async function POST({ request }: { request: Request }) {
         prompt,
         options: isBackgroundRemoval
           ? { image_url: imageUrl }
-          : photoModelInput(
-              provider,
-              imageUrl,
-              charge.quality,
-              maskUrl || undefined
-            ),
+          : isTextToImage
+            ? photoTextToImageInput(charge.quality)
+            : photoModelInput(
+                provider,
+                imageUrl,
+                charge.quality,
+                maskUrl || undefined
+              ),
         async: true,
         callbackUrl,
       },
@@ -306,9 +328,14 @@ export async function POST({ request }: { request: Request }) {
         status: AITaskStatus.FAILED,
         ...(message.trim() ? { error: message.trim() } : {}),
       });
-      return respErr('Could not submit the edit. Credits were restored.', {
-        status: 502,
-      });
+      return respErr(
+        isTextToImage
+          ? 'Could not submit the generation. Credits were restored.'
+          : 'Could not submit the edit. Credits were restored.',
+        {
+          status: 502,
+        }
+      );
     }
     // Outcome uncertain (timeout / 5xx / network): leave pending so a late
     // webhook can still claim and settle. Do not refund or reopen later.

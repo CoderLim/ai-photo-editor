@@ -38,6 +38,7 @@ const {
   DEFAULT_PHOTO_EDIT_QUALITY,
   EDIT_CREDITS,
   FAL_EDIT_MODEL,
+  FAL_TEXT_TO_IMAGE_MODEL,
   FAL_BACKGROUND_REMOVAL_MODEL,
   BACKGROUND_REMOVAL_CREDITS,
   PHOTO_EDIT_MODEL_LABEL,
@@ -46,8 +47,12 @@ const {
   REPLICATE_EDIT_MODEL,
   photoEditCharge,
 } = await import('../src/modules/photo-editor/config');
-const { createPhotoProvider, getSelectedPhotoProvider, photoModelInput } =
-  await import('../src/modules/photo-editor/service');
+const {
+  createPhotoProvider,
+  getSelectedPhotoProvider,
+  photoModelInput,
+  photoTextToImageInput,
+} = await import('../src/modules/photo-editor/service');
 const { issueUploadToken } =
   await import('../src/modules/photo-editor/upload-token');
 const { POST } = await import('../src/routes/api/photo-editor/edits');
@@ -69,6 +74,10 @@ test('quality credits match the published GPT Image 2.6 table', () => {
   assert.equal(EDIT_CREDITS, 10);
   assert.equal(PHOTO_EDIT_MODEL_LABEL, 'GPT Image 2.6');
   assert.equal(FAL_EDIT_MODEL, 'openai/gpt-image-2.6/flare/edit');
+  assert.equal(
+    FAL_TEXT_TO_IMAGE_MODEL,
+    'openai/gpt-image-2.6/flare/text-to-image'
+  );
   assert.equal(REPLICATE_EDIT_MODEL, 'openai/gpt-image-2.6-flare');
   assert.deepEqual(
     PHOTO_EDIT_QUALITIES.map((item) => item.id),
@@ -147,9 +156,20 @@ test('provider input uses GPT Image 2.6 fields, not Nano Banana resolution', () 
   assert.throws(() => photoModelInput('other', url, 'medium'), /Unsupported/);
 });
 
+test('text-to-image input uses landscape_4_3 and no image_urls', () => {
+  assert.deepEqual(photoTextToImageInput('medium'), {
+    image_size: 'landscape_4_3',
+    quality: 'medium',
+    num_images: 1,
+    output_format: 'png',
+  });
+  assert.equal('image_urls' in photoTextToImageInput('high'), false);
+});
+
 test('fal queue status/result URLs use owner/app only', () => {
   // Submit uses the full endpoint; poll must drop /flare/edit or Fal returns 405.
   assert.equal(falQueueModel(FAL_EDIT_MODEL), 'openai/gpt-image-2.6');
+  assert.equal(falQueueModel(FAL_TEXT_TO_IMAGE_MODEL), 'openai/gpt-image-2.6');
   assert.equal(falQueueModel(FAL_BACKGROUND_REMOVAL_MODEL), 'fal-ai/bria');
   assert.equal(
     falQueueModel('openai/gpt-image-2.6/sunburst/edit'),
@@ -174,6 +194,10 @@ test('edit API charges the server quality price and ignores client amounts', asy
     ]);
 
   assert.equal((await createPhotoProvider('fal')).model, FAL_EDIT_MODEL);
+  assert.equal(
+    (await createPhotoProvider('fal', 'text-to-image')).model,
+    FAL_TEXT_TO_IMAGE_MODEL
+  );
   assert.equal(
     (await createPhotoProvider('fal', 'remove-background')).model,
     FAL_BACKGROUND_REMOVAL_MODEL
@@ -420,6 +444,56 @@ test('edit API charges the server quality price and ignores client amounts', asy
     assert.equal(replay.payload.data.jobId, first.payload.data.jobId);
     assert.equal(replay.payload.data.credits, 10);
     assert.equal(await getBalance(userId), replayBalance);
+
+    // Homepage text-to-image: empty imageUrl on general only.
+    const callsBeforeT2i = calls.length;
+    const t2iBalanceBefore = await getBalance(userId);
+    const t2i = await post({
+      requestId: 'request-t2i-medium-0001',
+      quality: 'medium',
+      imageUrl: '',
+      uploadToken: '',
+      prompt: 'A red fox in snowy woods at golden hour.',
+    });
+    assert.equal(t2i.payload.code, 0, JSON.stringify(t2i.payload));
+    assert.equal(t2i.payload.data.credits, CREDIT_TABLE.medium);
+    assert.equal(
+      await getBalance(userId),
+      t2iBalanceBefore - CREDIT_TABLE.medium
+    );
+    assert.equal(calls.length, callsBeforeT2i + 1);
+    const t2iCall = calls.at(-1)!;
+    assert.match(t2iCall.url, /openai\/gpt-image-2\.6\/flare\/text-to-image$/);
+    assert.equal(t2iCall.body.image_size, 'landscape_4_3');
+    assert.equal(t2iCall.body.quality, 'medium');
+    assert.equal('image_urls' in t2iCall.body, false);
+    const [t2iTask] = await db()
+      .select()
+      .from(aiTask)
+      .where(eq(aiTask.id, t2i.payload.data.jobId));
+    assert.equal(t2iTask.model, FAL_TEXT_TO_IMAGE_MODEL);
+    assert.equal(JSON.parse(t2iTask.options || '{}').mode, 'text-to-image');
+    assert.equal('imageUrl' in JSON.parse(t2iTask.options || '{}'), false);
+
+    const t2iWithMask = await post({
+      requestId: 'request-t2i-mask-0001',
+      quality: 'low',
+      imageUrl: '',
+      uploadToken: '',
+      maskUrl,
+      maskUploadToken,
+    });
+    assert.equal(t2iWithMask.status, 400);
+    assert.match(t2iWithMask.payload.message, /text-to-image/i);
+
+    const noImageBg = await post({
+      requestId: 'request-rmbg-no-image-0001',
+      tool: 'remove-background',
+      imageUrl: '',
+      uploadToken: '',
+    });
+    assert.equal(noImageBg.payload.code, -1);
+    assert.match(noImageBg.payload.message, /Invalid image URL/i);
   } finally {
     globalThis.fetch = originalFetch;
   }

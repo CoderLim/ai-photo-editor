@@ -23,6 +23,9 @@ import { QualitySelector } from '@/components/photo-editor/quality-selector';
 import { usePhotoEditSession } from '@/components/photo-editor/use-photo-edit-session';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+type WorkspaceMode = 'edit' | 't2i';
 
 const QUICK_PROMPTS = [
   {
@@ -76,6 +79,7 @@ const PRECISION_EDIT_UI_ENABLED = false;
 /** Homepage general editor shell — prompt, chips, and example carousel. */
 export function PhotoEditorWorkspace() {
   const brushRef = useRef<MaskBrushHandle | null>(null);
+  const [mode, setMode] = useState<WorkspaceMode>('edit');
   const [precision, setPrecision] = useState(false);
   const [brushSize, setBrushSize] = useState(BRUSH_DEFAULT);
   const [brushState, setBrushState] = useState<MaskBrushState>({
@@ -83,10 +87,12 @@ export function PhotoEditorWorkspace() {
     canRedo: false,
     hasMask: false,
   });
+  const isT2i = mode === 't2i';
   const edit = usePhotoEditSession({
     toolSlug: 'general',
+    requireImage: !isT2i,
     getMaskFile: async () => {
-      if (!PRECISION_EDIT_UI_ENABLED || !precision) return null;
+      if (isT2i || !PRECISION_EDIT_UI_ENABLED || !precision) return null;
       return (await brushRef.current?.exportMaskBlob()) ?? null;
     },
   });
@@ -98,7 +104,16 @@ export function PhotoEditorWorkspace() {
 
   // P1: only paint on the input image — never while a result is shown.
   const canPrecision =
-    PRECISION_EDIT_UI_ENABLED && Boolean(edit.preview && !edit.result);
+    !isT2i &&
+    PRECISION_EDIT_UI_ENABLED &&
+    Boolean(edit.preview && !edit.result);
+
+  function switchMode(next: WorkspaceMode) {
+    if (next === mode) return;
+    setMode(next);
+    edit.resetMedia();
+    setPrecision(false);
+  }
 
   useEffect(() => {
     if (!canPrecision && precision) setPrecision(false);
@@ -123,7 +138,7 @@ export function PhotoEditorWorkspace() {
       await downloadPhotoResult({
         resultUrl: edit.result,
         jobId: edit.jobId,
-        filename: 'edited-photo.png',
+        filename: isT2i ? 'generated-photo.png' : 'edited-photo.png',
       });
     } catch (e) {
       toast.error(
@@ -141,8 +156,10 @@ export function PhotoEditorWorkspace() {
     }
   }, []);
 
+  const showExamples = !edit.preview && !edit.result;
+
   useEffect(() => {
-    if (edit.preview || examplePaused) return;
+    if (!showExamples || examplePaused) return;
     const timer = window.setInterval(() => {
       setExampleId((current) => {
         const index = QUICK_PROMPTS.findIndex((item) => item.id === current);
@@ -150,26 +167,50 @@ export function PhotoEditorWorkspace() {
       });
     }, 4000);
     return () => window.clearInterval(timer);
-  }, [edit.preview, examplePaused, exampleId]);
+  }, [showExamples, examplePaused, exampleId]);
 
   return (
     <>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(280px,0.72fr)_minmax(0,1.28fr)] lg:items-stretch">
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_16px_40px_-28px_rgba(15,23,42,.4)] sm:p-5">
-          <ImageUploadField
-            preview={edit.result ? undefined : edit.preview}
-            fileName={edit.file?.name}
-            showPreviewThumb={Boolean(edit.preview && !edit.result)}
-            onFile={edit.chooseFile}
-            onClear={edit.clearFile}
-          />
-          <div className="mt-3.5">
+          <Tabs
+            value={mode}
+            onValueChange={(value) => {
+              if (value === 'edit' || value === 't2i') switchMode(value);
+            }}
+            className="mb-3.5"
+          >
+            <TabsList className="grid h-10 w-full grid-cols-2 rounded-xl border border-slate-200 bg-slate-50 p-1 text-slate-500 shadow-none">
+              <TabsTrigger
+                value="edit"
+                className="rounded-lg text-xs font-semibold text-slate-500 shadow-none transition-colors hover:text-slate-800 data-active:bg-white data-active:text-slate-900 data-active:shadow-sm sm:text-sm dark:text-slate-500 dark:hover:text-slate-800 dark:data-active:border-transparent dark:data-active:bg-white dark:data-active:text-slate-900"
+              >
+                Photo Editor
+              </TabsTrigger>
+              <TabsTrigger
+                value="t2i"
+                className="rounded-lg text-xs font-semibold text-slate-500 shadow-none transition-colors hover:text-slate-800 data-active:bg-white data-active:text-slate-900 data-active:shadow-sm sm:text-sm dark:text-slate-500 dark:hover:text-slate-800 dark:data-active:border-transparent dark:data-active:bg-white dark:data-active:text-slate-900"
+              >
+                Text to Image
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+          {!isT2i && (
+            <ImageUploadField
+              preview={edit.result ? undefined : edit.preview}
+              fileName={edit.file?.name}
+              showPreviewThumb={Boolean(edit.preview && !edit.result)}
+              onFile={edit.chooseFile}
+              onClear={edit.clearFile}
+            />
+          )}
+          <div className={isT2i ? undefined : 'mt-3.5'}>
             <div className="mb-2 flex items-center justify-between">
               <label
                 htmlFor="photo-prompt"
                 className="text-sm font-semibold text-slate-800"
               >
-                Describe your edit
+                {isT2i ? 'Describe your image' : 'Describe your edit'}
               </label>
               <span className="text-xs text-slate-400">
                 {edit.prompt.length}/2000
@@ -181,24 +222,30 @@ export function PhotoEditorWorkspace() {
               value={edit.prompt}
               maxLength={2000}
               onChange={(e) => edit.changePrompt(e.target.value)}
-              placeholder="What would you like to change? e.g. Remove the person in the background while keeping the main subject unchanged."
+              placeholder={
+                isT2i
+                  ? 'What should we create? e.g. A cinematic portrait of a red fox in snowy woods at golden hour.'
+                  : 'What would you like to change? e.g. Remove the person in the background while keeping the main subject unchanged.'
+              }
               className="w-full resize-y rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm leading-relaxed text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
-            <div className="mt-2 flex [scrollbar-width:none] flex-nowrap gap-1.5 overflow-x-auto [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-              {QUICK_PROMPTS.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => {
-                    edit.changePrompt(item.text);
-                    setExampleId(item.id);
-                  }}
-                  className="shrink-0 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-xs leading-none font-medium whitespace-nowrap text-slate-600 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
+            {!isT2i && (
+              <div className="mt-2 flex [scrollbar-width:none] flex-nowrap gap-1.5 overflow-x-auto [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                {QUICK_PROMPTS.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      edit.changePrompt(item.text);
+                      setExampleId(item.id);
+                    }}
+                    className="shrink-0 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-xs leading-none font-medium whitespace-nowrap text-slate-600 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <QualitySelector
             className="mt-3.5"
@@ -217,10 +264,14 @@ export function PhotoEditorWorkspace() {
               <Sparkles className="size-4" />
             )}
             {edit.status === 'submitting'
-              ? 'Submitting edit...'
+              ? isT2i
+                ? 'Submitting...'
+                : 'Submitting edit...'
               : edit.status === 'pending'
                 ? 'Generating...'
-                : 'Generate Edit'}
+                : isT2i
+                  ? 'Generate'
+                  : 'Generate Edit'}
             {!edit.loading && (
               <span
                 className="rounded-md bg-white/15 px-2 py-1 text-xs"
@@ -237,14 +288,14 @@ export function PhotoEditorWorkspace() {
                 ? String(edit.creditBalance) + ' credits available · '
                 : ''}
             Model: {PHOTO_EDIT_MODEL_LABEL} · {edit.selectedQuality.label} ·
-            original aspect ratio
+            {isT2i ? ' landscape 4:3' : ' original aspect ratio'}
           </p>
         </div>
 
         <div
           className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_22px_50px_-24px_rgba(15,23,42,.55)]"
           onMouseEnter={() => {
-            if (!edit.preview) setExamplePaused(true);
+            if (showExamples) setExamplePaused(true);
           }}
           onMouseLeave={() => setExamplePaused(false)}
         >
@@ -255,12 +306,12 @@ export function PhotoEditorWorkspace() {
                 Workspace
               </span>
             </div>
-            {!edit.preview && (
+            {showExamples && (
               <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
                 Example · {example.caption}
               </span>
             )}
-            {edit.result && (
+            {edit.result && !isT2i && (
               <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-1 text-xs">
                 <button
                   type="button"
@@ -389,18 +440,26 @@ export function PhotoEditorWorkspace() {
             )}
           </div>
           <div className="relative min-h-[min(70vh,560px)] flex-1 lg:min-h-[520px]">
-            {edit.preview ? (
-              edit.result ? (
-                <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(ellipse_at_top,#f8fafc,#eef2f7)] p-3 sm:p-4">
-                  <img
-                    src={edit.showOriginal ? edit.preview : edit.result}
-                    alt={
-                      edit.showOriginal ? 'Original photo' : 'AI edited photo'
-                    }
-                    className="max-h-full max-w-full rounded-lg object-contain shadow-lg"
-                  />
-                </div>
-              ) : PRECISION_EDIT_UI_ENABLED ? (
+            {edit.result ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(ellipse_at_top,#f8fafc,#eef2f7)] p-3 sm:p-4">
+                <img
+                  src={
+                    !isT2i && edit.showOriginal && edit.preview
+                      ? edit.preview
+                      : edit.result
+                  }
+                  alt={
+                    !isT2i && edit.showOriginal
+                      ? 'Original photo'
+                      : isT2i
+                        ? 'AI generated photo'
+                        : 'AI edited photo'
+                  }
+                  className="max-h-full max-w-full rounded-lg object-contain shadow-lg"
+                />
+              </div>
+            ) : edit.preview ? (
+              PRECISION_EDIT_UI_ENABLED ? (
                 <MaskBrushCanvas
                   imageSrc={edit.preview}
                   enabled={precision && !edit.loading}
@@ -428,20 +487,24 @@ export function PhotoEditorWorkspace() {
                   data-example-id={example.id}
                   className="max-h-full max-w-full rounded-lg object-contain shadow-lg"
                 />
-                <div className="pointer-events-none absolute inset-x-0 top-3 flex justify-between px-3 sm:px-4">
-                  <span className="rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-semibold tracking-[0.14em] text-white uppercase backdrop-blur-sm">
-                    Before
-                  </span>
-                  <span className="rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-semibold tracking-[0.14em] text-white uppercase backdrop-blur-sm">
-                    After
-                  </span>
-                </div>
+                {!isT2i && (
+                  <div className="pointer-events-none absolute inset-x-0 top-3 flex justify-between px-3 sm:px-4">
+                    <span className="rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-semibold tracking-[0.14em] text-white uppercase backdrop-blur-sm">
+                      Before
+                    </span>
+                    <span className="rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-semibold tracking-[0.14em] text-white uppercase backdrop-blur-sm">
+                      After
+                    </span>
+                  </div>
+                )}
               </div>
             )}
             {edit.loading && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/85 backdrop-blur-sm">
                 <LoaderCircle className="mb-4 size-9 animate-spin text-blue-600" />
-                <p className="font-medium text-slate-900">Editing your photo</p>
+                <p className="font-medium text-slate-900">
+                  {isT2i ? 'Generating your image' : 'Editing your photo'}
+                </p>
                 <p className="mt-1 text-sm text-slate-500">
                   You can leave this page. Check My Creations later.
                 </p>
@@ -451,15 +514,19 @@ export function PhotoEditorWorkspace() {
           <div className="flex h-12 shrink-0 items-center justify-between gap-3 border-t border-slate-100 px-4">
             <p className="text-xs text-slate-500">
               {edit.result
-                ? 'Edit complete — review every detail.'
+                ? isT2i
+                  ? 'Generation complete — review every detail.'
+                  : 'Edit complete — review every detail.'
                 : edit.preview
                   ? precision
                     ? 'Paint the area to change, then generate.'
                     : 'Ready to generate your first edit.'
-                  : 'Upload your photo to replace this example.'}
+                  : isT2i
+                    ? 'Write a prompt to generate an image.'
+                    : 'Upload your photo to replace this example.'}
             </p>
             <div className="flex items-center gap-2">
-              {!edit.preview && (
+              {showExamples && (
                 <div
                   className="flex items-center gap-1.5"
                   role="tablist"
@@ -495,11 +562,11 @@ export function PhotoEditorWorkspace() {
                 <>
                   <Button
                     variant="outline"
-                    onClick={edit.editAgain}
+                    onClick={isT2i ? edit.clearResult : edit.editAgain}
                     className="rounded-lg"
                   >
                     <RotateCcw className="size-4" />
-                    Edit Again
+                    {isT2i ? 'Generate Again' : 'Edit Again'}
                   </Button>
                   <Button
                     disabled={downloading}

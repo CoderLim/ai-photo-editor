@@ -27,9 +27,26 @@ export function falQueueModel(model?: string): string {
   return `${parts[0]}/${parts[1]}`;
 }
 
+function detailMessage(detail: unknown): string | undefined {
+  if (typeof detail === 'string' && detail.trim()) return detail.trim();
+  if (!Array.isArray(detail)) return undefined;
+  const parts = detail
+    .map((item) => {
+      if (typeof item === 'string') return item.trim();
+      if (item && typeof item === 'object') {
+        const msg = (item as { msg?: unknown }).msg;
+        if (typeof msg === 'string' && msg.trim()) return msg.trim();
+      }
+      return '';
+    })
+    .filter(Boolean);
+  return parts.length ? parts.join('; ') : undefined;
+}
+
 /**
  * Pull a human-readable Fal error from webhook / queue payloads.
- * Prefer top-level `error`; fall back to `payload_error` or `payload.detail`.
+ * Prefer top-level `error`; then `payload_error`, top-level `detail`, or
+ * `payload.detail` (content-policy 422 bodies use top-level `detail`).
  */
 export function extractFalErrorMessage(
   data: Record<string, unknown> | null | undefined
@@ -41,26 +58,18 @@ export function extractFalErrorMessage(
   if (typeof data.payload_error === 'string' && data.payload_error.trim()) {
     return data.payload_error.trim();
   }
+  const topDetail = detailMessage(data.detail);
+  if (topDetail) return topDetail;
   const payload = data.payload;
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     return undefined;
   }
-  const detail = (payload as { detail?: unknown }).detail;
-  if (typeof detail === 'string' && detail.trim()) return detail.trim();
-  if (Array.isArray(detail)) {
-    const parts = detail
-      .map((item) => {
-        if (typeof item === 'string') return item.trim();
-        if (item && typeof item === 'object') {
-          const msg = (item as { msg?: unknown }).msg;
-          if (typeof msg === 'string' && msg.trim()) return msg.trim();
-        }
-        return '';
-      })
-      .filter(Boolean);
-    if (parts.length) return parts.join('; ');
-  }
-  return undefined;
+  return detailMessage((payload as { detail?: unknown }).detail);
+}
+
+/** Non-retryable Fal client failures (content policy, validation). */
+export function isFalClientErrorStatus(status: number): boolean {
+  return status >= 400 && status < 500 && status !== 408 && status !== 429;
 }
 
 /**
@@ -181,20 +190,55 @@ export class FalProvider implements AIProvider {
     };
 
     const statusResp = await fetch(statusUrl, { method: 'GET', headers });
+    const statusData = (await statusResp.json().catch(() => ({}))) as Record<
+      string,
+      unknown
+    >;
 
+    // Content-policy / validation often surface as HTTP 422 on status or
+    // result. Treat definite 4xx as FAILED so reconcile refunds instead of
+    // leaving the UI spinning until the stale timeout.
     if (!statusResp.ok) {
+      if (isFalClientErrorStatus(statusResp.status)) {
+        return {
+          taskId,
+          taskStatus: AITaskStatus.FAILED,
+          taskInfo: {
+            status: 'FAILED',
+            errorCode:
+              typeof statusData.error_type === 'string'
+                ? statusData.error_type
+                : typeof (statusData as { type?: unknown }).type === 'string'
+                  ? String((statusData as { type?: unknown }).type)
+                  : '',
+            errorMessage:
+              extractFalErrorMessage(statusData) ||
+              `request failed with status: ${statusResp.status}`,
+          },
+          taskResult: statusData,
+        };
+      }
       throw new Error(`request failed with status: ${statusResp.status}`);
     }
 
-    const statusData = await statusResp.json();
-    const taskStatus = this.mapStatus(statusData.status);
+    const rawStatus = String(statusData.status || '');
+    let taskStatus = this.mapStatus(rawStatus);
+
+    // Fal marks failed/cancelled queue jobs as COMPLETED and puts the cause
+    // in `error` / `error_type` on the status payload.
+    if (
+      taskStatus === AITaskStatus.SUCCESS &&
+      (statusData.error || statusData.error_type)
+    ) {
+      taskStatus = AITaskStatus.FAILED;
+    }
 
     if (taskStatus !== AITaskStatus.SUCCESS) {
       return {
         taskId,
         taskStatus,
         taskInfo: {
-          status: statusData.status,
+          status: rawStatus,
           errorCode:
             typeof statusData.error_type === 'string'
               ? statusData.error_type
@@ -207,12 +251,26 @@ export class FalProvider implements AIProvider {
 
     const resultUrl = `${this.baseUrl}/${queryModel}/requests/${taskId}`;
     const resultResp = await fetch(resultUrl, { method: 'GET', headers });
+    const data: any = await resultResp.json().catch(() => ({}));
 
     if (!resultResp.ok) {
+      if (isFalClientErrorStatus(resultResp.status)) {
+        return {
+          taskId,
+          taskStatus: AITaskStatus.FAILED,
+          taskInfo: {
+            status: 'FAILED',
+            errorCode:
+              typeof data.error_type === 'string' ? data.error_type : '',
+            errorMessage:
+              extractFalErrorMessage(data) ||
+              `request failed with status: ${resultResp.status}`,
+          },
+          taskResult: data,
+        };
+      }
       throw new Error(`request failed with status: ${resultResp.status}`);
     }
-
-    const data = await resultResp.json();
 
     let images: AIImage[] | undefined = undefined;
     let videos: AIVideo[] | undefined = undefined;
