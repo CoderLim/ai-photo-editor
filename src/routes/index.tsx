@@ -17,6 +17,12 @@ import { Pricing } from '@/blocks/pricing';
 import { CoreBenefits } from '@/components/photo-editor/core-benefits';
 import { PhotoEditorWorkspace } from '@/components/photo-editor/workspace';
 
+const AREA_EDIT_FAQ = 'How can I edit a specific area of a photo?';
+const AREA_EDIT_BLOG_LABEL =
+  'How can I edit a specific area of a photo using AI?';
+const AREA_EDIT_BLOG_HREF =
+  '/blog/how-to-edit-a-specific-area-of-a-photo-with-ai';
+
 const FAQS = [
   [
     'Is this AI photo editor really free?',
@@ -25,6 +31,10 @@ const FAQS = [
   [
     'Can I use it without signing up?',
     'Yes. Upload a photo, write a prompt, and generate with your 10 guest credits — no account required. Sign in anytime for 10 more credits and to keep results in My Creations.',
+  ],
+  [
+    AREA_EDIT_FAQ,
+    `Name the area in your prompt and say what must stay unchanged — no brush mask needed. For a sweater-color walkthrough and prompt tips, see ${AREA_EDIT_BLOG_LABEL}`,
   ],
   [
     'Does it work on iPhone or Android without an app?',
@@ -55,6 +65,24 @@ const FAQS = [
     'Yes. If an edit fails or is canceled, the credits used for that job are restored to your balance automatically.',
   ],
 ] as const;
+
+function FaqAnswer({ question, answer }: { question: string; answer: string }) {
+  if (question !== AREA_EDIT_FAQ) return answer;
+  const index = answer.lastIndexOf(AREA_EDIT_BLOG_LABEL);
+  if (index < 0) return answer;
+  return (
+    <>
+      {answer.slice(0, index)}
+      <Link
+        href={AREA_EDIT_BLOG_HREF}
+        className="font-semibold text-blue-600 hover:underline"
+      >
+        {AREA_EDIT_BLOG_LABEL}
+      </Link>
+      {answer.slice(index + AREA_EDIT_BLOG_LABEL.length)}
+    </>
+  );
+}
 
 const HOME_TITLE = 'AI Photo Editor: Free AI Image Editor Online, No Sign-Up';
 const HOME_DESCRIPTION =
@@ -363,7 +391,7 @@ function HomePage() {
                   {question}
                 </h3>
                 <p className="mt-3 text-sm leading-7 text-slate-600">
-                  {answer}
+                  <FaqAnswer question={question} answer={answer} />
                 </p>
               </div>
             ))}

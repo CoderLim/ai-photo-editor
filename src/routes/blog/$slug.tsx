@@ -1,19 +1,12 @@
 import { createFileRoute, notFound } from '@tanstack/react-router';
 import { describeSubmitProblem } from '@/routes/settings/guest-posts/-shared';
 import { MDXProvider } from '@mdx-js/react';
-import {
-  ArrowLeft,
-  ArrowRight,
-  Calendar,
-  Eye,
-  Pencil,
-  Zap,
-} from 'lucide-react';
+import { ArrowRight, Calendar, Eye, Pencil, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Link, useRouter } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
-import { pageHead } from '@/lib/seo';
+import { absoluteUrl, pageHead } from '@/lib/seo';
 import { cn } from '@/lib/utils';
 import { m } from '@/paraglide/messages.js';
 import { getLocale } from '@/paraglide/runtime.js';
@@ -223,6 +216,33 @@ function BlogPostPage() {
       })
     : null;
 
+  const breadcrumbJsonLd = !post.preview
+    ? JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: m['common.systems.home'](),
+            item: absoluteUrl('/'),
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: m['blog.title'](),
+            item: absoluteUrl('/blog'),
+          },
+          {
+            '@type': 'ListItem',
+            position: 3,
+            name: post.title,
+            item: absoluteUrl(`/blog/${post.slug}`),
+          },
+        ],
+      })
+    : null;
+
   return (
     <div className="force-light flex min-h-screen flex-col bg-[#f7f9fc] text-slate-900">
       <Header />
@@ -237,14 +257,29 @@ function BlogPostPage() {
         {articleJsonLd ? (
           <script type="application/ld+json">{articleJsonLd}</script>
         ) : null}
+        {breadcrumbJsonLd ? (
+          <script type="application/ld+json">{breadcrumbJsonLd}</script>
+        ) : null}
         <article className="mx-auto max-w-3xl">
-          <Link
-            href="/blog"
-            className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
-          >
-            <ArrowLeft className="size-4" />
-            {m['blog.back_to_blog']()}
-          </Link>
+          <nav aria-label="Breadcrumb" className="text-sm text-slate-500">
+            <ol className="flex flex-wrap items-center gap-1.5">
+              <li>
+                <Link href="/" className="hover:text-slate-900">
+                  {m['common.systems.home']()}
+                </Link>
+              </li>
+              <li aria-hidden="true">/</li>
+              <li>
+                <Link href="/blog" className="hover:text-slate-900">
+                  {m['blog.title']()}
+                </Link>
+              </li>
+              <li aria-hidden="true">/</li>
+              <li className="max-w-full font-medium text-slate-700">
+                {post.title}
+              </li>
+            </ol>
+          </nav>
 
           <header className="mt-8 mb-6 border-b border-slate-200 pb-6">
             {post.sponsored && (
