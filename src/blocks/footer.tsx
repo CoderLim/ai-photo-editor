@@ -63,6 +63,9 @@ export function Footer() {
             <Link href="/photo-text-editor" className="hover:text-blue-600">
               Photo Text Editor
             </Link>
+            <Link href="/image-to-image/" className="hover:text-blue-600">
+              Image to Image
+            </Link>
           </div>
         </div>
         <div>

@@ -130,6 +130,8 @@ const FEATURES = [
     title: 'Restyle Photos With Text Prompts',
     description:
       'Describe cinematic light, a golden-hour mood, vintage color, or another creative look using plain words.',
+    href: '/image-to-image/',
+    cta: 'image to image editing',
   },
   {
     title: 'Remove Clothing Wrinkles',
@@ -416,7 +418,9 @@ function HomePage() {
                           ? '/photo-background-changer'
                           : tool.slug === 'edit-text'
                             ? '/photo-text-editor'
-                            : '#editor'
+                            : tool.slug === 'image-to-image'
+                              ? '/image-to-image/'
+                              : '#editor'
                   }
                   className="group overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg"
                 >

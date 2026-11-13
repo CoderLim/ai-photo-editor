@@ -592,6 +592,13 @@ function PhotoTextEditorPage() {
             >
               AI photo editor
             </Link>
+            , try{' '}
+            <Link
+              href="/image-to-image/"
+              className="font-semibold text-blue-600 hover:underline"
+            >
+              image to image
+            </Link>
             , browse{' '}
             <Link
               href="/tools"

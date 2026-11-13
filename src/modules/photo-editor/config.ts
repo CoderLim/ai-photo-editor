@@ -209,6 +209,23 @@ export const PHOTO_TOOLS: ToolConfig[] = [
       'Generate, zoom in on the lettering, then download or refine.',
     ],
   },
+  {
+    slug: 'image-to-image',
+    title: 'AI Image to Image Editor',
+    heading: 'Image to Image Online',
+    description:
+      'Upload a photo, describe the new look, and AI redraws style, light or setting while the composition stays put.',
+    category: 'Replace & Transform',
+    examplePrompt:
+      'Turn this into a soft watercolour illustration — keep the pose and the framing.',
+    limitations:
+      'Heavy restyles can drift on faces, hands and small accessories. Style is described in words; there is no style-reference upload yet.',
+    steps: [
+      'Upload a JPG, PNG or WebP photo.',
+      'Describe the new look and what must stay unchanged.',
+      'Generate, compare before and after, then refine or download.',
+    ],
+  },
 ];
 
 /**

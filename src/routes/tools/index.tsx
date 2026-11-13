@@ -48,7 +48,9 @@ function ToolsPage() {
                       ? '/photo-background-changer'
                       : tool.slug === 'edit-text'
                         ? '/photo-text-editor'
-                        : '/#editor'
+                        : tool.slug === 'image-to-image'
+                          ? '/image-to-image/'
+                          : '/#editor'
               }
               className="group rounded-2xl border border-slate-200 bg-white p-7 hover:border-blue-300 hover:shadow-lg"
             >
@@ -59,7 +61,10 @@ function ToolsPage() {
                 {tool.description}
               </p>
               <span className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600">
-                Open tool <ArrowRight className="size-4" />
+                {tool.slug === 'image-to-image'
+                  ? 'AI image to image editor'
+                  : 'Open tool'}{' '}
+                <ArrowRight className="size-4" />
               </span>
             </Link>
           ))}

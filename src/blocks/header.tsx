@@ -13,6 +13,7 @@ export function Header() {
           label: 'Photo Background Changer',
         },
         { href: '/photo-text-editor', label: 'Photo Text Editor' },
+        { href: '/image-to-image/', label: 'img2img' },
       ],
     },
     { href: '/pricing', label: m['landing.nav.pricing']() },

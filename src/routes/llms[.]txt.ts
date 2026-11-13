@@ -39,6 +39,12 @@ const STATIC_PAGES: { path: string; title: string; description: string }[] = [
       'Edit text already inside a photo by describing the change; AI redraws the lettering',
   },
   {
+    path: '/image-to-image/',
+    title: 'Image to Image',
+    description:
+      'Upload a photo and describe a new look; AI redraws style while composition stays put',
+  },
+  {
     path: '/examples',
     title: 'AI Photo Edit Examples',
     description:

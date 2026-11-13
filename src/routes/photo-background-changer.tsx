@@ -595,7 +595,14 @@ function PhotoBackgroundChangerPage() {
                 >
                   AI Photo Editor
                 </Link>{' '}
-                for prompt-based editing instead.
+                for prompt-based editing, or{' '}
+                <Link
+                  href="/image-to-image/"
+                  className="font-semibold text-blue-600 hover:underline"
+                >
+                  restyle a photo
+                </Link>{' '}
+                while keeping the original composition.
               </p>
             </div>
           </div>
