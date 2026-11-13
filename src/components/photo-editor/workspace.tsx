@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { PHOTO_EDIT_MODEL_LABEL } from '@/modules/photo-editor/config';
 import { downloadPhotoResult } from '@/lib/download';
 import { cn } from '@/lib/utils';
 import { CreditGateDialog } from '@/components/photo-editor/credit-gate-dialog';
@@ -281,15 +280,6 @@ export function PhotoEditorWorkspace() {
               </span>
             )}
           </Button>
-          <p className="mt-2 text-center text-xs leading-relaxed text-slate-500">
-            {!edit.session?.user
-              ? '10 free trial credits · '
-              : edit.creditBalance !== null
-                ? String(edit.creditBalance) + ' credits available · '
-                : ''}
-            Model: {PHOTO_EDIT_MODEL_LABEL} · {edit.selectedQuality.label} ·
-            {isT2i ? ' landscape 4:3' : ' original aspect ratio'}
-          </p>
         </div>
 
         <div
@@ -563,7 +553,7 @@ export function PhotoEditorWorkspace() {
                   <Button
                     variant="outline"
                     onClick={isT2i ? edit.clearResult : edit.editAgain}
-                    className="rounded-lg"
+                    className="rounded-lg border-slate-200 bg-white text-slate-700 shadow-none hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-200 dark:bg-white dark:text-slate-700 dark:hover:bg-slate-50 dark:hover:text-slate-900"
                   >
                     <RotateCcw className="size-4" />
                     {isT2i ? 'Generate Again' : 'Edit Again'}
