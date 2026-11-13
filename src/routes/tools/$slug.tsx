@@ -18,7 +18,7 @@ export const Route = createFileRoute('/tools/$slug')({
       throw redirect({ to: '/photo-text-editor' });
     }
     if (params.slug === 'image-to-image') {
-      throw redirect({ to: '/image-to-image/' });
+      throw redirect({ to: '/image-to-image' });
     }
     if (!getPhotoTool(params.slug)) {
       throw redirect({ to: '/' });
