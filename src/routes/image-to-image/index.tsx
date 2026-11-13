@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 
 import { Link } from '@/core/i18n/navigation';
+import { envConfigs } from '@/config';
 import { EDIT_CREDITS } from '@/modules/photo-editor/config';
 import { absoluteUrl, pageHead } from '@/lib/seo';
 import { Footer } from '@/blocks/footer';
@@ -9,8 +10,7 @@ import { Header } from '@/blocks/header';
 import { ImageToImageWorkspace } from '@/components/photo-editor/image-to-image-workspace';
 
 const PATH = '/image-to-image/';
-const TITLE =
-  'Image to Image: Free AI Image to Image Editor Online, No Sign-Up';
+const TITLE = 'Image to Image: Free AI Editor Online, No Sign-Up';
 const DESCRIPTION =
   'Image to image editing: upload a photo, describe the new look, and AI redraws it while the composition stays put. Free credits, no sign-up, no presets.';
 
@@ -18,23 +18,23 @@ const BEFORE_AFTER = [
   {
     title: 'Portrait to illustration',
     description:
-      'A phone portrait of a woman outdoors, redrawn as a soft painterly illustration with golden-hour colour. Same pose, same framing; the style, light and backdrop change while she stays put.',
-    image: '/images/ai-photo-editor/restyle-photo.jpg',
-    alt: 'Outdoor portrait before and after painterly illustration restyle',
+      'An outdoor portrait redrawn as a soft watercolor illustration. Her pose, outfit silhouette and framing stay recognizable as the colors and texture change.',
+    image: '/images/ai-photo-editor/image-to-image/i2i-portrait-watercolor.jpg',
+    alt: 'Before and after: outdoor portrait transformed into a watercolor illustration',
   },
   {
     title: 'Product in a new setting',
     description:
-      'A metal wristwatch on a studio surface, restyled with a matte white case and bracelet. The dial, crown and framing stay put — only the material and finish change.',
-    image: '/images/ai-photo-editor/image-to-image/i2i-watch-setting.webp',
-    alt: 'Watch product photo before and after material restyle',
+      'The same stainless-steel wristwatch moves from a clean studio backdrop to wet dark stone in the morning light. Its dial, shape and camera angle remain consistent.',
+    image: '/images/ai-photo-editor/image-to-image/i2i-watch-new-setting.jpg',
+    alt: 'Before and after: stainless steel watch on a studio backdrop and wet stone',
   },
   {
     title: 'Old photo restyle',
     description:
-      'A soft portrait with a dated warm colour cast, cleaned up to a cooler film grade. Face and framing unchanged.',
-    image: '/images/ai-photo-editor/image-to-image/i2i-family-film.webp',
-    alt: 'Portrait before and after film colour restyle',
+      'A faded 1990s-style family photo gets cleaner contrast and a cooler film grade, while the family, their clothing and the original composition remain recognizable.',
+    image: '/images/ai-photo-editor/image-to-image/i2i-old-photo-restyle.jpg',
+    alt: 'Before and after: faded family portrait with cleaner film colors',
   },
 ] as const;
 
@@ -83,12 +83,50 @@ const COMPARE_ROWS = [
 ] as const;
 
 const USE_CASES = [
-  'Illustration and anime versions of real photos — avatars, thumbnails and profile pictures that still look like the original person.',
-  'Product photos in a new setting — seasonal or campaign scenes without booking a shoot again.',
-  'One character, many images — a mascot or a consistent look across a set of posts.',
-  'Old and ordinary photos, restyled — clean up a flat phone snap and give it a film, studio or painterly look.',
-  'Room and interior mood variants — the same room in warm evening light or a bright daytime palette.',
-  'More content from one shoot — ten different looks out of a set you already paid for.',
+  {
+    title: 'Anime & illustration',
+    description:
+      'Turn an everyday portrait into an anime-style avatar while keeping the same hair, smile, pose and clothing.',
+    image: '/images/ai-photo-editor/image-to-image/i2i-anime-portrait.jpg',
+    alt: 'Photo portrait turned into an anime illustration',
+  },
+  {
+    title: 'Product photography',
+    description:
+      'Place the same coffee product into a cozy cafe campaign scene without changing its packaging or label.',
+    image: '/images/ai-photo-editor/image-to-image/i2i-coffee-lifestyle.jpg',
+    alt: 'Coffee bag product photo changed from studio to cafe setting',
+  },
+  {
+    title: 'Character restyling',
+    description:
+      'Give an original mascot a polished 3D look while keeping the character recognizable.',
+    image: '/images/ai-photo-editor/image-to-image/i2i-mascot-restyle.jpg',
+    alt: 'Orange fox mascot transformed from flat vector art into 3D',
+  },
+  {
+    title: 'Cinematic photo looks',
+    description:
+      'Change an ordinary city portrait into a golden-hour editorial shot without starting from a new composition.',
+    image: '/images/ai-photo-editor/image-to-image/i2i-cinematic-street.jpg',
+    alt: 'Everyday city portrait before and after cinematic golden-hour color grading',
+  },
+  {
+    title: 'Interior mood variants',
+    description:
+      'Preview the same living room in bright daylight and warm evening light with the furniture layout preserved.',
+    image: '/images/ai-photo-editor/image-to-image/i2i-interior-day-night.jpg',
+    alt: 'Same living room in daytime and cozy evening lighting',
+  },
+  {
+    title: 'Multiple looks from one shot',
+    description:
+      'Explore a minimalist fashion look and a dramatic editorial version using the same portrait as a starting point.',
+    image:
+      '/images/ai-photo-editor/image-to-image/i2i-fashion-multiple-looks.jpg',
+    alt: 'One fashion portrait transformed into two editorial looks',
+    triple: true,
+  },
 ] as const;
 
 const TIPS = [
@@ -118,7 +156,7 @@ const FAQS = [
   ],
   [
     'What is the difference between image to image and text to image?',
-    "Text to image invents the whole picture from a description. Image to image keeps your photo's composition, subject and proportions and changes the look — style, light, material, setting. If you need a specific pose or a real product angle preserved, image to image is the one that can do it.",
+    'Text to image invents a picture from words alone, with no source photo. Image to image starts from a photo you upload and keeps composition, subject and proportions while changing the look — style, light, material, setting. On this site both the homepage editor and this page start from an uploaded photo; this page is the focused restyle workflow when you need a specific pose or product angle preserved.',
   ],
   [
     'Can I upload a second image as a style reference?',
@@ -141,6 +179,26 @@ const FAQS = [
 const jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
+    {
+      '@type': 'SoftwareApplication',
+      name: 'AI Image to Image Editor',
+      url: absoluteUrl(PATH),
+      applicationCategory: 'MultimediaApplication',
+      operatingSystem: 'Web browser (Windows, macOS, iOS, Android)',
+      description:
+        'Upload a photo, describe the new look, and AI redraws style, light or setting while the composition stays put.',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD',
+        description: '10 free credits, no sign-up',
+      },
+      provider: {
+        '@type': 'Organization',
+        name: envConfigs.app_name,
+        url: envConfigs.app_url,
+      },
+    },
     {
       '@type': 'FAQPage',
       mainEntity: FAQS.map(([question, answer]) => ({
@@ -245,6 +303,50 @@ function FaqAnswer({ question, answer }: { question: string; answer: string }) {
   return answer;
 }
 
+function ComparisonImage({
+  src,
+  alt,
+  triple = false,
+  className,
+}: {
+  src: string;
+  alt: string;
+  triple?: boolean;
+  className?: string;
+}) {
+  const labels = triple
+    ? ['Original', 'Look A', 'Look B']
+    : ['Before', 'After'];
+  return (
+    <div
+      className={
+        'relative overflow-hidden rounded-2xl bg-slate-100' +
+        (className ? ` ${className}` : '')
+      }
+    >
+      <img
+        src={src}
+        alt={alt}
+        width={1254}
+        height={1254}
+        loading="lazy"
+        decoding="async"
+        className="aspect-square w-full object-cover"
+      />
+      <div className="pointer-events-none absolute inset-x-0 top-3 flex justify-around px-2">
+        {labels.map((label) => (
+          <span
+            key={label}
+            className="rounded-md bg-slate-950/75 px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm backdrop-blur-sm"
+          >
+            {label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ImageToImagePage() {
   return (
     <div className="min-h-screen bg-[#f7f9fc] text-slate-900">
@@ -276,6 +378,9 @@ function ImageToImagePage() {
               <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl lg:text-[2.75rem]">
                 Image to Image Online
               </h1>
+              <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-600">
+                Upload a photo, describe the new look, and keep the composition.
+              </p>
             </div>
             <div id="editor" className="scroll-mt-24">
               <ImageToImageWorkspace />
@@ -324,32 +429,43 @@ function ImageToImagePage() {
               Same picture, new look — the composition is inherited from your
               file, not invented.
             </p>
-            <div className="mt-10 grid gap-10 sm:gap-12 md:grid-cols-3">
-              {BEFORE_AFTER.map((item, index) => (
-                <article key={item.title} className="min-w-0">
-                  <img
-                    src={item.image}
-                    alt={item.alt}
-                    width={1254}
-                    height={1254}
-                    loading="lazy"
-                    decoding="async"
-                    className="aspect-square w-full rounded-2xl object-contain"
-                  />
-                  <div className="mt-5">
-                    <p className="mb-2 text-xs font-semibold tracking-widest text-blue-600 uppercase">
-                      Example {String(index + 1).padStart(2, '0')}
-                    </p>
-                    <h3 className="text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">
-                      {item.title}
-                    </h3>
-                    <p className="mt-3 text-sm leading-7 text-slate-600">
-                      {item.description}
-                    </p>
-                  </div>
-                </article>
-              ))}
+            <div className="mt-10 space-y-12">
+              {BEFORE_AFTER.map((item, index) => {
+                const imageRight = index % 2 === 1;
+                return (
+                  <article
+                    key={item.title}
+                    className={
+                      'grid items-center gap-6 md:gap-10 ' +
+                      (imageRight
+                        ? 'md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]'
+                        : 'md:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]')
+                    }
+                  >
+                    <ComparisonImage
+                      src={item.image}
+                      alt={item.alt}
+                      className={imageRight ? 'md:order-2' : undefined}
+                    />
+                    <div className={imageRight ? 'md:order-1' : undefined}>
+                      <p className="mb-2 text-xs font-semibold tracking-widest text-blue-600 uppercase">
+                        Example {String(index + 1).padStart(2, '0')}
+                      </p>
+                      <h3 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+                        {item.title}
+                      </h3>
+                      <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">
+                        {item.description}
+                      </p>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
+            <p className="mt-8 text-xs leading-6 text-slate-500">
+              Illustrative transformations; actual results depend on the photo
+              and prompt.
+            </p>
           </div>
         </section>
 
@@ -398,9 +514,10 @@ function ImageToImagePage() {
               file. Subject placement, perspective, proportions and the number
               of objects are all inherited from the photo you uploaded — what
               you are steering is style, light, material and setting. That is
-              the whole difference from text to image, where the model invents
-              the composition from nothing and you cannot keep a specific pose
-              or product angle.
+              different from blank-canvas text to image, where the model invents
+              the composition from nothing. On this site the homepage editor
+              also starts from an uploaded photo for general edits; use this
+              page when you specifically want a composition-preserving restyle.
             </p>
             <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white">
               <table className="w-full text-left text-sm">
@@ -432,13 +549,25 @@ function ImageToImagePage() {
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
             What People Use It For
           </h2>
-          <ul className="mt-9 grid gap-5 sm:grid-cols-2">
+          <ul className="mt-9 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {USE_CASES.map((item) => (
               <li
-                key={item}
-                className="rounded-2xl border border-slate-200 bg-white px-5 py-5 text-sm leading-7 text-slate-600 shadow-sm"
+                key={item.title}
+                className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
               >
-                {item}
+                <ComparisonImage
+                  src={item.image}
+                  alt={item.alt}
+                  triple={'triple' in item && item.triple}
+                />
+                <div className="px-5 py-5">
+                  <h3 className="text-lg font-semibold tracking-tight text-slate-950">
+                    {item.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-7 text-slate-600">
+                    {item.description}
+                  </p>
+                </div>
               </li>
             ))}
           </ul>
@@ -563,9 +692,9 @@ function ImageToImagePage() {
               href="/blog/how-to-edit-photos-with-ai"
               className="font-semibold text-blue-600 hover:underline"
             >
-              AI photo editing tools
-            </Link>{' '}
-            on the blog.
+              how to edit photos with AI
+            </Link>
+            .
           </p>
         </section>
       </main>
@@ -580,7 +709,7 @@ export const Route = createFileRoute('/image-to-image/')({
       title: TITLE,
       description: DESCRIPTION,
       path: PATH,
-      image: '/images/ai-photo-editor/restyle-photo.jpg',
+      image: '/images/ai-photo-editor/image-to-image/i2i-og-cover.jpg',
     }),
     scripts: [
       {

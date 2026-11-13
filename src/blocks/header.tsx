@@ -3,6 +3,7 @@ import { SiteHeader } from '@/components/site-header';
 
 export function Header() {
   const navLinks = [
+    { href: '/image-to-image/', label: 'Image To Image' },
     {
       label: 'AI Tools',
       children: [
@@ -13,7 +14,6 @@ export function Header() {
           label: 'Photo Background Changer',
         },
         { href: '/photo-text-editor', label: 'Photo Text Editor' },
-        { href: '/image-to-image/', label: 'img2img' },
       ],
     },
     { href: '/pricing', label: m['landing.nav.pricing']() },

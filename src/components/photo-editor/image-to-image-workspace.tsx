@@ -11,8 +11,8 @@ import { usePhotoEditSession } from '@/components/photo-editor/use-photo-edit-se
 import { Button } from '@/components/ui/button';
 
 const I2I_EXAMPLE = {
-  image: '/images/ai-photo-editor/restyle-photo.jpg',
-  alt: 'Before and after image to image portrait restyle',
+  image: '/images/ai-photo-editor/image-to-image/i2i-workspace-demo.webp',
+  alt: 'Before and after: natural portrait restyled as a vintage selfie collage',
   caption: 'Photo → new look',
 } as const;
 
@@ -173,8 +173,9 @@ export function ImageToImageWorkspace() {
                 <img
                   src={I2I_EXAMPLE.image}
                   alt={I2I_EXAMPLE.alt}
-                  width={1586}
-                  height={992}
+                  width={1280}
+                  height={960}
+                  fetchPriority="high"
                   className="size-full object-cover object-center"
                 />
               </div>
