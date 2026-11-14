@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 
 import { downloadPhotoResult } from '@/lib/download';
 import { cn } from '@/lib/utils';
+import { AdvancedSettings } from '@/components/photo-editor/advanced-settings';
 import { AspectRatioSelector } from '@/components/photo-editor/aspect-ratio-selector';
 import { CreditGateDialog } from '@/components/photo-editor/credit-gate-dialog';
 import { ImageUploadField } from '@/components/photo-editor/image-upload-field';
@@ -237,24 +238,24 @@ export function PhotoEditorWorkspace() {
               ) : undefined
             }
           />
-          <AspectRatioSelector
-            className="mt-3.5"
-            value={edit.imageSize}
-            disabled={edit.loading}
-            onChange={edit.changeImageSize}
-          />
           <ResolutionSelector
             className="mt-3.5"
             value={edit.resolution}
             disabled={edit.loading}
             onChange={edit.changeResolution}
           />
-          <QualitySelector
-            className="mt-3.5"
-            value={edit.quality}
-            disabled={edit.loading}
-            onChange={edit.changeQuality}
-          />
+          <AdvancedSettings className="mt-3.5">
+            <AspectRatioSelector
+              value={edit.imageSize}
+              disabled={edit.loading}
+              onChange={edit.changeImageSize}
+            />
+            <QualitySelector
+              value={edit.quality}
+              disabled={edit.loading}
+              onChange={edit.changeQuality}
+            />
+          </AdvancedSettings>
           <Button
             onClick={edit.submit}
             disabled={edit.loading}
