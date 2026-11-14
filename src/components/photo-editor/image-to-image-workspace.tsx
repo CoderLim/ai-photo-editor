@@ -10,7 +10,6 @@ import { ImageUploadField } from '@/components/photo-editor/image-upload-field';
 import { PromptField } from '@/components/photo-editor/prompt-field';
 import { QualitySelector } from '@/components/photo-editor/quality-selector';
 import { ResolutionSelector } from '@/components/photo-editor/resolution-selector';
-import { useFillRemainingHeight } from '@/components/photo-editor/use-fill-remaining-height';
 import { usePhotoEditSession } from '@/components/photo-editor/use-photo-edit-session';
 import { Button } from '@/components/ui/button';
 
@@ -25,8 +24,6 @@ export function ImageToImageWorkspace() {
   const edit = usePhotoEditSession({
     toolSlug: 'image-to-image',
   });
-  const { ref: formRef, maxHeight: formMaxHeight } =
-    useFillRemainingHeight<HTMLDivElement>();
   const [downloading, setDownloading] = useState(false);
 
   async function handleDownload() {
@@ -50,11 +47,7 @@ export function ImageToImageWorkspace() {
   return (
     <>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(260px,0.68fr)_minmax(0,1.32fr)] lg:items-start">
-        <div
-          ref={formRef}
-          style={formMaxHeight ? { maxHeight: formMaxHeight } : undefined}
-          className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_16px_40px_-28px_rgba(15,23,42,.4)] sm:p-4 lg:sticky lg:top-20"
-        >
+        <div className="flex max-h-[36rem] min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_16px_40px_-28px_rgba(15,23,42,.4)] sm:p-4 lg:sticky lg:top-20">
           <div className="min-h-0 flex-1 space-y-3.5 overflow-y-auto overscroll-contain pr-0.5">
             <ImageUploadField
               preview={edit.result ? undefined : edit.preview}

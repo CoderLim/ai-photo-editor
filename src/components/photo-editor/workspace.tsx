@@ -22,7 +22,6 @@ import {
 import { PromptField } from '@/components/photo-editor/prompt-field';
 import { QualitySelector } from '@/components/photo-editor/quality-selector';
 import { ResolutionSelector } from '@/components/photo-editor/resolution-selector';
-import { useFillRemainingHeight } from '@/components/photo-editor/use-fill-remaining-height';
 import { usePhotoEditSession } from '@/components/photo-editor/use-photo-edit-session';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -99,8 +98,6 @@ export function PhotoEditorWorkspace() {
       return (await brushRef.current?.exportMaskBlob()) ?? null;
     },
   });
-  const { ref: formRef, maxHeight: formMaxHeight } =
-    useFillRemainingHeight<HTMLDivElement>();
   const [exampleId, setExampleId] = useState<ExampleId>('change-clothes');
   const [examplePaused, setExamplePaused] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -176,12 +173,8 @@ export function PhotoEditorWorkspace() {
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(280px,0.72fr)_minmax(0,1.28fr)] lg:items-start">
-        <div
-          ref={formRef}
-          style={formMaxHeight ? { maxHeight: formMaxHeight } : undefined}
-          className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_16px_40px_-28px_rgba(15,23,42,.4)] sm:p-5"
-        >
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(280px,0.72fr)_minmax(0,1.28fr)] lg:items-stretch">
+        <div className="flex max-h-[36rem] min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_16px_40px_-28px_rgba(15,23,42,.4)] sm:p-5 lg:h-0 lg:max-h-none lg:min-h-full">
           <Tabs
             value={mode}
             onValueChange={(value) => {
@@ -204,7 +197,7 @@ export function PhotoEditorWorkspace() {
               </TabsTrigger>
             </TabsList>
           </Tabs>
-          <div className="min-h-0 flex-1 space-y-3.5 overflow-y-auto overscroll-contain pr-0.5">
+          <div className="min-h-0 flex-1 space-y-3.5 overflow-y-auto pr-0.5">
             {!isT2i && (
               <ImageUploadField
                 preview={edit.result ? undefined : edit.preview}
