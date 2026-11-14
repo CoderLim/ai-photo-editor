@@ -4,13 +4,13 @@ import { toast } from 'sonner';
 
 import { PHOTO_EDIT_MODEL_LABEL } from '@/modules/photo-editor/config';
 import { downloadPhotoResult } from '@/lib/download';
-import { AdvancedSettings } from '@/components/photo-editor/advanced-settings';
 import { AspectRatioSelector } from '@/components/photo-editor/aspect-ratio-selector';
 import { CreditGateDialog } from '@/components/photo-editor/credit-gate-dialog';
 import { ImageUploadField } from '@/components/photo-editor/image-upload-field';
 import { PromptField } from '@/components/photo-editor/prompt-field';
 import { QualitySelector } from '@/components/photo-editor/quality-selector';
 import { ResolutionSelector } from '@/components/photo-editor/resolution-selector';
+import { useFillRemainingHeight } from '@/components/photo-editor/use-fill-remaining-height';
 import { usePhotoEditSession } from '@/components/photo-editor/use-photo-edit-session';
 import { Button } from '@/components/ui/button';
 
@@ -25,6 +25,8 @@ export function ImageToImageWorkspace() {
   const edit = usePhotoEditSession({
     toolSlug: 'image-to-image',
   });
+  const { ref: formRef, maxHeight: formMaxHeight } =
+    useFillRemainingHeight<HTMLDivElement>();
   const [downloading, setDownloading] = useState(false);
 
   async function handleDownload() {
@@ -48,29 +50,31 @@ export function ImageToImageWorkspace() {
   return (
     <>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(260px,0.68fr)_minmax(0,1.32fr)] lg:items-start">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_16px_40px_-28px_rgba(15,23,42,.4)] sm:p-4 lg:sticky lg:top-20">
-          <ImageUploadField
-            preview={edit.result ? undefined : edit.preview}
-            fileName={edit.file?.name}
-            showPreviewThumb={Boolean(edit.preview && !edit.result)}
-            onFile={edit.chooseFile}
-            onClear={edit.clearFile}
-          />
-          <PromptField
-            className="mt-3.5"
-            id="image-to-image-prompt"
-            value={edit.prompt}
-            onChange={edit.changePrompt}
-            rows={5}
-            placeholder="Describe what you want to change in the image, such as 'Turn this into a soft watercolour illustration — keep the pose and framing'."
-          />
-          <ResolutionSelector
-            className="mt-3.5"
-            value={edit.resolution}
-            disabled={edit.loading}
-            onChange={edit.changeResolution}
-          />
-          <AdvancedSettings className="mt-3.5">
+        <div
+          ref={formRef}
+          style={formMaxHeight ? { maxHeight: formMaxHeight } : undefined}
+          className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_16px_40px_-28px_rgba(15,23,42,.4)] sm:p-4 lg:sticky lg:top-20"
+        >
+          <div className="min-h-0 flex-1 space-y-3.5 overflow-y-auto overscroll-contain pr-0.5">
+            <ImageUploadField
+              preview={edit.result ? undefined : edit.preview}
+              fileName={edit.file?.name}
+              showPreviewThumb={Boolean(edit.preview && !edit.result)}
+              onFile={edit.chooseFile}
+              onClear={edit.clearFile}
+            />
+            <PromptField
+              id="image-to-image-prompt"
+              value={edit.prompt}
+              onChange={edit.changePrompt}
+              rows={5}
+              placeholder="Describe what you want to change in the image, such as 'Turn this into a soft watercolour illustration — keep the pose and framing'."
+            />
+            <ResolutionSelector
+              value={edit.resolution}
+              disabled={edit.loading}
+              onChange={edit.changeResolution}
+            />
             <AspectRatioSelector
               value={edit.imageSize}
               disabled={edit.loading}
@@ -81,39 +85,41 @@ export function ImageToImageWorkspace() {
               disabled={edit.loading}
               onChange={edit.changeQuality}
             />
-          </AdvancedSettings>
-          <Button
-            onClick={edit.submit}
-            disabled={edit.loading}
-            className="mt-3.5 h-11 w-full gap-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
-          >
-            {edit.loading ? (
-              <LoaderCircle className="size-4 animate-spin" />
-            ) : (
-              <Sparkles className="size-4" />
-            )}
-            {edit.status === 'submitting'
-              ? 'Submitting edit...'
-              : edit.status === 'pending'
-                ? 'Generating...'
-                : 'Generate Edit'}
-            {!edit.loading && (
-              <span
-                className="rounded-md bg-white/15 px-2 py-1 text-xs"
-                aria-live="polite"
-              >
-                {edit.selectedQuality.credits} credits
-              </span>
-            )}
-          </Button>
-          <p className="mt-2 text-center text-[11px] leading-relaxed text-slate-500">
-            {!edit.session?.user
-              ? '10 free trial credits · '
-              : edit.creditBalance !== null
-                ? String(edit.creditBalance) + ' credits available · '
-                : ''}
-            {PHOTO_EDIT_MODEL_LABEL} · {edit.selectedQuality.label}
-          </p>
+          </div>
+          <div className="shrink-0 border-t border-slate-100 pt-3.5">
+            <Button
+              onClick={edit.submit}
+              disabled={edit.loading}
+              className="h-11 w-full gap-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+            >
+              {edit.loading ? (
+                <LoaderCircle className="size-4 animate-spin" />
+              ) : (
+                <Sparkles className="size-4" />
+              )}
+              {edit.status === 'submitting'
+                ? 'Submitting edit...'
+                : edit.status === 'pending'
+                  ? 'Generating...'
+                  : 'Generate Edit'}
+              {!edit.loading && (
+                <span
+                  className="rounded-md bg-white/15 px-2 py-1 text-xs"
+                  aria-live="polite"
+                >
+                  {edit.selectedQuality.credits} credits
+                </span>
+              )}
+            </Button>
+            <p className="mt-2 text-center text-[11px] leading-relaxed text-slate-500">
+              {!edit.session?.user
+                ? '10 free trial credits · '
+                : edit.creditBalance !== null
+                  ? String(edit.creditBalance) + ' credits available · '
+                  : ''}
+              {PHOTO_EDIT_MODEL_LABEL} · {edit.selectedQuality.label}
+            </p>
+          </div>
         </div>
 
         <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_22px_50px_-24px_rgba(15,23,42,.55)]">

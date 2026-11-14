@@ -11,7 +11,6 @@ import { toast } from 'sonner';
 
 import { downloadPhotoResult } from '@/lib/download';
 import { cn } from '@/lib/utils';
-import { AdvancedSettings } from '@/components/photo-editor/advanced-settings';
 import { AspectRatioSelector } from '@/components/photo-editor/aspect-ratio-selector';
 import { CreditGateDialog } from '@/components/photo-editor/credit-gate-dialog';
 import { ImageUploadField } from '@/components/photo-editor/image-upload-field';
@@ -23,6 +22,7 @@ import {
 import { PromptField } from '@/components/photo-editor/prompt-field';
 import { QualitySelector } from '@/components/photo-editor/quality-selector';
 import { ResolutionSelector } from '@/components/photo-editor/resolution-selector';
+import { useFillRemainingHeight } from '@/components/photo-editor/use-fill-remaining-height';
 import { usePhotoEditSession } from '@/components/photo-editor/use-photo-edit-session';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -99,6 +99,8 @@ export function PhotoEditorWorkspace() {
       return (await brushRef.current?.exportMaskBlob()) ?? null;
     },
   });
+  const { ref: formRef, maxHeight: formMaxHeight } =
+    useFillRemainingHeight<HTMLDivElement>();
   const [exampleId, setExampleId] = useState<ExampleId>('change-clothes');
   const [examplePaused, setExamplePaused] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -174,14 +176,18 @@ export function PhotoEditorWorkspace() {
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(280px,0.72fr)_minmax(0,1.28fr)] lg:items-stretch">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_16px_40px_-28px_rgba(15,23,42,.4)] sm:p-5">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(280px,0.72fr)_minmax(0,1.28fr)] lg:items-start">
+        <div
+          ref={formRef}
+          style={formMaxHeight ? { maxHeight: formMaxHeight } : undefined}
+          className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_16px_40px_-28px_rgba(15,23,42,.4)] sm:p-5"
+        >
           <Tabs
             value={mode}
             onValueChange={(value) => {
               if (value === 'edit' || value === 't2i') switchMode(value);
             }}
-            className="mb-3.5"
+            className="mb-3.5 shrink-0"
           >
             <TabsList className="grid h-10 w-full grid-cols-2 rounded-xl border border-slate-200 bg-slate-50 p-1 text-slate-500 shadow-none">
               <TabsTrigger
@@ -198,53 +204,51 @@ export function PhotoEditorWorkspace() {
               </TabsTrigger>
             </TabsList>
           </Tabs>
-          {!isT2i && (
-            <ImageUploadField
-              preview={edit.result ? undefined : edit.preview}
-              fileName={edit.file?.name}
-              showPreviewThumb={Boolean(edit.preview && !edit.result)}
-              onFile={edit.chooseFile}
-              onClear={edit.clearFile}
+          <div className="min-h-0 flex-1 space-y-3.5 overflow-y-auto overscroll-contain pr-0.5">
+            {!isT2i && (
+              <ImageUploadField
+                preview={edit.result ? undefined : edit.preview}
+                fileName={edit.file?.name}
+                showPreviewThumb={Boolean(edit.preview && !edit.result)}
+                onFile={edit.chooseFile}
+                onClear={edit.clearFile}
+              />
+            )}
+            <PromptField
+              id="photo-prompt"
+              value={edit.prompt}
+              onChange={edit.changePrompt}
+              rows={isT2i ? 5 : 4}
+              placeholder={
+                isT2i
+                  ? "Describe what you want to create, such as 'A cinematic portrait of a red fox in snowy woods at golden hour'."
+                  : "Describe what you want to change in the image, such as 'Change the background to a blue sky'."
+              }
+              footer={
+                !isT2i ? (
+                  <div className="mt-2 flex [scrollbar-width:none] flex-nowrap gap-1.5 overflow-x-auto [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                    {QUICK_PROMPTS.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          edit.changePrompt(item.text);
+                          setExampleId(item.id);
+                        }}
+                        className="shrink-0 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs leading-none font-medium whitespace-nowrap text-slate-600 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : undefined
+              }
             />
-          )}
-          <PromptField
-            className={isT2i ? undefined : 'mt-3.5'}
-            id="photo-prompt"
-            value={edit.prompt}
-            onChange={edit.changePrompt}
-            rows={isT2i ? 5 : 4}
-            placeholder={
-              isT2i
-                ? "Describe what you want to create, such as 'A cinematic portrait of a red fox in snowy woods at golden hour'."
-                : "Describe what you want to change in the image, such as 'Change the background to a blue sky'."
-            }
-            footer={
-              !isT2i ? (
-                <div className="mt-2 flex [scrollbar-width:none] flex-nowrap gap-1.5 overflow-x-auto [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                  {QUICK_PROMPTS.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => {
-                        edit.changePrompt(item.text);
-                        setExampleId(item.id);
-                      }}
-                      className="shrink-0 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs leading-none font-medium whitespace-nowrap text-slate-600 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              ) : undefined
-            }
-          />
-          <ResolutionSelector
-            className="mt-3.5"
-            value={edit.resolution}
-            disabled={edit.loading}
-            onChange={edit.changeResolution}
-          />
-          <AdvancedSettings className="mt-3.5">
+            <ResolutionSelector
+              value={edit.resolution}
+              disabled={edit.loading}
+              onChange={edit.changeResolution}
+            />
             <AspectRatioSelector
               value={edit.imageSize}
               disabled={edit.loading}
@@ -255,35 +259,37 @@ export function PhotoEditorWorkspace() {
               disabled={edit.loading}
               onChange={edit.changeQuality}
             />
-          </AdvancedSettings>
-          <Button
-            onClick={edit.submit}
-            disabled={edit.loading}
-            className="mt-3.5 h-11 w-full gap-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
-          >
-            {edit.loading ? (
-              <LoaderCircle className="size-4 animate-spin" />
-            ) : (
-              <Sparkles className="size-4" />
-            )}
-            {edit.status === 'submitting'
-              ? isT2i
-                ? 'Submitting...'
-                : 'Submitting edit...'
-              : edit.status === 'pending'
-                ? 'Generating...'
-                : isT2i
-                  ? 'Generate'
-                  : 'Generate Edit'}
-            {!edit.loading && (
-              <span
-                className="rounded-md bg-white/15 px-2 py-1 text-xs"
-                aria-live="polite"
-              >
-                {edit.selectedQuality.credits} credits
-              </span>
-            )}
-          </Button>
+          </div>
+          <div className="shrink-0 border-t border-slate-100 pt-3.5">
+            <Button
+              onClick={edit.submit}
+              disabled={edit.loading}
+              className="h-11 w-full gap-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+            >
+              {edit.loading ? (
+                <LoaderCircle className="size-4 animate-spin" />
+              ) : (
+                <Sparkles className="size-4" />
+              )}
+              {edit.status === 'submitting'
+                ? isT2i
+                  ? 'Submitting...'
+                  : 'Submitting edit...'
+                : edit.status === 'pending'
+                  ? 'Generating...'
+                  : isT2i
+                    ? 'Generate'
+                    : 'Generate Edit'}
+              {!edit.loading && (
+                <span
+                  className="rounded-md bg-white/15 px-2 py-1 text-xs"
+                  aria-live="polite"
+                >
+                  {edit.selectedQuality.credits} credits
+                </span>
+              )}
+            </Button>
+          </div>
         </div>
 
         <div
