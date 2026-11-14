@@ -37,7 +37,9 @@
   },
   "search": {
     "gsc": true,
-    "sitemapPath": "/sitemap.xml"
+    "sitemapPath": "/sitemap.xml",
+    "indexNowKey": "8189d8b9cb213fa24fd11261552a87a3",
+    "indexNowKeyPath": "/8189d8b9cb213fa24fd11261552a87a3.txt"
   },
   "audit": {
     "buildCommand": "pnpm build",
