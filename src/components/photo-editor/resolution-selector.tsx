@@ -42,7 +42,7 @@ export function ResolutionSelector({
               disabled={disabled}
               onClick={() => onChange(option.id)}
               className={cn(
-                'flex size-12 shrink-0 items-center justify-center rounded-md border text-sm font-semibold transition-colors',
+                'flex size-10 shrink-0 items-center justify-center rounded-md border text-xs font-semibold transition-colors',
                 selected
                   ? 'border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-100'
                   : 'border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-slate-50 hover:text-slate-800',

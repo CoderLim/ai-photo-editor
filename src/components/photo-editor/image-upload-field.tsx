@@ -31,15 +31,12 @@ export function ImageUploadField({
 
   return (
     <div className={className}>
-      <div className="mb-2 flex items-center justify-between">
-        <label
-          htmlFor="photo-file"
-          className="text-sm font-semibold text-slate-800"
-        >
-          Upload image
-        </label>
-        <span className="text-xs text-slate-400">JPG, PNG, WebP · 10 MB</span>
-      </div>
+      <label
+        htmlFor="photo-file"
+        className="mb-2 block text-sm font-semibold text-slate-800"
+      >
+        Image Upload
+      </label>
       <input
         id="photo-file"
         ref={inputRef}
@@ -69,10 +66,10 @@ export function ImageUploadField({
           onFile(e.dataTransfer.files?.[0]);
         }}
         className={cn(
-          'relative flex min-h-[6.75rem] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed px-4 py-3 text-center transition-colors',
+          'relative flex min-h-[10.5rem] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed px-4 py-6 text-center transition-colors',
           dragging
             ? 'border-blue-500 bg-blue-50'
-            : 'border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50/50'
+            : 'border-blue-200 bg-blue-50/40 hover:border-blue-400 hover:bg-blue-50/70'
         )}
       >
         {hasPreview ? (
@@ -80,7 +77,7 @@ export function ImageUploadField({
             <img
               src={preview}
               alt="Selected photo"
-              className="size-24 rounded-lg object-contain"
+              className="size-24 rounded-xl object-contain"
             />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-slate-800">
@@ -106,14 +103,12 @@ export function ImageUploadField({
           </div>
         ) : (
           <>
-            <div className="mb-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-              <UploadCloud className="size-6 text-blue-600" />
-            </div>
-            <p className="text-sm font-semibold text-slate-800">
-              Click to upload or drag your image here
-            </p>
-            <p className="mt-1 text-xs text-slate-500">
-              Your photo stays in your browser until you generate.
+            <UploadCloud className="size-8 text-blue-500" strokeWidth={1.75} />
+            <span className="mt-3 inline-flex h-9 items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm shadow-blue-600/25">
+              Upload Image
+            </span>
+            <p className="mt-2.5 text-xs text-slate-500">
+              Support JPEG, JPG, PNG or WEBP formats up to 10 MB
             </p>
           </>
         )}

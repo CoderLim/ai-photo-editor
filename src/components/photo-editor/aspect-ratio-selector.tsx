@@ -12,15 +12,15 @@ type AspectRatioSelectorProps = {
 };
 
 const ICON_BOX: Record<(typeof PHOTO_IMAGE_SIZES)[number]['icon'], string> = {
-  landscape: 'h-3 w-5',
-  square: 'size-3.5',
-  landscape_4_3: 'h-3 w-4',
-  portrait_4_3: 'h-4 w-3',
-  landscape_16_9: 'h-2.5 w-5',
-  portrait_16_9: 'h-5 w-2.5',
+  landscape: 'h-2 w-3.5',
+  square: 'size-2.5',
+  landscape_4_3: 'h-2 w-3',
+  portrait_4_3: 'h-3 w-2',
+  landscape_16_9: 'h-1.5 w-3.5',
+  portrait_16_9: 'h-3.5 w-1.5',
 };
 
-/** Text-to-image aspect ratio chips — Fal `image_size` presets, site blue selected. */
+/** Aspect ratio chips — compact rounded tiles, site blue selected. */
 export function AspectRatioSelector({
   value,
   disabled,
@@ -38,7 +38,7 @@ export function AspectRatioSelector({
       <div
         role="radiogroup"
         aria-labelledby="photo-aspect-ratio-label"
-        className="grid grid-cols-3 gap-2 sm:grid-cols-6"
+        className="flex flex-wrap gap-1.5"
       >
         {PHOTO_IMAGE_SIZES.map((option) => {
           const selected = value === option.id;
@@ -51,7 +51,7 @@ export function AspectRatioSelector({
               disabled={disabled}
               onClick={() => onChange(option.id)}
               className={cn(
-                'flex min-h-[4.25rem] flex-col items-center justify-center gap-1.5 rounded-xl border px-1.5 py-2 transition-colors',
+                'flex h-12 w-12 shrink-0 flex-col items-center justify-center gap-1 rounded-md border transition-colors',
                 selected
                   ? 'border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-100'
                   : 'border-slate-200 bg-white text-slate-500 hover:border-blue-200 hover:bg-slate-50 hover:text-slate-700',
@@ -60,11 +60,11 @@ export function AspectRatioSelector({
             >
               <span
                 aria-hidden
-                className="flex h-5 w-full items-center justify-center"
+                className="flex h-3.5 w-full items-center justify-center"
               >
                 <span
                   className={cn(
-                    'rounded-[3px] border-2',
+                    'rounded-[2px] border-[1.5px]',
                     selected ? 'border-blue-500' : 'border-current opacity-70',
                     ICON_BOX[option.icon]
                   )}
@@ -72,7 +72,7 @@ export function AspectRatioSelector({
               </span>
               <span
                 className={cn(
-                  'text-[11px] leading-none font-medium',
+                  'text-[10px] leading-none font-medium',
                   selected ? 'text-blue-700' : 'text-slate-500'
                 )}
               >

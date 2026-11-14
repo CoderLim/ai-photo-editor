@@ -7,6 +7,7 @@ import { downloadPhotoResult } from '@/lib/download';
 import { AspectRatioSelector } from '@/components/photo-editor/aspect-ratio-selector';
 import { CreditGateDialog } from '@/components/photo-editor/credit-gate-dialog';
 import { ImageUploadField } from '@/components/photo-editor/image-upload-field';
+import { PromptField } from '@/components/photo-editor/prompt-field';
 import { QualitySelector } from '@/components/photo-editor/quality-selector';
 import { ResolutionSelector } from '@/components/photo-editor/resolution-selector';
 import { usePhotoEditSession } from '@/components/photo-editor/use-photo-edit-session';
@@ -54,23 +55,14 @@ export function ImageToImageWorkspace() {
             onFile={edit.chooseFile}
             onClear={edit.clearFile}
           />
-          <div className="mt-3.5">
-            <label
-              htmlFor="image-to-image-prompt"
-              className="mb-2 block text-sm font-semibold text-slate-800"
-            >
-              Describe the new look
-            </label>
-            <textarea
-              id="image-to-image-prompt"
-              rows={4}
-              value={edit.prompt}
-              maxLength={2000}
-              onChange={(e) => edit.changePrompt(e.target.value)}
-              placeholder="e.g. Turn this into a soft watercolour illustration — keep the pose and the framing."
-              className="w-full resize-y rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm leading-relaxed text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            />
-          </div>
+          <PromptField
+            className="mt-3.5"
+            id="image-to-image-prompt"
+            value={edit.prompt}
+            onChange={edit.changePrompt}
+            rows={5}
+            placeholder="Describe what you want to change in the image, such as 'Turn this into a soft watercolour illustration — keep the pose and framing'."
+          />
           <AspectRatioSelector
             className="mt-3.5"
             value={edit.imageSize}

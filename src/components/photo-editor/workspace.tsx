@@ -19,6 +19,7 @@ import {
   type MaskBrushHandle,
   type MaskBrushState,
 } from '@/components/photo-editor/mask-brush-canvas';
+import { PromptField } from '@/components/photo-editor/prompt-field';
 import { QualitySelector } from '@/components/photo-editor/quality-selector';
 import { ResolutionSelector } from '@/components/photo-editor/resolution-selector';
 import { usePhotoEditSession } from '@/components/photo-editor/use-photo-edit-session';
@@ -205,49 +206,37 @@ export function PhotoEditorWorkspace() {
               onClear={edit.clearFile}
             />
           )}
-          <div className={isT2i ? undefined : 'mt-3.5'}>
-            <div className="mb-2 flex items-center justify-between">
-              <label
-                htmlFor="photo-prompt"
-                className="text-sm font-semibold text-slate-800"
-              >
-                {isT2i ? 'Describe your image' : 'Describe your edit'}
-              </label>
-              <span className="text-xs text-slate-400">
-                {edit.prompt.length}/2000
-              </span>
-            </div>
-            <textarea
-              id="photo-prompt"
-              rows={3}
-              value={edit.prompt}
-              maxLength={2000}
-              onChange={(e) => edit.changePrompt(e.target.value)}
-              placeholder={
-                isT2i
-                  ? 'What should we create? e.g. A cinematic portrait of a red fox in snowy woods at golden hour.'
-                  : 'What would you like to change? e.g. Remove the person in the background while keeping the main subject unchanged.'
-              }
-              className="w-full resize-y rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm leading-relaxed text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            />
-            {!isT2i && (
-              <div className="mt-2 flex [scrollbar-width:none] flex-nowrap gap-1.5 overflow-x-auto [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                {QUICK_PROMPTS.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => {
-                      edit.changePrompt(item.text);
-                      setExampleId(item.id);
-                    }}
-                    className="shrink-0 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-xs leading-none font-medium whitespace-nowrap text-slate-600 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <PromptField
+            className={isT2i ? undefined : 'mt-3.5'}
+            id="photo-prompt"
+            value={edit.prompt}
+            onChange={edit.changePrompt}
+            rows={isT2i ? 5 : 4}
+            placeholder={
+              isT2i
+                ? "Describe what you want to create, such as 'A cinematic portrait of a red fox in snowy woods at golden hour'."
+                : "Describe what you want to change in the image, such as 'Change the background to a blue sky'."
+            }
+            footer={
+              !isT2i ? (
+                <div className="mt-2 flex [scrollbar-width:none] flex-nowrap gap-1.5 overflow-x-auto [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                  {QUICK_PROMPTS.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        edit.changePrompt(item.text);
+                        setExampleId(item.id);
+                      }}
+                      className="shrink-0 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs leading-none font-medium whitespace-nowrap text-slate-600 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              ) : undefined
+            }
+          />
           <AspectRatioSelector
             className="mt-3.5"
             value={edit.imageSize}
