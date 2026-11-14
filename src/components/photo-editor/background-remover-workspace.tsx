@@ -15,6 +15,7 @@ import { downloadBlob, downloadPhotoResult } from '@/lib/download';
 import { cn } from '@/lib/utils';
 import { BackgroundFillPanel } from '@/components/photo-editor/background-fill-panel';
 import { CreditGateDialog } from '@/components/photo-editor/credit-gate-dialog';
+import { ResolutionSelector } from '@/components/photo-editor/resolution-selector';
 import { usePhotoEditSession } from '@/components/photo-editor/use-photo-edit-session';
 import { Button } from '@/components/ui/button';
 
@@ -185,6 +186,15 @@ export function BackgroundRemoverWorkspace({
     </div>
   ) : null;
 
+  const resolutionRow = (
+    <ResolutionSelector
+      className="mt-3.5"
+      value={edit.resolution}
+      disabled={edit.loading}
+      onChange={edit.changeResolution}
+    />
+  );
+
   const actionRow = (
     <div className="mt-3.5 flex flex-col gap-2 sm:flex-row">
       <Button
@@ -308,6 +318,7 @@ export function BackgroundRemoverWorkspace({
                   : 'Download will bake in this background'
                 : 'Showing the original photo'}
             </p>
+            {resolutionRow}
             {actionRow}
             {creditLine}
           </div>
@@ -355,7 +366,7 @@ export function BackgroundRemoverWorkspace({
                 'relative cursor-pointer overflow-hidden rounded-xl border-2 border-dashed border-slate-200 text-center transition-colors hover:border-blue-400',
                 previewSrc
                   ? cn('mx-auto w-fit max-w-full border-solid', CHECKER_BG)
-                  : 'flex min-h-[28rem] w-full flex-col items-center justify-center bg-white px-4 py-5 hover:bg-blue-50/50 sm:min-h-[34rem]'
+                  : 'flex min-h-[24rem] w-full flex-col items-center justify-center bg-white px-4 py-5 hover:bg-blue-50/50 sm:min-h-[24rem]'
               )}
             >
               {previewSrc ? (
@@ -363,7 +374,7 @@ export function BackgroundRemoverWorkspace({
                   <img
                     src={previewSrc}
                     alt="Selected photo"
-                    className="block h-auto max-h-[24rem] w-auto max-w-full sm:max-h-[30rem]"
+                    className="block h-auto max-h-[24rem] w-auto max-w-full sm:max-h-[24rem]"
                   />
                 </div>
               ) : (
@@ -389,6 +400,7 @@ export function BackgroundRemoverWorkspace({
               </p>
             )}
           </div>
+          {resolutionRow}
           {actionRow}
           {creditLine}
         </div>
