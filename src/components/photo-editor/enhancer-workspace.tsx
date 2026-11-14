@@ -7,9 +7,11 @@ import {
   PHOTO_EDIT_MODEL_LABEL,
 } from '@/modules/photo-editor/config';
 import { downloadPhotoResult } from '@/lib/download';
+import { AspectRatioSelector } from '@/components/photo-editor/aspect-ratio-selector';
 import { CreditGateDialog } from '@/components/photo-editor/credit-gate-dialog';
 import { ImageUploadField } from '@/components/photo-editor/image-upload-field';
 import { QualitySelector } from '@/components/photo-editor/quality-selector';
+import { ResolutionSelector } from '@/components/photo-editor/resolution-selector';
 import { usePhotoEditSession } from '@/components/photo-editor/use-photo-edit-session';
 import { Button } from '@/components/ui/button';
 
@@ -58,6 +60,18 @@ export function EnhancerWorkspace() {
             showPreviewThumb={Boolean(edit.preview && !edit.result)}
             onFile={edit.chooseFile}
             onClear={edit.clearFile}
+          />
+          <ResolutionSelector
+            className="mt-3"
+            value={edit.resolution}
+            disabled={edit.loading}
+            onChange={edit.changeResolution}
+          />
+          <AspectRatioSelector
+            className="mt-3"
+            value={edit.imageSize}
+            disabled={edit.loading}
+            onChange={edit.changeImageSize}
           />
           <QualitySelector
             className="mt-3"
