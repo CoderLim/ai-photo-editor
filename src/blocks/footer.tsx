@@ -1,3 +1,5 @@
+import { Github, Mail } from 'lucide-react';
+
 import { Link } from '@/core/i18n/navigation';
 
 export function Footer() {
@@ -12,15 +14,24 @@ export function Footer() {
             Edit photos with natural-language prompts. Practical AI tools for
             everyday creative work.
           </p>
-          <p className="mt-4 text-sm">
-            <span className="text-slate-500">Support: </span>
+          <div className="mt-4 flex items-center gap-3">
             <a
               href="mailto:support@getaiphotoeditor.com"
-              className="font-medium text-slate-900 hover:text-blue-600"
+              aria-label="Email support"
+              className="text-slate-500 transition-colors hover:text-blue-600"
             >
-              support@getaiphotoeditor.com
+              <Mail className="size-5" />
             </a>
-          </p>
+            <a
+              href="https://github.com/limbuilder/ai-photo-editor"
+              aria-label="GitHub"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-slate-500 transition-colors hover:text-blue-600"
+            >
+              <Github className="size-5" />
+            </a>
+          </div>
         </div>
         <div>
           <p className="mb-4 text-sm font-semibold text-slate-900">Product</p>
