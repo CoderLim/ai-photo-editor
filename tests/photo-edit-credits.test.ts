@@ -45,9 +45,12 @@ const {
   PHOTO_EDIT_QUALITIES,
   PhotoEditQualityError,
   PhotoImageSizeError,
+  PhotoResolutionError,
   REPLICATE_EDIT_MODEL,
   photoEditCharge,
   photoImageSize,
+  photoResolution,
+  resolveFalImageSize,
 } = await import('../src/modules/photo-editor/config');
 const {
   createPhotoProvider,
@@ -88,11 +91,19 @@ test('quality credits match the published GPT Image 2.6 table', () => {
   for (const item of PHOTO_EDIT_QUALITIES) {
     assert.equal(item.credits, CREDIT_TABLE[item.id]);
     assert.equal(photoEditCharge(item.id).credits, CREDIT_TABLE[item.id]);
+    assert.equal(photoEditCharge(item.id, '1k').credits, CREDIT_TABLE[item.id]);
+    assert.equal(
+      photoEditCharge(item.id, '2k').credits,
+      CREDIT_TABLE[item.id] * 2
+    );
+    assert.equal(
+      photoEditCharge(item.id, '4k').credits,
+      CREDIT_TABLE[item.id] * 4
+    );
     assert.ok(item.label.length > 0);
     assert.ok(item.description.length > 10);
   }
-  // photoEditCharge accepts only a quality. A credit amount is not an input.
-  assert.equal(photoEditCharge.length, 1);
+  assert.equal(photoEditCharge('medium', '2k').resolution, '2k');
 });
 
 test('unknown or omitted quality is rejected', () => {
@@ -111,6 +122,27 @@ test('unknown or omitted quality is rejected', () => {
   ]) {
     assert.throws(() => photoEditCharge(value), PhotoEditQualityError);
   }
+});
+
+test('resolution multipliers and Fal pixel mapping', () => {
+  assert.equal(photoResolution(undefined), '1k');
+  assert.equal(photoResolution('2k'), '2k');
+  assert.throws(() => photoResolution('8k'), PhotoResolutionError);
+  assert.throws(() => photoEditCharge('medium', '8k'), PhotoResolutionError);
+  assert.equal(resolveFalImageSize('auto', '1k'), 'auto');
+  assert.equal(resolveFalImageSize('square', '1k'), 'square');
+  assert.deepEqual(resolveFalImageSize('square', '2k'), {
+    width: 2048,
+    height: 2048,
+  });
+  assert.deepEqual(resolveFalImageSize('landscape_16_9', '4k'), {
+    width: 3840,
+    height: 2160,
+  });
+  assert.deepEqual(resolveFalImageSize('auto', '4k'), {
+    width: 2880,
+    height: 2880,
+  });
 });
 
 test('new photo edits always select fal', async () => {
@@ -140,6 +172,16 @@ test('provider input uses GPT Image 2.6 fields, not Nano Banana resolution', () 
     {
       image_urls: [url],
       image_size: 'landscape_16_9',
+      quality: 'medium',
+      num_images: 1,
+      output_format: 'png',
+    }
+  );
+  assert.deepEqual(
+    photoModelInput('fal', url, 'medium', undefined, 'square', '2k'),
+    {
+      image_urls: [url],
+      image_size: { width: 2048, height: 2048 },
       quality: 'medium',
       num_images: 1,
       output_format: 'png',
@@ -184,6 +226,12 @@ test('text-to-image input uses image_size preset and no image_urls', () => {
   assert.deepEqual(photoTextToImageInput('low', 'landscape_16_9'), {
     image_size: 'landscape_16_9',
     quality: 'low',
+    num_images: 1,
+    output_format: 'png',
+  });
+  assert.deepEqual(photoTextToImageInput('medium', 'square', '2k'), {
+    image_size: { width: 2048, height: 2048 },
+    quality: 'medium',
     num_images: 1,
     output_format: 'png',
   });
@@ -510,6 +558,7 @@ test('edit API charges the server quality price and ignores client amounts', asy
     assert.equal(t2iTask.model, FAL_TEXT_TO_IMAGE_MODEL);
     assert.equal(JSON.parse(t2iTask.options || '{}').mode, 'text-to-image');
     assert.equal(JSON.parse(t2iTask.options || '{}').imageSize, 'auto');
+    assert.equal(JSON.parse(t2iTask.options || '{}').resolution, '1k');
     assert.equal('imageUrl' in JSON.parse(t2iTask.options || '{}'), false);
 
     const t2iSquare = await post({
@@ -522,6 +571,27 @@ test('edit API charges the server quality price and ignores client amounts', asy
     });
     assert.equal(t2iSquare.payload.code, 0, JSON.stringify(t2iSquare.payload));
     assert.equal(calls.at(-1)!.body.image_size, 'square');
+
+    const t2i2kBefore = await getBalance(userId);
+    const t2i2k = await post({
+      requestId: 'request-t2i-2k-0001',
+      quality: 'medium',
+      imageUrl: '',
+      uploadToken: '',
+      imageSize: 'square',
+      resolution: '2k',
+      prompt: 'A 2K square fox portrait.',
+    });
+    assert.equal(t2i2k.payload.code, 0, JSON.stringify(t2i2k.payload));
+    assert.equal(t2i2k.payload.data.credits, CREDIT_TABLE.medium * 2);
+    assert.equal(
+      await getBalance(userId),
+      t2i2kBefore - CREDIT_TABLE.medium * 2
+    );
+    assert.deepEqual(calls.at(-1)!.body.image_size, {
+      width: 2048,
+      height: 2048,
+    });
 
     const t2iBadSize = await post({
       requestId: 'request-t2i-bad-size-0001',

@@ -8,6 +8,7 @@ import { AspectRatioSelector } from '@/components/photo-editor/aspect-ratio-sele
 import { CreditGateDialog } from '@/components/photo-editor/credit-gate-dialog';
 import { ImageUploadField } from '@/components/photo-editor/image-upload-field';
 import { QualitySelector } from '@/components/photo-editor/quality-selector';
+import { ResolutionSelector } from '@/components/photo-editor/resolution-selector';
 import { usePhotoEditSession } from '@/components/photo-editor/use-photo-edit-session';
 import { Button } from '@/components/ui/button';
 
@@ -75,6 +76,12 @@ export function ImageToImageWorkspace() {
             value={edit.imageSize}
             disabled={edit.loading}
             onChange={edit.changeImageSize}
+          />
+          <ResolutionSelector
+            className="mt-3.5"
+            value={edit.resolution}
+            disabled={edit.loading}
+            onChange={edit.changeResolution}
           />
           <QualitySelector
             className="mt-3.5"

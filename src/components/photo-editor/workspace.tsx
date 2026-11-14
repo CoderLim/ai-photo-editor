@@ -20,6 +20,7 @@ import {
   type MaskBrushState,
 } from '@/components/photo-editor/mask-brush-canvas';
 import { QualitySelector } from '@/components/photo-editor/quality-selector';
+import { ResolutionSelector } from '@/components/photo-editor/resolution-selector';
 import { usePhotoEditSession } from '@/components/photo-editor/use-photo-edit-session';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -252,6 +253,12 @@ export function PhotoEditorWorkspace() {
             value={edit.imageSize}
             disabled={edit.loading}
             onChange={edit.changeImageSize}
+          />
+          <ResolutionSelector
+            className="mt-3.5"
+            value={edit.resolution}
+            disabled={edit.loading}
+            onChange={edit.changeResolution}
           />
           <QualitySelector
             className="mt-3.5"

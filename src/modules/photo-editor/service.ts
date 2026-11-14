@@ -8,8 +8,11 @@ import {
   FAL_EDIT_MODEL,
   FAL_TEXT_TO_IMAGE_MODEL,
   REPLICATE_EDIT_MODEL,
+  resolveFalImageSize,
+  type FalImageSizeValue,
   type PhotoEditQuality,
   type PhotoImageSize,
+  type PhotoResolution,
 } from './config';
 
 export type PhotoProviderTask = 'edit' | 'remove-background' | 'text-to-image';
@@ -62,12 +65,14 @@ export function photoModelInput(
   imageUrl: string,
   quality: PhotoEditQuality,
   maskUrl?: string,
-  imageSize: PhotoImageSize = 'auto'
+  imageSize: PhotoImageSize = 'auto',
+  resolution: PhotoResolution = '1k'
 ) {
+  const falSize: FalImageSizeValue = resolveFalImageSize(imageSize, resolution);
   if (provider === 'fal') {
     return {
       image_urls: [imageUrl],
-      image_size: imageSize,
+      image_size: falSize,
       quality,
       num_images: 1,
       output_format: 'png',
@@ -90,10 +95,11 @@ export function photoModelInput(
 /** Fal GPT Image 2.6 Flare text-to-image — no source image. */
 export function photoTextToImageInput(
   quality: PhotoEditQuality,
-  imageSize: PhotoImageSize = 'auto'
+  imageSize: PhotoImageSize = 'auto',
+  resolution: PhotoResolution = '1k'
 ) {
   return {
-    image_size: imageSize,
+    image_size: resolveFalImageSize(imageSize, resolution),
     quality,
     num_images: 1,
     output_format: 'png' as const,

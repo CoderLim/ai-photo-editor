@@ -20,9 +20,12 @@ import {
   PhotoEditQualityError,
   photoImageSize,
   PhotoImageSizeError,
+  photoResolution,
+  PhotoResolutionError,
   TEXT_EDIT_PROMPT_SUFFIX,
   TEXT_EDIT_USER_PROMPT_MAX,
   type PhotoImageSize,
+  type PhotoResolution,
 } from '@/modules/photo-editor/config';
 import {
   assertPromptAllowed,
@@ -151,33 +154,42 @@ export async function POST({ request }: { request: Request }) {
 
   // Credits, model, and provider are server-side. credits, costCredits, model,
   // provider, and price on the body are ignored so a client cannot undercharge.
+  // Aspect ratio + resolution for GPT Image 2.6. Background removal ignores
+  // both — that model has no size control.
+  let imageSize: PhotoImageSize | undefined;
+  let resolution: PhotoResolution | undefined;
+  if (!isBackgroundRemoval) {
+    try {
+      imageSize = photoImageSize(body.imageSize);
+      resolution = photoResolution(body.resolution);
+    } catch (error) {
+      if (
+        error instanceof PhotoImageSizeError ||
+        error instanceof PhotoResolutionError
+      ) {
+        return respErr(error.message, { status: 400 });
+      }
+      throw error;
+    }
+  }
+
   let charge: ReturnType<typeof photoEditCharge>;
   try {
     charge = isBackgroundRemoval
       ? {
           quality: DEFAULT_PHOTO_EDIT_QUALITY,
+          resolution: '1k',
           credits: BACKGROUND_REMOVAL_CREDITS,
         }
-      : photoEditCharge(body.quality);
+      : photoEditCharge(body.quality, resolution);
   } catch (error) {
-    if (error instanceof PhotoEditQualityError) {
+    if (
+      error instanceof PhotoEditQualityError ||
+      error instanceof PhotoResolutionError
+    ) {
       return respErr(error.message, { status: 400 });
     }
     throw error;
-  }
-
-  // Aspect ratio for GPT Image 2.6 (Fal `image_size`). Background removal
-  // ignores it — that model has no size control.
-  let imageSize: PhotoImageSize | undefined;
-  if (!isBackgroundRemoval) {
-    try {
-      imageSize = photoImageSize(body.imageSize);
-    } catch (error) {
-      if (error instanceof PhotoImageSizeError) {
-        return respErr(error.message, { status: 400 });
-      }
-      throw error;
-    }
   }
 
   if (!isTextToImage) {
@@ -224,7 +236,8 @@ export async function POST({ request }: { request: Request }) {
         requestId +
         ':' +
         charge.quality +
-        (imageSize ? ':' + imageSize : '')
+        (imageSize ? ':' + imageSize : '') +
+        (resolution ? ':' + resolution : '')
     );
   const previous = await findTask(stableId);
   if (previous) {
@@ -294,6 +307,7 @@ export async function POST({ request }: { request: Request }) {
         tool,
         quality: charge.quality,
         ...(imageSize ? { imageSize } : {}),
+        ...(resolution ? { resolution } : {}),
         ...(isTextToImage ? { mode: 'text-to-image' } : {}),
         ...(maskUrl ? { maskUrl } : {}),
       },
@@ -334,13 +348,14 @@ export async function POST({ request }: { request: Request }) {
         options: isBackgroundRemoval
           ? { image_url: imageUrl }
           : isTextToImage
-            ? photoTextToImageInput(charge.quality, imageSize!)
+            ? photoTextToImageInput(charge.quality, imageSize!, resolution!)
             : photoModelInput(
                 provider,
                 imageUrl,
                 charge.quality,
                 maskUrl || undefined,
-                imageSize
+                imageSize,
+                resolution
               ),
         async: true,
         callbackUrl,

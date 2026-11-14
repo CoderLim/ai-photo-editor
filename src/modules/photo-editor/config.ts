@@ -96,7 +96,73 @@ export function photoImageSize(value: unknown): PhotoImageSize {
   return value;
 }
 
-/** Medium / standard edit. Other qualities use `photoEditCharge`. */
+/**
+ * Output resolution tier. Fal has no `1k|2k|4k` enum — we map aspect + tier to
+ * `image_size` (named preset at 1K, or `{width,height}` at 2K/4K).
+ *
+ * Credit multipliers follow Fal token cost (~2× at 2K, ~3.3× at 4K square) with
+ * headroom for reference-image input on edits: 1 / 2 / 4.
+ */
+export const PHOTO_RESOLUTIONS = [
+  { id: '1k', label: '1K', creditMultiplier: 1 },
+  { id: '2k', label: '2K', creditMultiplier: 2 },
+  { id: '4k', label: '4K', creditMultiplier: 4 },
+] as const;
+
+export type PhotoResolution = (typeof PHOTO_RESOLUTIONS)[number]['id'];
+
+export const DEFAULT_PHOTO_RESOLUTION: PhotoResolution = '1k';
+
+/** Concrete pixels for 2K/4K. 1K keeps Fal named presets / `auto`. */
+const RESOLUTION_PIXELS: Record<
+  PhotoImageSize,
+  Record<'2k' | '4k', readonly [number, number]>
+> = {
+  // auto at higher tiers: square fallback (source aspect only via `auto` at 1K)
+  auto: { '2k': [2048, 2048], '4k': [2880, 2880] },
+  square: { '2k': [2048, 2048], '4k': [2880, 2880] },
+  landscape_4_3: { '2k': [2048, 1536], '4k': [3264, 2448] },
+  portrait_4_3: { '2k': [1536, 2048], '4k': [2448, 3264] },
+  landscape_16_9: { '2k': [2048, 1152], '4k': [3840, 2160] },
+  portrait_16_9: { '2k': [1152, 2048], '4k': [2160, 3840] },
+};
+
+export type FalImageSizeValue =
+  PhotoImageSize | { width: number; height: number };
+
+/** Map UI aspect + resolution to Fal `image_size`. */
+export function resolveFalImageSize(
+  aspect: PhotoImageSize,
+  resolution: PhotoResolution
+): FalImageSizeValue {
+  if (resolution === '1k') return aspect;
+  const [width, height] = RESOLUTION_PIXELS[aspect][resolution];
+  return { width, height };
+}
+
+export function isPhotoResolution(value: unknown): value is PhotoResolution {
+  return (
+    typeof value === 'string' &&
+    PHOTO_RESOLUTIONS.some((item) => item.id === value)
+  );
+}
+
+export class PhotoResolutionError extends Error {
+  constructor() {
+    super('Choose a valid resolution: 1K, 2K, or 4K');
+    this.name = 'PhotoResolutionError';
+  }
+}
+
+export function photoResolution(value: unknown): PhotoResolution {
+  if (value === undefined || value === null || value === '') {
+    return DEFAULT_PHOTO_RESOLUTION;
+  }
+  if (!isPhotoResolution(value)) throw new PhotoResolutionError();
+  return value;
+}
+
+/** Medium / standard edit at 1K. Other qualities use `photoEditCharge`. */
 export const EDIT_CREDITS = PHOTO_EDIT_QUALITIES.find(
   (item) => item.id === DEFAULT_PHOTO_EDIT_QUALITY
 )!.credits;
@@ -146,16 +212,28 @@ export class PhotoEditQualityError extends Error {
 }
 
 /**
- * Credits for a validated quality. The only argument is the quality; a
- * client credit amount, model, or provider cannot change the result.
+ * Credits for a validated quality × resolution. Client credit amounts are
+ * ignored — only these server tables decide the charge.
  */
-export function photoEditCharge(quality: unknown): {
+export function photoEditCharge(
+  quality: unknown,
+  resolution: unknown = DEFAULT_PHOTO_RESOLUTION
+): {
   quality: PhotoEditQuality;
+  resolution: PhotoResolution;
   credits: number;
 } {
   if (!isPhotoEditQuality(quality)) throw new PhotoEditQualityError();
+  const resolvedResolution = photoResolution(resolution);
   const option = PHOTO_EDIT_QUALITIES.find((item) => item.id === quality)!;
-  return { quality, credits: option.credits };
+  const multiplier = PHOTO_RESOLUTIONS.find(
+    (item) => item.id === resolvedResolution
+  )!.creditMultiplier;
+  return {
+    quality,
+    resolution: resolvedResolution,
+    credits: option.credits * multiplier,
+  };
 }
 
 export type ToolConfig = {

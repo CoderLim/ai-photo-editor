@@ -6,10 +6,13 @@ import { authClient, useSession } from '@/core/auth/client';
 import {
   DEFAULT_PHOTO_EDIT_QUALITY,
   DEFAULT_PHOTO_IMAGE_SIZE,
+  DEFAULT_PHOTO_RESOLUTION,
   isPhotoEditQuality,
   PHOTO_EDIT_QUALITIES,
+  photoEditCharge,
   type PhotoEditQuality,
   type PhotoImageSize,
+  type PhotoResolution,
 } from '@/modules/photo-editor/config';
 import { track } from '@/lib/track';
 import type { CreditGate } from '@/components/photo-editor/credit-gate-dialog';
@@ -118,6 +121,9 @@ export function usePhotoEditSession({
   );
   const [imageSize, setImageSize] = useState<PhotoImageSize>(
     DEFAULT_PHOTO_IMAGE_SIZE
+  );
+  const [resolution, setResolution] = useState<PhotoResolution>(
+    DEFAULT_PHOTO_RESOLUTION
   );
   const [upload, setUpload] = useState<{ url: string; token: string } | null>(
     null
@@ -306,6 +312,11 @@ export function usePhotoEditSession({
     requestId.current = null;
   };
 
+  const changeResolution = (next: PhotoResolution) => {
+    setResolution(next);
+    requestId.current = null;
+  };
+
   const changePrompt = (next: string) => {
     setPrompt(next);
     requestId.current = null;
@@ -359,9 +370,7 @@ export function usePhotoEditSession({
 
       step = 'credits';
       const credits = await dataOrThrow(await fetch('/api/credits'));
-      const cost =
-        creditCost ??
-        PHOTO_EDIT_QUALITIES.find((item) => item.id === quality)!.credits;
+      const cost = creditCost ?? photoEditCharge(quality, resolution).credits;
       refreshHeaderCredits(credits.balance);
       if (credits.balance < cost) {
         showCreditGate(guest ? 'signup' : 'purchase');
@@ -457,6 +466,7 @@ export function usePhotoEditSession({
             tool: toolSlug,
             quality,
             imageSize,
+            resolution,
             requestId: requestId.current,
           }),
         })
@@ -508,9 +518,10 @@ export function usePhotoEditSession({
     requestId.current = null;
   };
 
-  const selectedQuality = PHOTO_EDIT_QUALITIES.find(
-    (item) => item.id === quality
-  )!;
+  const selectedQuality = {
+    ...PHOTO_EDIT_QUALITIES.find((item) => item.id === quality)!,
+    credits: photoEditCharge(quality, resolution).credits,
+  };
   const loading = status === 'submitting' || status === 'pending';
 
   return {
@@ -523,6 +534,7 @@ export function usePhotoEditSession({
     prompt,
     quality,
     imageSize,
+    resolution,
     jobId,
     status,
     result,
@@ -536,6 +548,7 @@ export function usePhotoEditSession({
     clearResult,
     changeQuality,
     changeImageSize,
+    changeResolution,
     changePrompt,
     invalidateRequest,
     submit,
