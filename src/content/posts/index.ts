@@ -15,6 +15,7 @@ export const BLOG_POST_SLUGS = [
   'how-to-edit-photos-with-ai',
   'what-is-chatgpt-images-2-6',
   'how-to-edit-a-specific-area-of-a-photo-with-ai',
+  'best-ai-photo-editors-2026',
 ] as const;
 
 export type BlogPostMeta = {
