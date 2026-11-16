@@ -17,11 +17,17 @@ import { Pricing } from '@/blocks/pricing';
 import { CoreBenefits } from '@/components/photo-editor/core-benefits';
 import { PhotoEditorWorkspace } from '@/components/photo-editor/workspace';
 
-const AREA_EDIT_FAQ = 'How can I edit a specific area of a photo?';
 const AREA_EDIT_BLOG_LABEL =
   'How can I edit a specific area of a photo using AI?';
 const AREA_EDIT_BLOG_HREF =
   '/blog/how-to-edit-a-specific-area-of-a-photo-with-ai';
+
+/** Inline FAQ phrases that should render as internal links. Longer labels first. */
+const FAQ_INLINE_LINKS: ReadonlyArray<readonly [string, string]> = [
+  [AREA_EDIT_BLOG_LABEL, AREA_EDIT_BLOG_HREF],
+  ['Photo Background Changer', '/photo-background-changer'],
+  ['Photo Text Editor', '/photo-text-editor'],
+];
 
 const FAQS = [
   [
@@ -33,8 +39,30 @@ const FAQS = [
     'Yes. Edit a photo you upload, or switch to Text to Image and generate from a prompt — 10 guest credits, no account required. Sign in anytime for 10 more credits and to keep results in My Creations.',
   ],
   [
-    AREA_EDIT_FAQ,
-    `Name the area in your prompt and say what must stay unchanged — no brush mask needed. For a sweater-color walkthrough and prompt tips, see ${AREA_EDIT_BLOG_LABEL}`,
+    'Can I edit an existing photo using text prompts?',
+    "Yes. Upload a photo, describe what you'd like to change, and let AI handle the edit. You can remove objects, change outfits, adjust lighting, or try a different style without using Photoshop.",
+  ],
+  // Replaces the old “specific area” FAQ (same topic). Prompt localization only —
+  // precision brush/mask UI is off (PRECISION_EDIT_UI_ENABLED = false).
+  [
+    'Can I edit just one part of a photo without changing the rest?',
+    `You can describe the specific area you want to edit and ask AI to preserve everything else. The editor tries to keep unrelated details consistent, but generative edits may still affect nearby areas. For pixel-precise control, a dedicated masking tool may be a better choice. For a sweater-color walkthrough and prompt tips, see ${AREA_EDIT_BLOG_LABEL}`,
+  ],
+  [
+    "How can I change a photo's background without changing the person?",
+    'Use our Photo Background Changer. It separates the original subject from the background, then lets you add a new color or image without regenerating the person. Fine details like hair and shadows may still need checking.',
+  ],
+  [
+    "Can I edit text that's already part of an image?",
+    "Yes. With our Photo Text Editor, you can change words on signs, posters, menus, and product labels using simple instructions. AI attempts to match the original lettering and layout, though exact font matching isn't guaranteed.",
+  ],
+  [
+    'Do I need Photoshop or editing skills to use this AI photo editor?',
+    "No. Everything works in your browser. Upload a photo, describe the change in everyday language, and review the result. You don't need to work with layers or learn complicated editing tools.",
+  ],
+  [
+    "What's the difference between AI photo editing and AI image generation?",
+    'AI photo editing starts with an existing image and changes it based on your instructions. AI image generation creates a new image from a text description. GetAIPhotoEditor supports both, so you can edit your own photos or create something new.',
   ],
   [
     'Does it work on iPhone or Android without an app?',
@@ -66,20 +94,49 @@ const FAQS = [
   ],
 ] as const;
 
-function FaqAnswer({ question, answer }: { question: string; answer: string }) {
-  if (question !== AREA_EDIT_FAQ) return answer;
-  const index = answer.lastIndexOf(AREA_EDIT_BLOG_LABEL);
-  if (index < 0) return answer;
+function FaqAnswer({ answer }: { answer: string }) {
+  const parts: Array<string | { href: string; label: string }> = [];
+  let remaining = answer;
+
+  while (remaining.length > 0) {
+    let nextIndex = -1;
+    let nextLabel = '';
+    let nextHref = '';
+    for (const [label, href] of FAQ_INLINE_LINKS) {
+      const index = remaining.indexOf(label);
+      if (index < 0) continue;
+      if (nextIndex < 0 || index < nextIndex) {
+        nextIndex = index;
+        nextLabel = label;
+        nextHref = href;
+      }
+    }
+    if (nextIndex < 0) {
+      parts.push(remaining);
+      break;
+    }
+    if (nextIndex > 0) parts.push(remaining.slice(0, nextIndex));
+    parts.push({ href: nextHref, label: nextLabel });
+    remaining = remaining.slice(nextIndex + nextLabel.length);
+  }
+
+  if (parts.length === 1 && typeof parts[0] === 'string') return parts[0];
+
   return (
     <>
-      {answer.slice(0, index)}
-      <Link
-        href={AREA_EDIT_BLOG_HREF}
-        className="font-semibold text-blue-600 hover:underline"
-      >
-        {AREA_EDIT_BLOG_LABEL}
-      </Link>
-      {answer.slice(index + AREA_EDIT_BLOG_LABEL.length)}
+      {parts.map((part, index) =>
+        typeof part === 'string' ? (
+          part
+        ) : (
+          <Link
+            key={`${part.href}-${index}`}
+            href={part.href}
+            className="font-semibold text-blue-600 hover:underline"
+          >
+            {part.label}
+          </Link>
+        )
+      )}
     </>
   );
 }
@@ -390,7 +447,7 @@ function HomePage() {
                   {question}
                 </h3>
                 <p className="mt-3 text-sm leading-7 text-slate-600">
-                  <FaqAnswer question={question} answer={answer} />
+                  <FaqAnswer answer={answer} />
                 </p>
               </div>
             ))}
