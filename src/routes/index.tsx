@@ -31,19 +31,11 @@ const FAQ_INLINE_LINKS: ReadonlyArray<readonly [string, string]> = [
 
 const FAQS = [
   [
-    'Is this AI photo editor really free?',
-    `Yes to start. You get 10 free credits without signing in (enough for one medium-quality edit). Sign in and you get 10 more. A medium-quality edit uses ${EDIT_CREDITS} credits; other qualities use more or fewer. One-time credit packs are available when you need more.`,
-  ],
-  [
-    'Can I use it without signing up?',
-    'Yes. Edit a photo you upload, or switch to Text to Image and generate from a prompt — 10 guest credits, no account required. Sign in anytime for 10 more credits and to keep results in My Creations.',
-  ],
-  [
     'Can I edit an existing photo using text prompts?',
     "Yes. Upload a photo, describe what you'd like to change, and let AI handle the edit. You can remove objects, change outfits, adjust lighting, or try a different style without using Photoshop.",
   ],
-  // Replaces the old “specific area” FAQ (same topic). Prompt localization only —
-  // precision brush/mask UI is off (PRECISION_EDIT_UI_ENABLED = false).
+  // Prompt localization only — precision brush/mask UI is off
+  // (PRECISION_EDIT_UI_ENABLED = false).
   [
     'Can I edit just one part of a photo without changing the rest?',
     `You can describe the specific area you want to edit and ask AI to preserve everything else. The editor tries to keep unrelated details consistent, but generative edits may still affect nearby areas. For pixel-precise control, a dedicated masking tool may be a better choice. For a sweater-color walkthrough and prompt tips, see ${AREA_EDIT_BLOG_LABEL}`,
@@ -65,28 +57,16 @@ const FAQS = [
     'AI photo editing starts with an existing image and changes it based on your instructions. AI image generation creates a new image from a text description. GetAIPhotoEditor supports both, so you can edit your own photos or create something new.',
   ],
   [
-    'Does it work on iPhone or Android without an app?',
-    'Yes. Use a modern browser on iPhone, Android, Mac, or Windows. No additional app installation is needed.',
+    'Is this AI photo editor really free?',
+    `Yes to start. You get 10 free credits without signing in (enough for one medium-quality edit). Sign in and you get 10 more. A medium-quality edit uses ${EDIT_CREDITS} credits; other qualities use more or fewer. One-time credit packs are available when you need more.`,
   ],
   [
-    'What happens to my photos after editing?',
-    'Before generation, your selected photo stays in your browser. When you generate, it is uploaded for processing and the result is stored so you can access My Creations after signing in. We do not promise automatic deletion; see the Privacy Policy for data-handling information.',
+    'Can I use it without signing up?',
+    'Yes. Edit a photo you upload, or switch to Text to Image and generate from a prompt — 10 guest credits, no account required. Sign in anytime for 10 more credits and to keep results in My Creations.',
   ],
   [
-    'Are my uploaded photos private and secure?',
-    'Before you generate, your selected photo stays in your browser. When you generate, it is sent securely for processing so we can return your edit. We use encryption in transit and access controls; see the Privacy Policy for details.',
-  ],
-  [
-    'How long do you store my photos?',
-    'After generation, uploads and results are stored so signed-in users can reopen them in My Creations. We do not promise automatic deletion after a fixed period. Contact us if you want data removed sooner.',
-  ],
-  [
-    'Are my photos used to train AI models?',
-    'No. We use your photos only to generate the edits you request. We do not use your uploads or results to train AI models.',
-  ],
-  [
-    'Can I delete my uploaded and generated photos?',
-    'Yes. You can request deletion of your personal data, including uploaded and generated photos, through your account settings or by emailing support@getaiphotoeditor.com.',
+    'What happens to my uploaded and generated photos?',
+    'Before you generate, your selected photo stays in your browser. When you generate, it is uploaded securely for processing and the result is stored so signed-in users can reopen it in My Creations. We do not use your photos to train AI models, and we do not promise automatic deletion after a fixed period. You can request deletion through account settings or by emailing support@getaiphotoeditor.com. See the Privacy Policy for details.',
   ],
   [
     'Will my credits be refunded if generation fails?',
