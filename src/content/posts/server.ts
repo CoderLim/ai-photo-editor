@@ -63,6 +63,9 @@ export const getBlogPostFn = createServerFn()
           description: row.description || '',
           image: row.image || undefined,
           createdAt: new Date(row.createdAt).toISOString(),
+          updatedAt: row.updatedAt
+            ? new Date(row.updatedAt).toISOString()
+            : undefined,
           authorName: row.authorName || undefined,
           authorImage: row.authorImage || undefined,
           source: 'db',
@@ -83,6 +86,10 @@ export const getBlogPostFn = createServerFn()
       description: meta.description,
       image: meta.image,
       createdAt: new Date(meta.created_at).toISOString(),
+      updatedAt: meta.updated_at
+        ? new Date(meta.updated_at).toISOString()
+        : undefined,
+      authorType: meta.author_type,
       authorName: meta.author_name,
       authorImage: meta.author_image,
       source: 'local',
@@ -138,6 +145,9 @@ export const getBlogPreviewFn = createServerFn()
         description: p.description || '',
         image: p.image || undefined,
         createdAt: new Date(p.createdAt).toISOString(),
+        updatedAt: p.updatedAt
+          ? new Date(p.updatedAt).toISOString()
+          : undefined,
         authorName: p.authorName || undefined,
         authorImage: p.authorImage || undefined,
         source: 'db',

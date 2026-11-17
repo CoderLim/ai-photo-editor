@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Link, useRouter } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
 import { absoluteUrl, pageHead } from '@/lib/seo';
+import { sitePublisher } from '@/lib/site-identity';
 import { cn } from '@/lib/utils';
 import { m } from '@/paraglide/messages.js';
 import { getLocale } from '@/paraglide/runtime.js';
@@ -201,6 +202,14 @@ function BlogPostPage() {
   const LocalContent =
     post.source === 'local' ? loadLocalPost(post.slug, locale)?.default : null;
 
+  const isSiteAuthor =
+    !post.authorName || post.authorName === sitePublisher.name;
+  const author = isSiteAuthor
+    ? sitePublisher
+    : { '@type': post.authorType ?? 'Person', name: post.authorName };
+  const hasUpdate =
+    post.updatedAt && post.updatedAt.slice(0, 10) > post.createdAt.slice(0, 10);
+
   const articleJsonLd = !post.preview
     ? JSON.stringify({
         '@context': 'https://schema.org',
@@ -208,9 +217,9 @@ function BlogPostPage() {
         headline: post.title,
         description: post.description,
         datePublished: post.createdAt,
-        author: post.authorName
-          ? { '@type': 'Person', name: post.authorName }
-          : { '@type': 'Organization', name: envConfigs.app_name },
+        dateModified: hasUpdate ? post.updatedAt : undefined,
+        author,
+        publisher: sitePublisher,
         image: post.image || undefined,
         mainEntityOfPage: `${envConfigs.app_url}/blog/${post.slug}`,
       })
@@ -293,9 +302,19 @@ function BlogPostPage() {
             <div className="mt-4 flex items-center gap-4 text-sm text-slate-500">
               <span className="inline-flex items-center gap-1.5">
                 <Calendar className="size-4" />
-                {formatPostDate(post.createdAt, locale)}
+                <time dateTime={post.createdAt}>
+                  {formatPostDate(post.createdAt, locale)}
+                </time>
               </span>
-              {(post.authorName || post.authorImage) && (
+              {hasUpdate && (
+                <span>
+                  {m['common.pages.last_updated']()}:{' '}
+                  <time dateTime={post.updatedAt}>
+                    {formatPostDate(post.updatedAt!, locale)}
+                  </time>
+                </span>
+              )}
+              {(isSiteAuthor || post.authorName || post.authorImage) && (
                 <span className="inline-flex items-center gap-2">
                   {post.authorImage && (
                     <img
@@ -306,7 +325,13 @@ function BlogPostPage() {
                       className="size-5 rounded-full object-cover"
                     />
                   )}
-                  {post.authorName}
+                  {isSiteAuthor ? (
+                    <Link href="/about" className="hover:underline">
+                      {sitePublisher.name}
+                    </Link>
+                  ) : (
+                    post.authorName
+                  )}
                 </span>
               )}
             </div>

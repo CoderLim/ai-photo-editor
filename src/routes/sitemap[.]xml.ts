@@ -17,6 +17,7 @@ const STATIC_PATHS = [
   '/image-to-image/',
   '/examples',
   '/guest-post',
+  '/about',
   '/privacy-policy',
   '/terms-of-service',
   '/acceptable-use-policy',

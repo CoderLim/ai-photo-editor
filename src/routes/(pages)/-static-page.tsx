@@ -3,6 +3,7 @@ import { notFound, useLoaderData } from '@tanstack/react-router';
 
 import { envConfigs } from '@/config';
 import { pageHead } from '@/lib/seo';
+import { sitePublisher } from '@/lib/site-identity';
 import { m } from '@/paraglide/messages.js';
 import { baseLocale, getLocale } from '@/paraglide/runtime.js';
 
@@ -70,13 +71,28 @@ function StaticPage() {
 
   return (
     <article>
+      {slug === 'about' && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'AboutPage',
+              url: `${envConfigs.app_url}/about`,
+              name: meta.title,
+              mainEntity: sitePublisher,
+            }).replace(/</g, '\\u003c'),
+          }}
+        />
+      )}
       <header className="border-border mb-6 border-b pb-5">
         <h1 className="text-foreground text-3xl font-semibold tracking-tight md:text-4xl">
           {meta.title}
         </h1>
         <p className="text-muted-foreground mt-2 text-sm">{meta.description}</p>
         <p className="text-muted-foreground mt-2 text-xs">
-          {m['common.pages.last_updated']()}: {meta.updated_at}
+          {m['common.pages.last_updated']()}:{' '}
+          <time dateTime={meta.updated_at}>{meta.updated_at}</time>
         </p>
       </header>
       <div className="text-foreground/90 min-w-0 text-[15px] leading-7">

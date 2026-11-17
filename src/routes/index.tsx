@@ -11,6 +11,7 @@ import { Link } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
 import { EDIT_CREDITS, PHOTO_TOOLS } from '@/modules/photo-editor/config';
 import { pageHead } from '@/lib/seo';
+import { sitePublisher } from '@/lib/site-identity';
 import { Footer } from '@/blocks/footer';
 import { Header } from '@/blocks/header';
 import { Pricing } from '@/blocks/pricing';
@@ -128,14 +129,17 @@ const HOME_DESCRIPTION =
 const structuredDataJsonLd = JSON.stringify({
   '@context': 'https://schema.org',
   '@graph': [
+    sitePublisher,
     {
       '@type': 'WebSite',
+      publisher: { '@id': sitePublisher['@id'] },
       name: envConfigs.app_name,
       url: envConfigs.app_url,
       description: HOME_DESCRIPTION,
     },
     {
       '@type': 'SoftwareApplication',
+      publisher: { '@id': sitePublisher['@id'] },
       name: envConfigs.app_name,
       applicationCategory: 'MultimediaApplication',
       operatingSystem: 'Web',
@@ -350,7 +354,7 @@ function HomePage() {
             <p className="mt-3 text-center text-slate-500">
               Three steps to your edited image.
             </p>
-            <div className="mt-10 grid gap-5 md:grid-cols-3">
+            <ol className="mt-10 grid list-none gap-5 md:grid-cols-3">
               {[
                 [
                   '01',
@@ -368,7 +372,7 @@ function HomePage() {
                   `Generate an edit with your free credits, inspect the result, then download or refine it. A medium-quality edit uses ${EDIT_CREDITS} credits. Sign in for 10 more credits and My Creations.`,
                 ],
               ].map(([number, title, description]) => (
-                <div
+                <li
                   key={number}
                   className="rounded-2xl border border-slate-100 bg-slate-50 p-7"
                 >
@@ -379,9 +383,9 @@ function HomePage() {
                   <p className="mt-2 text-sm leading-7 text-slate-600">
                     {description}
                   </p>
-                </div>
+                </li>
               ))}
-            </div>
+            </ol>
           </div>
         </section>
         <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6">

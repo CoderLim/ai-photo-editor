@@ -80,8 +80,11 @@ export function Footer() {
           </div>
         </div>
         <div>
-          <p className="mb-4 text-sm font-semibold text-slate-900">Legal</p>
+          <p className="mb-4 text-sm font-semibold text-slate-900">Company</p>
           <div className="flex flex-col gap-3 text-sm">
+            <Link href="/about" className="hover:text-blue-600">
+              About
+            </Link>
             <Link href="/privacy-policy" className="hover:text-blue-600">
               Privacy Policy
             </Link>
