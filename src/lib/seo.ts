@@ -87,13 +87,15 @@ export function pageHead(input: PageSeoInput): {
   const localized = !!input.localized;
   const canonicalLocale = localized ? locale : baseLocale;
   const canonical = absoluteUrl(input.path, canonicalLocale);
-  // A dedicated, versioned social asset uses the latest brand logo and avoids
-  // crawlers continuing to display a stale share image after a logo refresh.
-  const brandShareImage = '/og-brand-20261108.png';
+  // Versioned share card: before/after + prompt so crawlers and messengers
+  // show product capability, not just the abstract logo mark.
+  const brandShareImage = '/og-share-20261117.png';
   const isBrandImage = !input.image;
   const image = absoluteAsset(input.image ?? brandShareImage);
   const socialTitle = input.socialTitle ?? input.title;
   const socialDescription = input.socialDescription ?? input.description;
+  const brandImageAlt =
+    'GetAIPhotoEditor — before/after photo edit with a text prompt';
 
   const meta: MetaEntry[] = [
     { title: input.title },
@@ -114,9 +116,9 @@ export function pageHead(input: PageSeoInput): {
       ...(isBrandImage
         ? ([
             { property: 'og:image:type', content: 'image/png' },
-            { property: 'og:image:width', content: '1024' },
-            { property: 'og:image:height', content: '1024' },
-            { property: 'og:image:alt', content: 'GetAIPhotoEditor logo' },
+            { property: 'og:image:width', content: '1200' },
+            { property: 'og:image:height', content: '630' },
+            { property: 'og:image:alt', content: brandImageAlt },
           ] as MetaEntry[])
         : []),
       { property: 'og:locale', content: 'en_US' },
@@ -125,7 +127,7 @@ export function pageHead(input: PageSeoInput): {
       { name: 'twitter:description', content: socialDescription },
       { name: 'twitter:image', content: image },
       ...(isBrandImage
-        ? [{ name: 'twitter:image:alt', content: 'GetAIPhotoEditor logo' }]
+        ? [{ name: 'twitter:image:alt', content: brandImageAlt }]
         : [])
     );
   }
