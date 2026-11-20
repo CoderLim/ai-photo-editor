@@ -1,7 +1,9 @@
-import { useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import { Trash2, UploadCloud } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+
+const ACCEPTED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 type ImageUploadFieldProps = {
   preview?: string;
@@ -12,6 +14,29 @@ type ImageUploadFieldProps = {
   onClear?: () => void;
   className?: string;
 };
+
+function fileFromClipboard(data: DataTransfer | null): File | undefined {
+  if (!data) return undefined;
+
+  for (const item of data.items) {
+    if (item.kind !== 'file' || !ACCEPTED_TYPES.has(item.type)) continue;
+    const file = item.getAsFile();
+    if (file) return file;
+  }
+
+  for (const file of data.files) {
+    if (ACCEPTED_TYPES.has(file.type)) return file;
+  }
+
+  return undefined;
+}
+
+function isEditableTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return false;
+  return Boolean(
+    target.closest('input, textarea, select, [contenteditable="true"]')
+  );
+}
 
 /** Shared image dropzone used by homepage and tool workspaces. */
 export function ImageUploadField({
@@ -25,9 +50,27 @@ export function ImageUploadField({
 }: ImageUploadFieldProps) {
   const localRef = useRef<HTMLInputElement | null>(null);
   const inputRef = externalRef ?? localRef;
+  const onFileRef = useRef(onFile);
   const [dragging, setDragging] = useState(false);
   const openPicker = () => inputRef.current?.click();
   const hasPreview = Boolean(showPreviewThumb && preview);
+
+  useEffect(() => {
+    onFileRef.current = onFile;
+  }, [onFile]);
+
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      if (isEditableTarget(e.target)) return;
+      const file = fileFromClipboard(e.clipboardData);
+      if (!file) return;
+      e.preventDefault();
+      onFileRef.current(file);
+    };
+
+    window.addEventListener('paste', onPaste);
+    return () => window.removeEventListener('paste', onPaste);
+  }, []);
 
   return (
     <div className={className}>
@@ -55,6 +98,13 @@ export function ImageUploadField({
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') openPicker();
         }}
+        onPaste={(e) => {
+          const file = fileFromClipboard(e.clipboardData);
+          if (!file) return;
+          e.preventDefault();
+          e.stopPropagation();
+          onFile(file);
+        }}
         onDragOver={(e) => {
           e.preventDefault();
           setDragging(true);
@@ -63,7 +113,9 @@ export function ImageUploadField({
         onDrop={(e) => {
           e.preventDefault();
           setDragging(false);
-          onFile(e.dataTransfer.files?.[0]);
+          const file = e.dataTransfer.files?.[0];
+          if (file && !ACCEPTED_TYPES.has(file.type)) return;
+          onFile(file);
         }}
         className={cn(
           'relative flex min-h-[10.5rem] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed px-4 py-6 text-center transition-colors',
@@ -84,7 +136,7 @@ export function ImageUploadField({
                 {fileName || 'Edited photo'}
               </p>
               <p className="mt-1 text-xs text-slate-500">
-                Click to replace photo
+                Click or paste to replace
               </p>
             </div>
             {onClear ? (
@@ -108,7 +160,7 @@ export function ImageUploadField({
               Upload Image
             </span>
             <p className="mt-2.5 text-xs text-slate-500">
-              Support JPEG, JPG, PNG or WEBP formats up to 10 MB
+              Click, paste, or drag · JPEG, PNG, WEBP up to 10 MB
             </p>
           </>
         )}
