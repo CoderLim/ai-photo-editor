@@ -28,10 +28,11 @@ const BEFORE_AFTER = [
     title: 'Remove a held object',
     description:
       'Ask to remove the flower from the hand and keep the person, pose, and lighting the same.',
-    beforeSrc: '/images/examples/gpt-image-2.6/remove-object/before.png',
-    afterSrc: '/images/examples/gpt-image-2.6/remove-object/after.png',
-    beforeAlt: 'Man holding a flower before AI object removal',
-    afterAlt: 'Same photo after the flower was removed with AI',
+    beforeSrc: '/images/ai-photo-editor/object-remover/before-flower.webp',
+    afterSrc: '/images/ai-photo-editor/object-remover/after-flower.webp',
+    beforeAlt:
+      'Man in a red hat holding a white daisy before AI object removal',
+    afterAlt: 'Same man after the daisy was removed from his hand with AI',
   },
 ] as const;
 
@@ -67,29 +68,29 @@ const USE_CASES = [
     title: 'Product and e-commerce photos',
     description:
       'Take the spare cable, the dust, or the second sample out of the frame without re-shooting. Common for marketplace listings and ad creative where the product has to sit alone.',
-    image: '/images/ai-photo-editor/remove-object.jpg',
-    alt: 'Product photo cleaned up by removing a distracting object with AI',
+    image: '/images/ai-photo-editor/object-remover/use-product.webp',
+    alt: 'Before and after: product bottle cleaned by removing cable, dust and background clutter with AI',
   },
   {
     title: 'Travel and street photos',
     description:
       'Remove tourists, bins, and parked scooters from a landmark shot so the composition reads the way you saw it.',
-    image: '/images/examples/gpt-image-2.6/remove-object/after.png',
-    alt: 'Travel photo after removing an unwanted object with AI',
+    image: '/images/ai-photo-editor/object-remover/use-travel.webp',
+    alt: 'Before and after: tourists, trash bin and scooter removed from a landmark square with AI',
   },
   {
     title: 'Real estate and interiors',
     description:
       'Erase a stray bin, a personal photo frame, or clutter from a room photo before a listing goes live. Keep it honest: remove distractions, not the features of the property.',
-    image: '/images/examples/gpt-image-2.6/remove-object/before.png',
-    alt: 'Interior photo prepared for object removal with AI',
+    image: '/images/ai-photo-editor/object-remover/use-interior.webp',
+    alt: 'Before and after: living room decluttered by removing bin, clothes and table clutter with AI',
   },
   {
     title: 'Social posts and thumbnails',
     description:
       'Clean the frame before it becomes a cover image. Small removals at thumbnail size are usually invisible even when they are obvious at 100%.',
-    image: '/images/ai-photo-editor/remove-object.jpg',
-    alt: 'Social thumbnail cleaned by removing clutter with an AI object remover',
+    image: '/images/ai-photo-editor/object-remover/use-social.webp',
+    alt: 'Before and after: crumbs, cable and scrap paper removed from a flat-lay photo with AI',
   },
 ] as const;
 
@@ -393,10 +394,10 @@ function AiObjectRemoverPage() {
                       src={item.beforeSrc}
                       alt={item.beforeAlt}
                       width={1024}
-                      height={1024}
+                      height={1536}
                       loading="lazy"
                       decoding="async"
-                      className="aspect-square w-full rounded-xl bg-slate-100 object-cover"
+                      className="aspect-[2/3] w-full rounded-xl bg-slate-100 object-cover"
                     />
                     <figcaption className="mt-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
                       Before
@@ -407,10 +408,10 @@ function AiObjectRemoverPage() {
                       src={item.afterSrc}
                       alt={item.afterAlt}
                       width={1024}
-                      height={1024}
+                      height={1536}
                       loading="lazy"
                       decoding="async"
-                      className="aspect-square w-full rounded-xl bg-slate-100 object-cover"
+                      className="aspect-[2/3] w-full rounded-xl bg-slate-100 object-cover"
                     />
                     <figcaption className="mt-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
                       After
@@ -442,11 +443,11 @@ function AiObjectRemoverPage() {
                 <img
                   src={item.image}
                   alt={item.alt}
-                  width={1106}
-                  height={812}
+                  width={1448}
+                  height={1086}
                   loading="lazy"
                   decoding="async"
-                  className="mb-5 aspect-[1106/812] w-full rounded-xl bg-slate-100 object-cover"
+                  className="mb-5 aspect-[1448/1086] w-full rounded-xl bg-slate-100 object-cover"
                 />
                 <h3 className="text-lg font-semibold">{item.title}</h3>
                 <p className="mt-3 text-sm leading-7 text-slate-600">
