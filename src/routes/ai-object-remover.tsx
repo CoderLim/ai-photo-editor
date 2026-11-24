@@ -272,11 +272,11 @@ function AiObjectRemoverPage() {
     <div className="min-h-screen bg-[#f7f9fc] text-slate-900">
       <Header />
       <main>
-        <section className="border-b border-slate-200 bg-gradient-to-b from-[#edf4ff] via-[#f8fbff] to-[#f7f9fc] px-4 pt-9 pb-12 sm:px-6 sm:pt-12">
+        <section className="border-b border-slate-200 bg-gradient-to-b from-[#edf4ff] via-[#f8fbff] to-[#f7f9fc] px-4 pt-4 pb-10 sm:px-6 sm:pt-5 sm:pb-12">
           <div className="mx-auto max-w-[1320px]">
             <nav
               aria-label="Breadcrumb"
-              className="mb-6 text-sm text-slate-500"
+              className="mb-3 text-sm text-slate-500"
             >
               <ol className="flex flex-wrap items-center gap-1.5">
                 <li>
@@ -296,11 +296,11 @@ function AiObjectRemoverPage() {
                 </li>
               </ol>
             </nav>
-            <div className="mx-auto mb-7 max-w-3xl text-center">
+            <div className="mx-auto mb-5 max-w-3xl text-center">
               <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl lg:text-[2.75rem]">
                 AI Object Remover Online
               </h1>
-              <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
+              <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
                 Remove unwanted objects from any photo with a short prompt — the
                 AI fills in the background behind them. No sign-up to try.
               </p>
