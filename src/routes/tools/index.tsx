@@ -42,15 +42,17 @@ function ToolsPage() {
               href={
                 tool.slug === 'remove-background'
                   ? '/ai-background-remover'
-                  : tool.slug === 'enhance-photo'
-                    ? '/ai-photo-enhancer'
-                    : tool.slug === 'change-background'
-                      ? '/photo-background-changer'
-                      : tool.slug === 'edit-text'
-                        ? '/photo-text-editor'
-                        : tool.slug === 'image-to-image'
-                          ? '/image-to-image/'
-                          : '/#editor'
+                  : tool.slug === 'remove-object'
+                    ? '/ai-object-remover'
+                    : tool.slug === 'enhance-photo'
+                      ? '/ai-photo-enhancer'
+                      : tool.slug === 'change-background'
+                        ? '/photo-background-changer'
+                        : tool.slug === 'edit-text'
+                          ? '/photo-text-editor'
+                          : tool.slug === 'image-to-image'
+                            ? '/image-to-image/'
+                            : '/#editor'
               }
               className="group rounded-2xl border border-slate-200 bg-white p-7 hover:border-blue-300 hover:shadow-lg"
             >

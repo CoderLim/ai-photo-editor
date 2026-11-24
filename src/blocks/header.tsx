@@ -10,6 +10,7 @@ export function Header() {
       children: [
         { href: '/ai-photo-enhancer', label: 'AI Photo Enhancer' },
         { href: '/ai-background-remover', label: 'AI Background Remover' },
+        { href: '/ai-object-remover', label: 'AI Object Remover' },
         {
           href: '/photo-background-changer',
           label: 'Photo Background Changer',

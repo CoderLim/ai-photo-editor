@@ -21,6 +21,9 @@ export const Route = createFileRoute('/tools/$slug')({
       // Typed route path omits the trailing slash; canonical/fullPath keep it.
       throw redirect({ to: '/image-to-image' });
     }
+    if (params.slug === 'remove-object') {
+      throw redirect({ to: '/ai-object-remover' });
+    }
     if (!getPhotoTool(params.slug)) {
       throw redirect({ to: '/' });
     }

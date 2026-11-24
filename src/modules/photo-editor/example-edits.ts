@@ -79,7 +79,7 @@ export const EXAMPLE_EDITS: ExampleEdit[] = [
     sourceLabel: 'OpenAI Cookbook image edit example',
     sourceUrl:
       'https://github.com/openai/openai-cookbook/tree/main/images/output_images',
-    toolHref: '/#editor',
+    toolHref: '/ai-object-remover',
   },
   {
     id: 'change-furniture',

@@ -28,6 +28,12 @@ const STATIC_PAGES: { path: string; title: string; description: string }[] = [
       'Remove photo backgrounds and download transparent PNG cutouts',
   },
   {
+    path: '/ai-object-remover',
+    title: 'AI Object Remover',
+    description:
+      'Remove unwanted objects, people, or clutter from photos with a short prompt',
+  },
+  {
     path: '/photo-background-changer',
     title: 'Photo Background Changer',
     description: 'Change photo backgrounds to a color, preset, or custom image',

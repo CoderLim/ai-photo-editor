@@ -255,7 +255,7 @@ function CompareTool({
     return (
       <>
         <Link
-          href="/#editor"
+          href="/ai-object-remover"
           className="font-semibold text-blue-600 hover:underline"
         >
           Object remover

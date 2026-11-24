@@ -59,7 +59,7 @@ export function Footer() {
             <Link href="/ai-background-remover" className="hover:text-blue-600">
               AI Background Remover
             </Link>
-            <Link href="/#editor" className="hover:text-blue-600">
+            <Link href="/ai-object-remover" className="hover:text-blue-600">
               Object Remover
             </Link>
             <Link

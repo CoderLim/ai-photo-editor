@@ -12,6 +12,7 @@ const STATIC_PATHS = [
   '/tools',
   '/ai-photo-enhancer',
   '/ai-background-remover',
+  '/ai-object-remover',
   '/photo-background-changer',
   '/photo-text-editor',
   '/image-to-image/',

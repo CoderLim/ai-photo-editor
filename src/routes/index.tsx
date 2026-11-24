@@ -480,15 +480,17 @@ function HomePage() {
                   href={
                     tool.slug === 'remove-background'
                       ? '/ai-background-remover'
-                      : tool.slug === 'enhance-photo'
-                        ? '/ai-photo-enhancer'
-                        : tool.slug === 'change-background'
-                          ? '/photo-background-changer'
-                          : tool.slug === 'edit-text'
-                            ? '/photo-text-editor'
-                            : tool.slug === 'image-to-image'
-                              ? '/image-to-image/'
-                              : '#editor'
+                      : tool.slug === 'remove-object'
+                        ? '/ai-object-remover'
+                        : tool.slug === 'enhance-photo'
+                          ? '/ai-photo-enhancer'
+                          : tool.slug === 'change-background'
+                            ? '/photo-background-changer'
+                            : tool.slug === 'edit-text'
+                              ? '/photo-text-editor'
+                              : tool.slug === 'image-to-image'
+                                ? '/image-to-image/'
+                                : '#editor'
                   }
                   className="group overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg"
                 >
