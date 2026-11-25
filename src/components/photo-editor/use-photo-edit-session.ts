@@ -8,6 +8,7 @@ import {
   DEFAULT_PHOTO_IMAGE_SIZE,
   DEFAULT_PHOTO_RESOLUTION,
   isPhotoEditQuality,
+  MAX_PHOTO_INPUT_IMAGES,
   PHOTO_EDIT_QUALITIES,
   photoEditCharge,
   type PhotoEditQuality,
@@ -17,7 +18,24 @@ import {
 import { track } from '@/lib/track';
 import type { CreditGate } from '@/components/photo-editor/credit-gate-dialog';
 
-type Draft = { file: File; prompt: string; quality?: PhotoEditQuality };
+export type SessionImage = {
+  id: string;
+  preview: string;
+  fileName?: string;
+  file?: File;
+  upload?: { url: string; token: string };
+};
+
+type Draft = {
+  files: File[];
+  /** Legacy single-file drafts from older clients. */
+  file?: File;
+  prompt: string;
+  quality?: PhotoEditQuality;
+};
+
+const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_BYTES = 10 * 1024 * 1024;
 
 /** Decode the result URL before we flip the UI off "loading" / onto Edited. */
 function preloadImage(url: string, timeoutMs = 20_000): Promise<void> {
@@ -37,6 +55,14 @@ function preloadImage(url: string, timeoutMs = 20_000): Promise<void> {
   });
 }
 
+function newImageId() {
+  return crypto.randomUUID().replaceAll('-', '');
+}
+
+function revokeBlob(url: string) {
+  if (url.startsWith('blob:')) URL.revokeObjectURL(url);
+}
+
 type UsePhotoEditSessionOptions = {
   /** Built-in prompt when the surface does not expose a textarea. */
   fixedPrompt?: string;
@@ -51,6 +77,8 @@ type UsePhotoEditSessionOptions = {
    * sets this false and POSTs without imageUrl.
    */
   requireImage?: boolean;
+  /** Cap on source photos (default 1 for dedicated tools). */
+  maxImages?: number;
   /**
    * Optional precision-edit mask (PNG). Return null when empty.
    * Uploaded with the source in one FormData when both are new.
@@ -58,8 +86,8 @@ type UsePhotoEditSessionOptions = {
   getMaskFile?: () => Promise<Blob | null>;
 };
 
-function saveDraft(file: File, prompt: string, quality: PhotoEditQuality) {
-  if (typeof indexedDB === 'undefined') return;
+function saveDraft(files: File[], prompt: string, quality: PhotoEditQuality) {
+  if (typeof indexedDB === 'undefined' || !files.length) return;
   const req = indexedDB.open('getaiphotoeditor-draft', 1);
   req.onupgradeneeded = () => {
     if (!req.result.objectStoreNames.contains('files'))
@@ -68,7 +96,7 @@ function saveDraft(file: File, prompt: string, quality: PhotoEditQuality) {
   req.onsuccess = () => {
     const tx = req.result.transaction('files', 'readwrite');
     tx.objectStore('files').put(
-      { file, prompt, quality } satisfies Draft,
+      { files, prompt, quality } satisfies Draft,
       'current'
     );
     tx.oncomplete = () => req.result.close();
@@ -84,6 +112,14 @@ function clearDraft() {
     tx.objectStore('files').delete('current');
     tx.oncomplete = () => req.result.close();
   };
+}
+
+function draftFiles(draft: Draft | undefined): File[] {
+  if (!draft) return [];
+  if (Array.isArray(draft.files) && draft.files.every((f) => f instanceof File))
+    return draft.files;
+  if (draft.file instanceof File) return [draft.file];
+  return [];
 }
 
 const PROMPT_SAFETY_TOAST: Record<string, string> = {
@@ -105,16 +141,17 @@ export function usePhotoEditSession({
   restoreDraftPrompt = true,
   creditCost,
   requireImage = true,
+  maxImages = 1,
   getMaskFile,
 }: UsePhotoEditSessionOptions = {}) {
+  const imageCap = Math.min(Math.max(1, maxImages), MAX_PHOTO_INPUT_IMAGES);
   const { data: session } = useSession();
   const queryClient = useQueryClient();
   const [creditGate, setCreditGate] = useState<CreditGate>(null);
   const [creditBalance, setCreditBalance] = useState<number | null>(null);
-  const previewRef = useRef<string | null>(null);
+  const imagesRef = useRef<SessionImage[]>([]);
   const requestId = useRef<string | null>(null);
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState('');
+  const [images, setImages] = useState<SessionImage[]>([]);
   const [prompt, setPrompt] = useState(fixedPrompt || '');
   const [quality, setQuality] = useState<PhotoEditQuality>(
     DEFAULT_PHOTO_EDIT_QUALITY
@@ -125,9 +162,6 @@ export function usePhotoEditSession({
   const [resolution, setResolution] = useState<PhotoResolution>(
     DEFAULT_PHOTO_RESOLUTION
   );
-  const [upload, setUpload] = useState<{ url: string; token: string } | null>(
-    null
-  );
   const [sourceJobId, setSourceJobId] = useState<string | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [status, setStatus] = useState<
@@ -135,6 +169,30 @@ export function usePhotoEditSession({
   >('idle');
   const [result, setResult] = useState('');
   const [showOriginal, setShowOriginal] = useState(false);
+  /** Shown above the generate button (and as a toast) on submit / poll failure. */
+  const [error, setError] = useState<string | null>(null);
+
+  const reportError = (message: string) => {
+    // Fal may store the same detail once per image; collapse before display.
+    const cleaned = [
+      ...new Set(
+        message
+          .split(/\s*;\s*/)
+          .map((part) => part.trim())
+          .filter(Boolean)
+      ),
+    ].join('; ');
+    setError(cleaned);
+    toast.error(cleaned);
+  };
+
+  const preview = images[0]?.preview || '';
+  const file = images[0]?.file || null;
+
+  const replaceImages = (next: SessionImage[]) => {
+    imagesRef.current = next;
+    setImages(next);
+  };
 
   const refreshHeaderCredits = (balance: number) => {
     setCreditBalance(balance);
@@ -148,7 +206,10 @@ export function usePhotoEditSession({
   };
 
   const showCreditGate = (mode: CreditGate) => {
-    if (file) saveDraft(file, prompt, quality);
+    const draftable = imagesRef.current
+      .map((item) => item.file)
+      .filter((f): f is File => Boolean(f));
+    if (draftable.length) saveDraft(draftable, prompt, quality);
     setCreditGate(mode);
   };
 
@@ -175,21 +236,29 @@ export function usePhotoEditSession({
       const tx = request.result.transaction('files', 'readonly');
       const value = tx.objectStore('files').get('current');
       value.onsuccess = () => {
-        const draft = value.result as Draft | undefined;
-        if (draft?.file instanceof File) {
-          setFile(draft.file);
-          const restoredUrl = URL.createObjectURL(draft.file);
-          previewRef.current = restoredUrl;
-          setPreview(restoredUrl);
-          if (restoreDraftPrompt) setPrompt(draft.prompt || '');
-          if (isPhotoEditQuality(draft.quality)) setQuality(draft.quality);
-        }
+        const restored = draftFiles(value.result as Draft | undefined).slice(
+          0,
+          imageCap
+        );
+        if (!restored.length) return;
+        const next = restored.map((item) => ({
+          id: newImageId(),
+          preview: URL.createObjectURL(item),
+          fileName: item.name,
+          file: item,
+        }));
+        replaceImages(next);
+        if (restoreDraftPrompt) setPrompt((value.result as Draft).prompt || '');
+        if (isPhotoEditQuality((value.result as Draft).quality))
+          setQuality((value.result as Draft).quality!);
       };
       tx.oncomplete = () => request.result.close();
     };
     return () => {
-      if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+      for (const item of imagesRef.current) revokeBlob(item.preview);
     };
+    // Restore once on mount; imageCap is fixed per workspace mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restoreDraftPrompt]);
 
   useEffect(() => {
@@ -199,11 +268,16 @@ export function usePhotoEditSession({
       .then(dataOrThrow)
       .then((job) => {
         if (!job.imageUrl) return;
+        for (const item of imagesRef.current) revokeBlob(item.preview);
         setSourceJobId(job.jobId);
-        setPreview(job.imageUrl);
+        replaceImages([
+          {
+            id: newImageId(),
+            preview: job.imageUrl,
+            fileName: 'Previous edit',
+          },
+        ]);
         setResult('');
-        setFile(null);
-        setUpload(null);
       })
       .catch(() => undefined);
   }, []);
@@ -217,21 +291,29 @@ export function usePhotoEditSession({
       try {
         const response = await fetch('/api/photo-editor/edits/' + jobId);
         const job = await dataOrThrow(response);
-        if (job.status === 'success' && job.imageUrl) {
+        const jobStatus = String(job.status || '').toLowerCase();
+        if (jobStatus === 'success' && job.imageUrl) {
           // Keep the loading overlay until the bytes are in cache, otherwise
           // Edited briefly still shows the original and looks like a no-op.
           await preloadImage(job.imageUrl);
           setResult(job.imageUrl);
           setStatus('success');
           setShowOriginal(false);
+          setError(null);
           clearDraft();
-        } else if (job.status === 'failed' || job.status === 'canceled') {
+        } else if (
+          jobStatus === 'failed' ||
+          jobStatus === 'canceled' ||
+          jobStatus === 'cancelled'
+        ) {
           setStatus('failed');
           requestId.current = null;
           const detail = typeof job.error === 'string' ? job.error.trim() : '';
-          toast.error(
+          reportError(
             detail
-              ? `${detail} Credits were restored.`
+              ? /credits were restored/i.test(detail)
+                ? detail
+                : `${detail} Credits were restored.`
               : 'Generation failed. Your credits have been restored.'
           );
         }
@@ -246,38 +328,117 @@ export function usePhotoEditSession({
     return () => window.clearInterval(timer);
   }, [status, jobId]);
 
-  const chooseFile = (selected?: File) => {
-    if (!selected) return;
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(selected.type)) {
-      toast.error('Please choose a JPG, PNG or WebP image.');
+  const persistDraftFrom = (
+    next: SessionImage[],
+    nextPrompt = fixedPrompt || prompt,
+    nextQuality = quality
+  ) => {
+    const files = next
+      .map((item) => item.file)
+      .filter((f): f is File => Boolean(f));
+    if (files.length) saveDraft(files, nextPrompt, nextQuality);
+    else clearDraft();
+  };
+
+  const addFiles = (selected: File[]) => {
+    if (!selected.length) return;
+    const accepted: File[] = [];
+    for (const item of selected) {
+      if (!ACCEPTED_TYPES.includes(item.type)) {
+        toast.error('Please choose a JPG, PNG or WebP image.');
+        continue;
+      }
+      if (item.size > MAX_BYTES) {
+        toast.error('Maximum image size is 10 MB.');
+        continue;
+      }
+      accepted.push(item);
+    }
+    if (!accepted.length) return;
+
+    const room = imageCap - imagesRef.current.length;
+    if (room <= 0) {
+      toast.error(`You can upload up to ${imageCap} images.`);
       return;
     }
-    if (selected.size > 10 * 1024 * 1024) {
-      toast.error('Maximum image size is 10 MB.');
-      return;
+    const toAdd = accepted.slice(0, room);
+    if (accepted.length > room) {
+      toast.error(
+        `Only ${room} more image${room === 1 ? '' : 's'} can be added.`
+      );
     }
-    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
-    const url = URL.createObjectURL(selected);
-    previewRef.current = url;
-    setFile(selected);
-    setPreview(url);
-    setUpload(null);
+
+    const added = toAdd.map((item) => ({
+      id: newImageId(),
+      preview: URL.createObjectURL(item),
+      fileName: item.name,
+      file: item,
+    }));
+    const next = [...imagesRef.current, ...added];
+    replaceImages(next);
     setSourceJobId(null);
     setResult('');
     setJobId(null);
     setStatus('idle');
     requestId.current = null;
-    saveDraft(selected, fixedPrompt || prompt, quality);
+    persistDraftFrom(next);
+  };
+
+  /** Single-file helper used by older call sites / drop handlers. */
+  const chooseFile = (selected?: File) => {
+    if (!selected) return;
+    if (imageCap === 1) {
+      for (const item of imagesRef.current) revokeBlob(item.preview);
+      const next = [
+        {
+          id: newImageId(),
+          preview: URL.createObjectURL(selected),
+          fileName: selected.name,
+          file: selected,
+        },
+      ];
+      if (!ACCEPTED_TYPES.includes(selected.type)) {
+        toast.error('Please choose a JPG, PNG or WebP image.');
+        revokeBlob(next[0].preview);
+        return;
+      }
+      if (selected.size > MAX_BYTES) {
+        toast.error('Maximum image size is 10 MB.');
+        revokeBlob(next[0].preview);
+        return;
+      }
+      replaceImages(next);
+      setSourceJobId(null);
+      setResult('');
+      setJobId(null);
+      setStatus('idle');
+      requestId.current = null;
+      persistDraftFrom(next);
+      return;
+    }
+    addFiles([selected]);
+  };
+
+  const removeImage = (id: string) => {
+    const target = imagesRef.current.find((item) => item.id === id);
+    if (!target) return;
+    revokeBlob(target.preview);
+    const next = imagesRef.current.filter((item) => item.id !== id);
+    replaceImages(next);
+    if (!next.length) {
+      setSourceJobId(null);
+      setShowOriginal(false);
+    }
+    setResult('');
+    setJobId(null);
+    setStatus('idle');
+    requestId.current = null;
+    persistDraftFrom(next);
   };
 
   const clearFile = () => {
-    if (previewRef.current) {
-      URL.revokeObjectURL(previewRef.current);
-      previewRef.current = null;
-    }
-    setFile(null);
-    setPreview('');
-    setUpload(null);
+    for (const item of imagesRef.current) revokeBlob(item.preview);
+    replaceImages([]);
     setSourceJobId(null);
     setResult('');
     setJobId(null);
@@ -304,7 +465,7 @@ export function usePhotoEditSession({
   const changeQuality = (next: PhotoEditQuality) => {
     setQuality(next);
     requestId.current = null;
-    if (file) saveDraft(file, fixedPrompt || prompt, next);
+    persistDraftFrom(imagesRef.current, fixedPrompt || prompt, next);
   };
 
   const changeImageSize = (next: PhotoImageSize) => {
@@ -320,7 +481,7 @@ export function usePhotoEditSession({
   const changePrompt = (next: string) => {
     setPrompt(next);
     requestId.current = null;
-    if (file) saveDraft(file, next, quality);
+    persistDraftFrom(imagesRef.current, next, quality);
   };
 
   /** Call when the precision mask changes so idempotent edit ids stay fresh. */
@@ -329,15 +490,17 @@ export function usePhotoEditSession({
   };
 
   const submit = async () => {
-    if (requireImage && !preview) return toast.error('Upload a photo first.');
+    if (requireImage && !imagesRef.current.length)
+      return reportError('Upload a photo first.');
     const editPrompt = (fixedPrompt || prompt).trim();
     if (!editPrompt) {
-      return toast.error(
+      return reportError(
         requireImage
           ? 'Describe your edit first.'
           : 'Describe what to generate first.'
       );
     }
+    setError(null);
     setStatus('submitting');
     let guest = Boolean(session?.user?.isAnonymous);
     // Names the failing fetch when submit throws before an ai_task exists.
@@ -378,71 +541,60 @@ export function usePhotoEditSession({
         return;
       }
 
-      let imageUrl = '';
-      let uploadToken = '';
+      let imageUrls: string[] = [];
+      let uploadTokens: string[] = [];
       let maskUrl = '';
       let maskUploadToken = '';
+      const current = imagesRef.current;
 
       if (requireImage) {
-        imageUrl = upload?.url || preview;
-        uploadToken = upload?.token || '';
         const maskFile = maskBlob
           ? new File([maskBlob], 'precision-mask.png', { type: 'image/png' })
           : null;
+        const pendingIndexes = current
+          .map((item, index) => ({ item, index }))
+          .filter(({ item }) => item.file && !item.upload);
 
         step = 'upload';
-        if (file && !upload && maskFile) {
-          // One request for source + mask — upload-image rate-limits to 1s.
+        if (pendingIndexes.length || maskFile) {
           const data = new FormData();
-          data.append('files', file);
-          data.append('files', maskFile);
+          for (const { item } of pendingIndexes)
+            data.append('files', item.file!);
+          if (maskFile) data.append('files', maskFile);
           const stored = await dataOrThrow(
             await fetch('/api/storage/upload-image', {
               method: 'POST',
               body: data,
             })
           );
-          const source = stored.results?.[0];
-          const mask = stored.results?.[1];
-          if (!source?.url || !source?.token)
+          const results = stored.results || [];
+          if (results.length < pendingIndexes.length + (maskFile ? 1 : 0))
             throw new Error('Image upload did not return authorization');
-          if (!mask?.url || !mask?.token)
-            throw new Error('Mask upload did not return authorization');
-          imageUrl = source.url;
-          uploadToken = source.token;
-          maskUrl = mask.url;
-          maskUploadToken = mask.token;
-          setUpload({ url: imageUrl, token: uploadToken });
-        } else if (file && !upload) {
-          const data = new FormData();
-          data.append('files', file);
-          const stored = await dataOrThrow(
-            await fetch('/api/storage/upload-image', {
-              method: 'POST',
-              body: data,
-            })
-          );
-          const first = stored.results?.[0];
-          if (!first?.url || !first?.token)
-            throw new Error('Image upload did not return authorization');
-          imageUrl = first.url;
-          uploadToken = first.token;
-          setUpload({ url: imageUrl, token: uploadToken });
-        } else if (maskFile) {
-          // Source already uploaded or from a prior job — mask only.
-          const data = new FormData();
-          data.append('files', maskFile);
-          const stored = await dataOrThrow(
-            await fetch('/api/storage/upload-image', {
-              method: 'POST',
-              body: data,
-            })
-          );
-          const mask = stored.results?.[0];
-          if (!mask?.url || !mask?.token)
-            throw new Error('Mask upload did not return authorization');
-          maskUrl = mask.url;
-          maskUploadToken = mask.token;
+
+          const next = current.map((item) => ({ ...item }));
+          pendingIndexes.forEach(({ index }, resultIndex) => {
+            const uploaded = results[resultIndex];
+            if (!uploaded?.url || !uploaded?.token)
+              throw new Error('Image upload did not return authorization');
+            next[index] = {
+              ...next[index],
+              upload: { url: uploaded.url, token: uploaded.token },
+              // Keep blob preview for the canvas; upload URL is for the API.
+            };
+          });
+          if (maskFile) {
+            const mask = results[pendingIndexes.length];
+            if (!mask?.url || !mask?.token)
+              throw new Error('Mask upload did not return authorization');
+            maskUrl = mask.url;
+            maskUploadToken = mask.token;
+          }
+          replaceImages(next);
+          imageUrls = next.map((item) => item.upload?.url || item.preview);
+          uploadTokens = next.map((item) => item.upload?.token || '');
+        } else {
+          imageUrls = current.map((item) => item.upload?.url || item.preview);
+          uploadTokens = current.map((item) => item.upload?.token || '');
         }
       }
 
@@ -456,12 +608,14 @@ export function usePhotoEditSession({
           body: JSON.stringify({
             ...(requireImage
               ? {
-                  imageUrl,
-                  uploadToken,
+                  imageUrl: imageUrls[0] || '',
+                  imageUrls,
+                  uploadToken: uploadTokens[0] || '',
+                  uploadTokens,
                   sourceJobId,
                   ...(maskUrl ? { maskUrl, maskUploadToken } : {}),
                 }
-              : { imageUrl: '' }),
+              : { imageUrl: '', imageUrls: [] }),
             prompt: editPrompt,
             tool: toolSlug,
             quality,
@@ -493,28 +647,38 @@ export function usePhotoEditSession({
         return;
       }
       // No ai_task row in these cases — record for the admin timeline.
+      const totalKb = imagesRef.current.reduce(
+        (sum, item) => sum + (item.file ? item.file.size : 0),
+        0
+      );
       track('photo_edit_submit_failed', {
         step,
         error: String(message).slice(0, 200),
         tool: toolSlug,
         quality,
-        ...(file ? { fileKb: Math.round(file.size / 1024) } : {}),
+        ...(totalKb ? { fileKb: Math.round(totalKb / 1024) } : {}),
       });
-      toast.error(PROMPT_SAFETY_TOAST[message] || message);
+      reportError(PROMPT_SAFETY_TOAST[message] || message);
     }
   };
 
   const editAgain = () => {
     if (!result || !jobId) return;
-    setPreview(result);
+    for (const item of imagesRef.current) revokeBlob(item.preview);
+    replaceImages([
+      {
+        id: newImageId(),
+        preview: result,
+        fileName: 'Previous edit',
+      },
+    ]);
     setResult('');
-    setFile(null);
-    setUpload(null);
     setSourceJobId(jobId);
     setJobId(null);
     if (fixedPrompt) setPrompt(fixedPrompt);
     else setPrompt('');
     setStatus('idle');
+    setError(null);
     requestId.current = null;
   };
 
@@ -529,6 +693,8 @@ export function usePhotoEditSession({
     creditGate,
     setCreditGate,
     creditBalance,
+    images,
+    maxImages: imageCap,
     file,
     preview,
     prompt,
@@ -538,11 +704,14 @@ export function usePhotoEditSession({
     jobId,
     status,
     result,
+    error,
     showOriginal,
     setShowOriginal,
     selectedQuality,
     loading,
     chooseFile,
+    addFiles,
+    removeImage,
     clearFile,
     resetMedia,
     clearResult,

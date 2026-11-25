@@ -16,6 +16,7 @@ import {
   BACKGROUND_REMOVAL_CREDITS,
   DEFAULT_PHOTO_EDIT_QUALITY,
   getPhotoTool,
+  MAX_PHOTO_INPUT_IMAGES,
   photoEditCharge,
   PhotoEditQualityError,
   photoImageSize,
@@ -95,7 +96,24 @@ export async function POST({ request }: { request: Request }) {
   }
   const requestedPrompt =
     typeof body.prompt === 'string' ? body.prompt.trim() : '';
-  const imageUrl = typeof body.imageUrl === 'string' ? body.imageUrl : '';
+  const imageUrlsRaw = Array.isArray(body.imageUrls)
+    ? body.imageUrls
+    : typeof body.imageUrl === 'string' && body.imageUrl
+      ? [body.imageUrl]
+      : [];
+  const imageUrls = imageUrlsRaw
+    .filter((url: unknown): url is string => typeof url === 'string')
+    .map((url: string) => url.trim())
+    .filter(Boolean);
+  const imageUrl = imageUrls[0] || '';
+  const uploadTokensRaw = Array.isArray(body.uploadTokens)
+    ? body.uploadTokens
+    : typeof body.uploadToken === 'string'
+      ? [body.uploadToken]
+      : [];
+  const uploadTokens = uploadTokensRaw.map((token: unknown) =>
+    typeof token === 'string' ? token : ''
+  );
   const maskUrl = typeof body.maskUrl === 'string' ? body.maskUrl.trim() : '';
   const requestId = typeof body.requestId === 'string' ? body.requestId : '';
   const tool = typeof body.tool === 'string' ? body.tool : 'general';
@@ -122,19 +140,27 @@ export async function POST({ request }: { request: Request }) {
   if (!prompt || prompt.length > 2000)
     return respErr('Prompt must be 1–2000 characters');
   // Homepage general with no image → text-to-image. Dedicated tools still require a photo.
-  const isTextToImage = tool === 'general' && !imageUrl;
+  const isTextToImage = tool === 'general' && imageUrls.length === 0;
   if (isTextToImage) {
     if (maskUrl) {
       return respErr('Mask is not supported for text-to-image', {
         status: 400,
       });
     }
+  } else if (imageUrls.length > MAX_PHOTO_INPUT_IMAGES) {
+    return respErr(`At most ${MAX_PHOTO_INPUT_IMAGES} images per edit`);
   } else if (
-    !imageUrl ||
-    imageUrl.length > 2048 ||
-    (!/^https?:\/\//.test(imageUrl) && !imageUrl.startsWith('/uploads/'))
+    !imageUrls.length ||
+    imageUrls.some(
+      (url) =>
+        url.length > 2048 ||
+        (!/^https?:\/\//.test(url) && !url.startsWith('/uploads/'))
+    )
   ) {
     return respErr('Invalid image URL');
+  }
+  if (isBackgroundRemoval && imageUrls.length > 1) {
+    return respErr('Background removal accepts one image');
   }
   if (maskUrl) {
     if (isBackgroundRemoval) {
@@ -193,12 +219,8 @@ export async function POST({ request }: { request: Request }) {
   }
 
   if (!isTextToImage) {
-    let imageAuthorized = await verifyUploadToken(
-      user.id,
-      imageUrl,
-      String(body.uploadToken || '')
-    );
-    if (!imageAuthorized && typeof body.sourceJobId === 'string') {
+    let sourceOutputUrls: string[] | null = null;
+    if (typeof body.sourceJobId === 'string') {
       const source = await findTask(body.sourceJobId);
       if (
         source?.userId === user.id &&
@@ -206,16 +228,29 @@ export async function POST({ request }: { request: Request }) {
       ) {
         try {
           const output = JSON.parse(source.taskResult || '{}');
-          imageAuthorized =
-            output.images?.some((item: any) => item.imageUrl === imageUrl) ===
-            true;
+          sourceOutputUrls = Array.isArray(output.images)
+            ? output.images
+                .map((item: any) =>
+                  typeof item?.imageUrl === 'string' ? item.imageUrl : ''
+                )
+                .filter(Boolean)
+            : [];
         } catch {
           /* Invalid source job */
         }
       }
     }
-    if (!imageAuthorized)
-      return respErr('Upload or select an image you own', { status: 403 });
+    for (let i = 0; i < imageUrls.length; i++) {
+      const url = imageUrls[i];
+      const token =
+        uploadTokens[i] || (i === 0 ? String(body.uploadToken || '') : '');
+      let imageAuthorized = await verifyUploadToken(user.id, url, token);
+      if (!imageAuthorized && sourceOutputUrls?.includes(url)) {
+        imageAuthorized = true;
+      }
+      if (!imageAuthorized)
+        return respErr('Upload or select an image you own', { status: 403 });
+    }
   }
 
   if (maskUrl) {
@@ -303,7 +338,12 @@ export async function POST({ request }: { request: Request }) {
       prompt,
       costCredits: charge.credits,
       options: {
-        ...(isTextToImage ? {} : { imageUrl }),
+        ...(isTextToImage
+          ? {}
+          : {
+              imageUrl,
+              ...(imageUrls.length > 1 ? { imageUrls } : {}),
+            }),
         tool,
         quality: charge.quality,
         ...(imageSize ? { imageSize } : {}),
@@ -351,7 +391,7 @@ export async function POST({ request }: { request: Request }) {
             ? photoTextToImageInput(charge.quality, imageSize!, resolution!)
             : photoModelInput(
                 provider,
-                imageUrl,
+                imageUrls,
                 charge.quality,
                 maskUrl || undefined,
                 imageSize,
@@ -365,19 +405,24 @@ export async function POST({ request }: { request: Request }) {
   } catch (error: unknown) {
     if (isDefiniteProviderReject(error)) {
       const message = error instanceof Error ? error.message : String(error);
+      const cleaned = message.replace(/\s*\(status:\s*\d+\)\s*$/i, '').trim();
       await updateTask({
         taskId: task.id,
         status: AITaskStatus.FAILED,
-        ...(message.trim() ? { error: message.trim() } : {}),
+        ...(cleaned ? { error: cleaned } : {}),
       });
-      return respErr(
-        isTextToImage
+      // Prefer Fal's content-policy / validation text over a generic line so
+      // the homepage toast matches what the Fal dashboard shows.
+      const userMessage = /content checker|content.?policy|flagged by/i.test(
+        cleaned
+      )
+        ? `${cleaned} Credits were restored.`
+        : isTextToImage
           ? 'Could not submit the generation. Credits were restored.'
-          : 'Could not submit the edit. Credits were restored.',
-        {
-          status: 502,
-        }
-      );
+          : 'Could not submit the edit. Credits were restored.';
+      return respErr(userMessage, {
+        status: 502,
+      });
     }
     // Outcome uncertain (timeout / 5xx / network): leave pending so a late
     // webhook can still claim and settle. Do not refund or reopen later.

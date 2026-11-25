@@ -6,6 +6,7 @@ import { PHOTO_EDIT_MODEL_LABEL } from '@/modules/photo-editor/config';
 import { downloadPhotoResult } from '@/lib/download';
 import { AspectRatioSelector } from '@/components/photo-editor/aspect-ratio-selector';
 import { CreditGateDialog } from '@/components/photo-editor/credit-gate-dialog';
+import { GenerateError } from '@/components/photo-editor/generate-error';
 import { ImageUploadField } from '@/components/photo-editor/image-upload-field';
 import { PromptField } from '@/components/photo-editor/prompt-field';
 import { QualitySelector } from '@/components/photo-editor/quality-selector';
@@ -50,11 +51,18 @@ export function ImageToImageWorkspace() {
         <div className="flex max-h-[36rem] min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_16px_40px_-28px_rgba(15,23,42,.4)] sm:p-4 lg:sticky lg:top-20">
           <div className="min-h-0 flex-1 space-y-3.5 overflow-y-auto overscroll-contain pr-0.5">
             <ImageUploadField
-              preview={edit.result ? undefined : edit.preview}
-              fileName={edit.file?.name}
-              showPreviewThumb={Boolean(edit.preview && !edit.result)}
-              onFile={edit.chooseFile}
-              onClear={edit.clearFile}
+              images={
+                edit.result
+                  ? []
+                  : edit.images.map((item) => ({
+                      id: item.id,
+                      preview: item.preview,
+                      fileName: item.fileName,
+                    }))
+              }
+              maxImages={edit.maxImages}
+              onAdd={edit.addFiles}
+              onRemove={edit.removeImage}
             />
             <PromptField
               id="image-to-image-prompt"
@@ -80,6 +88,7 @@ export function ImageToImageWorkspace() {
             />
           </div>
           <div className="shrink-0 border-t border-slate-100 pt-3.5">
+            <GenerateError message={edit.error} />
             <Button
               onClick={edit.submit}
               disabled={edit.loading}

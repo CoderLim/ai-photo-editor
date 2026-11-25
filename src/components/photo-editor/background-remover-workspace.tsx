@@ -15,6 +15,7 @@ import { downloadBlob, downloadPhotoResult } from '@/lib/download';
 import { cn } from '@/lib/utils';
 import { BackgroundFillPanel } from '@/components/photo-editor/background-fill-panel';
 import { CreditGateDialog } from '@/components/photo-editor/credit-gate-dialog';
+import { GenerateError } from '@/components/photo-editor/generate-error';
 import { ResolutionSelector } from '@/components/photo-editor/resolution-selector';
 import { usePhotoEditSession } from '@/components/photo-editor/use-photo-edit-session';
 import { Button } from '@/components/ui/button';
@@ -196,53 +197,56 @@ export function BackgroundRemoverWorkspace({
   );
 
   const actionRow = (
-    <div className="mt-3.5 flex flex-col gap-2 sm:flex-row">
-      <Button
-        onClick={edit.submit}
-        disabled={edit.loading}
-        className="h-11 flex-1 gap-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
-      >
-        {edit.loading ? (
-          <LoaderCircle className="size-4 animate-spin" />
-        ) : (
-          <Sparkles className="size-4" />
-        )}
-        {edit.status === 'submitting'
-          ? 'Submitting edit...'
-          : edit.status === 'pending'
-            ? 'Generating...'
-            : isChanger
-              ? 'Prepare Background'
-              : 'Remove Background'}
-        {!edit.loading && (
-          <span
-            className="rounded-md bg-white/15 px-2 py-1 text-xs"
-            aria-live="polite"
-          >
-            {BACKGROUND_REMOVAL_CREDITS} credits
-          </span>
-        )}
-      </Button>
-      {edit.result && (
+    <div className="mt-3.5 flex flex-col gap-2">
+      <GenerateError message={edit.error} />
+      <div className="flex flex-col gap-2 sm:flex-row">
         <Button
-          type="button"
-          variant="outline"
-          disabled={downloading}
-          onClick={handleDownload}
-          className="h-11 shrink-0 gap-2 rounded-xl border-slate-200 px-5"
+          onClick={edit.submit}
+          disabled={edit.loading}
+          className="h-11 flex-1 gap-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
         >
-          {downloading ? (
+          {edit.loading ? (
             <LoaderCircle className="size-4 animate-spin" />
           ) : (
-            <Download className="size-4" />
+            <Sparkles className="size-4" />
           )}
-          {isChanger
-            ? 'Download PNG'
-            : fill.mode === 'transparent'
-              ? 'Download PNG'
-              : 'Download'}
+          {edit.status === 'submitting'
+            ? 'Submitting edit...'
+            : edit.status === 'pending'
+              ? 'Generating...'
+              : isChanger
+                ? 'Prepare Background'
+                : 'Remove Background'}
+          {!edit.loading && (
+            <span
+              className="rounded-md bg-white/15 px-2 py-1 text-xs"
+              aria-live="polite"
+            >
+              {BACKGROUND_REMOVAL_CREDITS} credits
+            </span>
+          )}
         </Button>
-      )}
+        {edit.result && (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={downloading}
+            onClick={handleDownload}
+            className="h-11 shrink-0 gap-2 rounded-xl border-slate-200 px-5"
+          >
+            {downloading ? (
+              <LoaderCircle className="size-4 animate-spin" />
+            ) : (
+              <Download className="size-4" />
+            )}
+            {isChanger
+              ? 'Download PNG'
+              : fill.mode === 'transparent'
+                ? 'Download PNG'
+                : 'Download'}
+          </Button>
+        )}
+      </div>
     </div>
   );
 

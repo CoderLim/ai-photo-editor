@@ -184,7 +184,8 @@ test('POST: webhook success during generate keeps success after attach', async (
   const uploadToken = await issueUploadToken(userId, imageUrl);
   const requestId = 'request-race-success-01';
   const quality = 'medium';
-  const jobId = 'edit_' + md5(`${userId}:${requestId}:${quality}`);
+  // Must match edits POST stableId (quality + default imageSize/resolution).
+  const jobId = 'edit_' + md5(`${userId}:${requestId}:${quality}:auto:1k`);
 
   let release!: () => void;
   const gate = new Promise<void>((resolve) => {
@@ -254,7 +255,8 @@ test('POST: webhook failure during generate stays failed', async () => {
   const uploadToken = await issueUploadToken(userId, imageUrl);
   const requestId = 'request-race-fail-01';
   const quality = 'medium';
-  const jobId = 'edit_' + md5(`${userId}:${requestId}:${quality}`);
+  // Must match edits POST stableId (quality + default imageSize/resolution).
+  const jobId = 'edit_' + md5(`${userId}:${requestId}:${quality}:auto:1k`);
 
   let release!: () => void;
   const gate = new Promise<void>((resolve) => {
@@ -323,7 +325,8 @@ test('POST: network timeout keeps pending; webhook later settles', async () => {
   const uploadToken = await issueUploadToken(userId, imageUrl);
   const requestId = 'request-race-timeout-01';
   const quality = 'medium';
-  const jobId = 'edit_' + md5(`${userId}:${requestId}:${quality}`);
+  // Must match edits POST stableId (quality + default imageSize/resolution).
+  const jobId = 'edit_' + md5(`${userId}:${requestId}:${quality}:auto:1k`);
 
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (input, init) => {
@@ -380,7 +383,8 @@ test('POST: definite 4xx fails and refunds', async () => {
   const uploadToken = await issueUploadToken(userId, imageUrl);
   const requestId = 'request-race-4xx-0001';
   const quality = 'medium';
-  const jobId = 'edit_' + md5(`${userId}:${requestId}:${quality}`);
+  // Must match edits POST stableId (quality + default imageSize/resolution).
+  const jobId = 'edit_' + md5(`${userId}:${requestId}:${quality}:auto:1k`);
 
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (input, init) => {
@@ -428,7 +432,8 @@ test('POST: accepted generate then conflicting webhook id keeps webhook settleme
   const uploadToken = await issueUploadToken(userId, imageUrl);
   const requestId = 'request-race-conflict-01';
   const quality = 'medium';
-  const jobId = 'edit_' + md5(`${userId}:${requestId}:${quality}`);
+  // Must match edits POST stableId (quality + default imageSize/resolution).
+  const jobId = 'edit_' + md5(`${userId}:${requestId}:${quality}:auto:1k`);
 
   let release!: () => void;
   const gate = new Promise<void>((resolve) => {

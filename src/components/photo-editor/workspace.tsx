@@ -13,6 +13,7 @@ import { downloadPhotoResult } from '@/lib/download';
 import { cn } from '@/lib/utils';
 import { AspectRatioSelector } from '@/components/photo-editor/aspect-ratio-selector';
 import { CreditGateDialog } from '@/components/photo-editor/credit-gate-dialog';
+import { GenerateError } from '@/components/photo-editor/generate-error';
 import { ImageUploadField } from '@/components/photo-editor/image-upload-field';
 import {
   MaskBrushCanvas,
@@ -93,6 +94,7 @@ export function PhotoEditorWorkspace() {
   const edit = usePhotoEditSession({
     toolSlug: 'general',
     requireImage: !isT2i,
+    maxImages: 8,
     getMaskFile: async () => {
       if (isT2i || !PRECISION_EDIT_UI_ENABLED || !precision) return null;
       return (await brushRef.current?.exportMaskBlob()) ?? null;
@@ -200,11 +202,18 @@ export function PhotoEditorWorkspace() {
           <div className="min-h-0 flex-1 space-y-3.5 overflow-y-auto pr-0.5">
             {!isT2i && (
               <ImageUploadField
-                preview={edit.result ? undefined : edit.preview}
-                fileName={edit.file?.name}
-                showPreviewThumb={Boolean(edit.preview && !edit.result)}
-                onFile={edit.chooseFile}
-                onClear={edit.clearFile}
+                images={
+                  edit.result
+                    ? []
+                    : edit.images.map((item) => ({
+                        id: item.id,
+                        preview: item.preview,
+                        fileName: item.fileName,
+                      }))
+                }
+                maxImages={edit.maxImages}
+                onAdd={edit.addFiles}
+                onRemove={edit.removeImage}
               />
             )}
             <PromptField
@@ -254,6 +263,7 @@ export function PhotoEditorWorkspace() {
             />
           </div>
           <div className="shrink-0 border-t border-slate-100 pt-3.5">
+            <GenerateError message={edit.error} />
             <Button
               onClick={edit.submit}
               disabled={edit.loading}

@@ -9,6 +9,7 @@ import {
 import { downloadPhotoResult } from '@/lib/download';
 import { AspectRatioSelector } from '@/components/photo-editor/aspect-ratio-selector';
 import { CreditGateDialog } from '@/components/photo-editor/credit-gate-dialog';
+import { GenerateError } from '@/components/photo-editor/generate-error';
 import { ImageUploadField } from '@/components/photo-editor/image-upload-field';
 import { QualitySelector } from '@/components/photo-editor/quality-selector';
 import { ResolutionSelector } from '@/components/photo-editor/resolution-selector';
@@ -51,11 +52,18 @@ export function TextEditorWorkspace() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(260px,0.68fr)_minmax(0,1.32fr)] lg:items-start">
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_16px_40px_-28px_rgba(15,23,42,.4)] sm:p-4 lg:sticky lg:top-20">
           <ImageUploadField
-            preview={edit.result ? undefined : edit.preview}
-            fileName={edit.file?.name}
-            showPreviewThumb={Boolean(edit.preview && !edit.result)}
-            onFile={edit.chooseFile}
-            onClear={edit.clearFile}
+            images={
+              edit.result
+                ? []
+                : edit.images.map((item) => ({
+                    id: item.id,
+                    preview: item.preview,
+                    fileName: item.fileName,
+                  }))
+            }
+            maxImages={edit.maxImages}
+            onAdd={edit.addFiles}
+            onRemove={edit.removeImage}
           />
           <div className="mt-3.5">
             <div className="mb-2 flex items-center justify-between">
@@ -97,30 +105,33 @@ export function TextEditorWorkspace() {
             disabled={edit.loading}
             onChange={edit.changeQuality}
           />
-          <Button
-            onClick={edit.submit}
-            disabled={edit.loading}
-            className="mt-3.5 h-11 w-full gap-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
-          >
-            {edit.loading ? (
-              <LoaderCircle className="size-4 animate-spin" />
-            ) : (
-              <Sparkles className="size-4" />
-            )}
-            {edit.status === 'submitting'
-              ? 'Submitting edit...'
-              : edit.status === 'pending'
-                ? 'Generating...'
-                : 'Generate Edit'}
-            {!edit.loading && (
-              <span
-                className="rounded-md bg-white/15 px-2 py-1 text-xs"
-                aria-live="polite"
-              >
-                {edit.selectedQuality.credits} credits
-              </span>
-            )}
-          </Button>
+          <div className="mt-3.5">
+            <GenerateError message={edit.error} />
+            <Button
+              onClick={edit.submit}
+              disabled={edit.loading}
+              className="h-11 w-full gap-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+            >
+              {edit.loading ? (
+                <LoaderCircle className="size-4 animate-spin" />
+              ) : (
+                <Sparkles className="size-4" />
+              )}
+              {edit.status === 'submitting'
+                ? 'Submitting edit...'
+                : edit.status === 'pending'
+                  ? 'Generating...'
+                  : 'Generate Edit'}
+              {!edit.loading && (
+                <span
+                  className="rounded-md bg-white/15 px-2 py-1 text-xs"
+                  aria-live="polite"
+                >
+                  {edit.selectedQuality.credits} credits
+                </span>
+              )}
+            </Button>
+          </div>
           <p className="mt-2 text-center text-[11px] leading-relaxed text-slate-500">
             {!edit.session?.user
               ? '10 free trial credits · '

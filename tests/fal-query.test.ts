@@ -28,6 +28,28 @@ test('extractFalErrorMessage reads top-level detail arrays (content policy 422)'
     'The content could not be processed because it contained material flagged by a content checker.'
   );
   assert.equal(
+    extractFalErrorMessage({
+      detail: [
+        {
+          loc: ['body', 'image_urls', 0],
+          msg: 'The provided image URL is not accessible or has expired. Please ensure the URL is valid and publicly accessible.',
+          type: 'image_load_error',
+        },
+        {
+          loc: ['body', 'image_urls', 1],
+          msg: 'The provided image URL is not accessible or has expired. Please ensure the URL is valid and publicly accessible.',
+          type: 'image_load_error',
+        },
+        {
+          loc: ['body', 'image_urls', 2],
+          msg: 'The provided image URL is not accessible or has expired. Please ensure the URL is valid and publicly accessible.',
+          type: 'image_load_error',
+        },
+      ],
+    }),
+    'The provided image URL is not accessible or has expired. Please ensure the URL is valid and publicly accessible.'
+  );
+  assert.equal(
     extractFalErrorMessage({ error: 'runner exploded' }),
     'runner exploded'
   );
@@ -69,6 +91,31 @@ test('FalProvider.query marks HTTP 422 status as FAILED with content message', a
   const result = await provider.query({
     taskId: 'req-content-policy',
     model: 'openai/gpt-image-2.6/flare/text-to-image',
+    mediaType: AIMediaType.IMAGE,
+  });
+
+  assert.equal(result.taskStatus, AITaskStatus.FAILED);
+  assert.match(result.taskInfo?.errorMessage || '', /content checker/i);
+});
+
+test('FalProvider.query marks ERROR queue status as FAILED', async () => {
+  const provider = new FalProvider({ apiKey: 'test-only-fal-key' });
+  globalThis.fetch = async (input) => {
+    const url = String(input);
+    assert.match(url, /\/status$/);
+    return new Response(
+      JSON.stringify({
+        status: 'ERROR',
+        error:
+          'The content could not be processed because it contained material flagged by a content checker.',
+      }),
+      { status: 200, headers: { 'content-type': 'application/json' } }
+    );
+  };
+
+  const result = await provider.query({
+    taskId: 'req-error-status',
+    model: 'openai/gpt-image-2.6/flare/edit',
     mediaType: AIMediaType.IMAGE,
   });
 

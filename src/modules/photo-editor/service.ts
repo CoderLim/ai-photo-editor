@@ -62,16 +62,20 @@ export async function getSelectedPhotoProvider() {
  */
 export function photoModelInput(
   provider: string,
-  imageUrl: string,
+  imageUrl: string | string[],
   quality: PhotoEditQuality,
   maskUrl?: string,
   imageSize: PhotoImageSize = 'auto',
   resolution: PhotoResolution = '1k'
 ) {
+  const imageUrls = (Array.isArray(imageUrl) ? imageUrl : [imageUrl]).filter(
+    Boolean
+  );
+  if (!imageUrls.length) throw new Error('At least one image URL is required');
   const falSize: FalImageSizeValue = resolveFalImageSize(imageSize, resolution);
   if (provider === 'fal') {
     return {
-      image_urls: [imageUrl],
+      image_urls: imageUrls,
       image_size: falSize,
       quality,
       num_images: 1,
@@ -82,7 +86,7 @@ export function photoModelInput(
   if (provider === 'replicate') {
     // Historical Replicate path only — new edits use fal. Keep auto sizing.
     return {
-      input_images: [imageUrl],
+      input_images: imageUrls,
       aspect_ratio: 'auto',
       quality,
       number_of_images: 1,

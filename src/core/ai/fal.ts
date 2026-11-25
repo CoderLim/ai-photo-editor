@@ -30,16 +30,21 @@ export function falQueueModel(model?: string): string {
 function detailMessage(detail: unknown): string | undefined {
   if (typeof detail === 'string' && detail.trim()) return detail.trim();
   if (!Array.isArray(detail)) return undefined;
-  const parts = detail
-    .map((item) => {
-      if (typeof item === 'string') return item.trim();
-      if (item && typeof item === 'object') {
-        const msg = (item as { msg?: unknown }).msg;
-        if (typeof msg === 'string' && msg.trim()) return msg.trim();
-      }
-      return '';
-    })
-    .filter(Boolean);
+  // Fal often repeats the same msg once per image_urls entry — keep unique.
+  const parts = [
+    ...new Set(
+      detail
+        .map((item) => {
+          if (typeof item === 'string') return item.trim();
+          if (item && typeof item === 'object') {
+            const msg = (item as { msg?: unknown }).msg;
+            if (typeof msg === 'string' && msg.trim()) return msg.trim();
+          }
+          return '';
+        })
+        .filter(Boolean)
+    ),
+  ];
   return parts.length ? parts.join('; ') : undefined;
 }
 
@@ -155,7 +160,17 @@ export class FalProvider implements AIProvider {
     });
 
     if (!resp.ok) {
-      throw new Error(`request failed with status: ${resp.status}`);
+      const body = (await resp.json().catch(() => ({}))) as Record<
+        string,
+        unknown
+      >;
+      const detail = extractFalErrorMessage(body);
+      // Keep `status: NNN` so photo-edit submit can treat definite 4xx as reject.
+      throw new Error(
+        detail
+          ? `${detail} (status: ${resp.status})`
+          : `request failed with status: ${resp.status}`
+      );
     }
 
     const data = await resp.json();
@@ -225,10 +240,12 @@ export class FalProvider implements AIProvider {
     let taskStatus = this.mapStatus(rawStatus);
 
     // Fal marks failed/cancelled queue jobs as COMPLETED and puts the cause
-    // in `error` / `error_type` on the status payload.
+    // in `error` / `error_type` / `detail` on the status payload.
     if (
       taskStatus === AITaskStatus.SUCCESS &&
-      (statusData.error || statusData.error_type)
+      (statusData.error ||
+        statusData.error_type ||
+        extractFalErrorMessage(statusData))
     ) {
       taskStatus = AITaskStatus.FAILED;
     }
@@ -387,7 +404,11 @@ export class FalProvider implements AIProvider {
       case 'COMPLETED':
         return AITaskStatus.SUCCESS;
       case 'FAILED':
+      case 'ERROR':
         return AITaskStatus.FAILED;
+      case 'CANCELLED':
+      case 'CANCELED':
+        return AITaskStatus.CANCELED;
       default:
         throw new Error(`unknown status: ${status}`);
     }

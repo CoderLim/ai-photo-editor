@@ -169,6 +169,8 @@ export const EDIT_CREDITS = PHOTO_EDIT_QUALITIES.find(
 
 export const REPLICATE_EDIT_MODEL = 'openai/gpt-image-2.6-flare';
 export const FAL_EDIT_MODEL = 'openai/gpt-image-2.6/flare/edit';
+/** Max source photos per edit (GPT Image accepts up to 16; keep UI modest). */
+export const MAX_PHOTO_INPUT_IMAGES = 8;
 /** Homepage text-to-image (no source photo). Same Flare family / quality table as edit. */
 export const FAL_TEXT_TO_IMAGE_MODEL =
   'openai/gpt-image-2.6/flare/text-to-image';

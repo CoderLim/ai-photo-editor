@@ -159,6 +159,14 @@ test('provider input uses GPT Image 2.6 fields, not Nano Banana resolution', () 
     num_images: 1,
     output_format: 'png',
   });
+  const url2 = 'https://cdn.example.test/ref.png';
+  assert.deepEqual(photoModelInput('fal', [url, url2], 'high'), {
+    image_urls: [url, url2],
+    image_size: 'auto',
+    quality: 'high',
+    num_images: 1,
+    output_format: 'png',
+  });
   assert.deepEqual(photoModelInput('fal', url, 'high', mask), {
     image_urls: [url],
     image_size: 'auto',
