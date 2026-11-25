@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GetAIPhotoEditor</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="header">
+      <img class="logo" src="icons/icon-48.png" width="28" height="28" alt="" />
+      <div class="brand">
+        <h1>GetAIPhotoEditor</h1>
+        <p class="tagline">Remove bg · Retouch · Enhance</p>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="field" aria-labelledby="media-label">
+        <div class="label-row">
+          <label id="media-label" for="media-input">Photos</label>
+          <span class="hint">Images · local preview only</span>
+        </div>
+        <label class="dropzone" id="dropzone" for="media-input">
+          <input
+            id="media-input"
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            multiple
+            hidden
+          />
+          <span class="dropzone-title">Drop images here or click to browse</span>
+          <span class="dropzone-sub">PNG, JPG, WEBP</span>
+        </label>
+        <ul class="preview-list" id="preview-list" hidden></ul>
+      </section>
+
+      <section class="field" aria-labelledby="prompt-label">
+        <div class="label-row">
+          <label id="prompt-label" for="prompt">Prompt</label>
+        </div>
+        <textarea
+          id="prompt"
+          rows="4"
+          placeholder="Describe the edit you want…"
+          maxlength="2000"
+        ></textarea>
+      </section>
+
+      <button type="button" class="generate" id="generate">
+        Open GetAIPhotoEditor
+      </button>
+
+      <p class="footnote">
+        Opens
+        <a
+          href="https://getaiphotoeditor.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          >getaiphotoeditor.com</a
+        >
+        to edit. Extension generation coming soon.
+      </p>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

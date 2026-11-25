@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1280px; height: 800px; overflow: hidden; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background:
+      radial-gradient(ellipse 70% 60% at 15% 20%, rgba(100,140,255,0.18), transparent 55%),
+      radial-gradient(ellipse 50% 50% at 85% 80%, rgba(220,80,180,0.14), transparent 50%),
+      #0c0d10;
+    color: #f2f3f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 64px;
+    padding: 48px 64px;
+  }
+  .copy { max-width: 420px; }
+  .copy h1 {
+    font-size: 42px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    margin-bottom: 14px;
+  }
+  .copy p {
+    font-size: 18px;
+    color: #8b919c;
+    line-height: 1.5;
+    margin-bottom: 28px;
+  }
+  .bullets { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .bullets li {
+    font-size: 15px;
+    color: #c8cdd6;
+    padding-left: 22px;
+    position: relative;
+  }
+  .bullets li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 7px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #e8e4dc;
+  }
+  .popup {
+    width: 360px;
+    background: #0c0d10;
+    border: 1px solid #2a2e38;
+    border-radius: 14px;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.55);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid #2a2e38;
+  }
+  .header img { width: 28px; height: 28px; border-radius: 6px; }
+  .header h2 { font-size: 15px; font-weight: 650; letter-spacing: -0.02em; }
+  .header .tag { color: #8b919c; font-size: 11px; margin-top: 2px; }
+  .main { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 14px; }
+  .label { font-weight: 600; font-size: 12px; margin-bottom: 6px; }
+  .dropzone {
+    min-height: 88px; padding: 14px;
+    border: 1px dashed #2a2e38; border-radius: 10px;
+    background: #15171c; text-align: center;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  }
+  .dropzone .t { font-weight: 550; font-size: 12px; }
+  .dropzone .s { color: #8b919c; font-size: 10px; }
+  .previews { display: flex; gap: 8px; margin-top: 8px; }
+  .thumb {
+    width: 64px; height: 64px; border-radius: 8px;
+    background: linear-gradient(135deg, #3a4a6a, #6a3a5a);
+    border: 1px solid #2a2e38;
+  }
+  .prompt {
+    width: 100%; min-height: 84px; padding: 10px 12px;
+    border: 1px solid #2a2e38; border-radius: 10px;
+    background: #15171c; color: #f2f3f5; font-size: 13px; line-height: 1.45;
+  }
+  .btn {
+    width: 100%; padding: 11px 14px; border: none; border-radius: 10px;
+    background: #e8e4dc; color: #12141a;
+    font-weight: 650; font-size: 13px; text-align: center;
+  }
+  .foot { color: #8b919c; font-size: 11px; text-align: center; }
+</style>
+</head>
+<body>
+  <div class="copy">
+    <h1>GetAIPhotoEditor</h1>
+    <p>Remove backgrounds, retouch portraits, and enhance photos — open the editor in one click.</p>
+    <ul class="bullets">
+      <li>Local photo preview in the popup</li>
+      <li>Draft your edit prompt</li>
+      <li>Jump straight to getaiphotoeditor.com</li>
+    </ul>
+  </div>
+  <div class="popup">
+    <div class="header">
+      <img src="data:image/png;base64,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" alt="" />
+      <div>
+        <h2>GetAIPhotoEditor</h2>
+        <div class="tag">Remove bg · Retouch · Enhance</div>
+      </div>
+    </div>
+    <div class="main">
+      <div>
+        <div class="label">Photos</div>
+        <div class="dropzone">
+          <div class="t">Drop images here or click to browse</div>
+          <div class="s">PNG, JPG, WEBP</div>
+        </div>
+        <div class="previews">
+          <div class="thumb"></div>
+          <div class="thumb" style="background:linear-gradient(135deg,#5a6a3a,#3a5a6a)"></div>
+        </div>
+      </div>
+      <div>
+        <div class="label">Prompt</div>
+        <div class="prompt">Remove the background and keep soft edge detail…</div>
+      </div>
+      <div class="btn">Open GetAIPhotoEditor</div>
+      <div class="foot">Opens getaiphotoeditor.com to edit</div>
+    </div>
+  </div>
+</body>
+</html>
