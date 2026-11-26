@@ -83,7 +83,7 @@ export function Footer() {
               rel="noopener noreferrer"
               className="hover:text-blue-600"
             >
-              提示词集合
+              Prompt Collection
             </a>
           </div>
         </div>
