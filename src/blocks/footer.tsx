@@ -77,6 +77,14 @@ export function Footer() {
             <Link href="/image-to-image/" className="hover:text-blue-600">
               Image to Image
             </Link>
+            <a
+              href="https://github.com/CoderLim/awesome-ai-image-prompts"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-blue-600"
+            >
+              提示词集合
+            </a>
           </div>
         </div>
         <div>
