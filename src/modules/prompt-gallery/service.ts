@@ -69,8 +69,7 @@ export async function getGalleryPage(offset: number, limit = 24): Promise<Galler
 export const NO_STORE = { 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' };
 
 export async function readGalleryMedia(id: string, index: number, thumbnail: boolean, request: Request) {
-  const row = await getPromptById(id);
-  const media = row?.mediaType === 'image' ? row.media[index] : undefined;
+  const media = (await galleryRepository().getMediaById(id))[index];
   const key = media && mediaKey(media, thumbnail);
   if (!key) return new Response(null, { status: 404, headers: NO_STORE });
   const bucket = bindings().PROMPT_MEDIA;
