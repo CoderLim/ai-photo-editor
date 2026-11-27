@@ -45,6 +45,12 @@
   //   { "binding": "HYPERDRIVE", "id": "REPLACE_WITH_OUTPUT_OF_WRANGLER_HYPERDRIVE_CREATE" }
   // ]
   //
+  // Public prompt gallery (see docs/prompt-gallery.md). Append this object
+  // to d1_databases above using the existing prompts-db ID (no migrations_dir):
+  // { "binding": "PROMPTS_DB", "database_name": "prompts-db", "database_id": "YOUR_EXISTING_PROMPTS_DB_ID" }
+  // Append this entry to r2_buckets without removing any existing entries:
+  // { "binding": "PROMPT_MEDIA", "bucket_name": "prompt-media" }
+  //
   // Other optional bindings — uncomment when needed:
   // "kv_namespaces":  [{ "binding": "CACHE",  "id": "..." }],
   // "r2_buckets":     [{ "binding": "BUCKET", "bucket_name": "..." }]
