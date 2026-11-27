@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Download, LoaderCircle, RotateCcw, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { Link } from '@/core/i18n/navigation';
 import {
   PHOTO_EDIT_MODEL_LABEL,
   TEXT_EDIT_USER_PROMPT_MAX,
@@ -66,16 +67,21 @@ export function TextEditorWorkspace() {
             onRemove={edit.removeImage}
           />
           <div className="mt-3.5">
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-2 flex items-center justify-between gap-2">
               <label
                 htmlFor="photo-text-prompt"
                 className="text-sm font-semibold text-slate-800"
               >
                 Describe the text change
               </label>
-              <span className="text-xs text-slate-400">
-                {edit.prompt.length}/{TEXT_EDIT_USER_PROMPT_MAX}
-              </span>
+              <Link
+                href="/ai-photo-prompts"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 text-xs font-medium text-blue-600 hover:text-blue-700"
+              >
+                Browse prompts
+              </Link>
             </div>
             <textarea
               id="photo-text-prompt"
@@ -86,6 +92,11 @@ export function TextEditorWorkspace() {
               placeholder='e.g. Replace "Blueberry Muffin" with "Cinnamon Roll".'
               className="w-full resize-y rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm leading-relaxed text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
+            <div className="mt-1.5 flex justify-end">
+              <span className="text-xs text-slate-400">
+                {edit.prompt.length}/{TEXT_EDIT_USER_PROMPT_MAX}
+              </span>
+            </div>
           </div>
           <ResolutionSelector
             className="mt-3.5"

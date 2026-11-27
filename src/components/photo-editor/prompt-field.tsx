@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { Link } from '@/core/i18n/navigation';
 import { cn } from '@/lib/utils';
 
 type PromptFieldProps = {
@@ -30,12 +31,19 @@ export function PromptField({
 }: PromptFieldProps) {
   return (
     <div className={className}>
-      <label
-        htmlFor={id}
-        className="mb-2 block text-sm font-semibold text-slate-800"
-      >
-        {label}
-      </label>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <label htmlFor={id} className="text-sm font-semibold text-slate-800">
+          {label}
+        </label>
+        <Link
+          href="/ai-photo-prompts"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="shrink-0 text-xs font-medium text-blue-600 hover:text-blue-700"
+        >
+          Browse prompts
+        </Link>
+      </div>
       <div
         className={cn(
           'rounded-2xl border border-slate-200 bg-white transition-colors focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100',
