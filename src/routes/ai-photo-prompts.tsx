@@ -96,10 +96,10 @@ function PromptTile({
     item.width && item.height ? item.width / item.height : undefined;
 
   return (
-    <article className="group bg-muted relative isolate overflow-hidden">
+    <article className="group relative isolate overflow-hidden bg-slate-100">
       {broken ? (
         <div
-          className="text-muted-foreground flex min-h-24 items-center justify-center p-4 text-center text-sm"
+          className="flex min-h-24 items-center justify-center p-4 text-center text-sm text-slate-500"
           style={{ aspectRatio: ratio ?? 1 }}
         >
           Image unavailable
