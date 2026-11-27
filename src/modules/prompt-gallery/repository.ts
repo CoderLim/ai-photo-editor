@@ -38,7 +38,7 @@ export function parseRow(row: RawPrompt): GalleryPrompt {
     description: row.description, prompt: row.prompt, category: row.category,
     tags: Array.isArray(tags) ? tags.filter((x): x is string => typeof x === 'string') : [],
     inputMode: row.input_mode, model: row.model,
-    media: Array.isArray(media) ? media.map(x => x && typeof x === 'object' ? x as PromptMedia : null).map(x => x ?? {type:'image', role:'input', originalUrl:''}) : [],
+    media: Array.isArray(media) ? media.map((x): PromptMedia => x && typeof x === 'object' ? x as PromptMedia : {type:'image', role:'input', originalUrl:''}) : [],
     author: author && typeof author === 'object' ? author : null,
     sourceUrl: row.source_url, featured: row.featured === 1,
     featuredRank: row.featured_rank, updatedAt: row.updated_at,
@@ -60,7 +60,7 @@ function where(options: PromptOptions, displayable = false) {
     clauses.push("(instr(lower(title), lower(?)) > 0 OR instr(lower(prompt), lower(?)) > 0 OR instr(lower(tags), lower(?)) > 0)");
     values.push(options.keyword, options.keyword, options.keyword);
   }
-  if (displayable) clauses.push("EXISTS (SELECT 1 FROM json_each(media) AS m WHERE json_extract(m.value, '$.type') = 'image' AND json_extract(m.value, '$.role') IN ('output','source-media') AND (json_extract(m.value, '$.thumbnailKey') GLOB 'images/thumbnails/v1/*' OR json_extract(m.value, '$.key') GLOB 'images/originals/*'))");
+  if (displayable) clauses.push("EXISTS (SELECT 1 FROM json_each(media) AS m WHERE json_extract(CASE WHEN m.type = 'object' THEN m.value ELSE '{}' END, '$.type') = 'image' AND json_extract(CASE WHEN m.type = 'object' THEN m.value ELSE '{}' END, '$.role') IN ('output','source-media') AND (json_extract(CASE WHEN m.type = 'object' THEN m.value ELSE '{}' END, '$.thumbnailKey') GLOB 'images/thumbnails/v1/*' OR json_extract(CASE WHEN m.type = 'object' THEN m.value ELSE '{}' END, '$.key') GLOB 'images/originals/*'))");
   return { sql: clauses.join(' AND '), values };
 }
 
@@ -81,6 +81,13 @@ export function createRepository(db: GalleryDatabase) {
       .bind(...(mediaType ? [value, mediaType] : [value])).first<RawPrompt>();
     return row ? parseRow(row) : null;
   }
+  async function getMediaById(id: string) {
+    const row = await db.prepare('SELECT media FROM prompts WHERE ' + PUBLIC + " AND media_type = 'image' AND id = ?")
+      .bind(id).first<{ media: string }>();
+    if (!row) return [];
+    const media = parse<unknown>(row.media, []);
+    return Array.isArray(media) ? media.map((x): PromptMedia => x && typeof x === 'object' ? x as PromptMedia : {type:'image', role:'input', originalUrl:''}) : [];
+  }
   async function getPromptCount(options: PromptOptions = {}) {
     const { sql, values } = where(options);
     const row = await db.prepare('SELECT COUNT(*) AS total FROM prompts WHERE ' + sql).bind(...values).first<{total: number}>();
@@ -93,5 +100,5 @@ export function createRepository(db: GalleryDatabase) {
   return { getPrompts, getPromptById: (id: string) => detail('id', id),
     getPromptBySlug: (slug: string, mediaType: MediaType = 'image') => detail('slug', slug, mediaType),
     getFeaturedPrompts: (options: PromptOptions = {}) => getPrompts({...options, featured: true}),
-    getCategories, getPromptCount };
+    getCategories, getPromptCount, getMediaById };
 }
