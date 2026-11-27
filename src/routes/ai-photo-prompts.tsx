@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
@@ -10,11 +10,15 @@ import { apiGet } from '@/lib/api-client';
 import { pageHead } from '@/lib/seo';
 import { Footer } from '@/blocks/footer';
 import { Header } from '@/blocks/header';
+import { ImageLightbox } from '@/components/image-lightbox';
 import { distributeMasonry } from '@/components/prompt-gallery/masonry';
 
-const title = 'AI Photo Prompts – AI Image Prompt Gallery';
+import { AiPhotoPromptsSeo, promptsSeoJsonLd } from './-ai-photo-prompts-seo';
+
+const title = 'AI Photo Prompts: 2000+ Copy-and-Paste Prompts';
 const description =
-  'Explore AI photo prompts with example images. Browse the gallery and copy full original prompts for your next AI image or photo edit.';
+  'Browse 2000+ AI photo prompts you can copy and paste — portraits, backgrounds, outfits, product shots and restyles. Paste one, edit your own photo, no sign-up.';
+const ogImage = '/images/ai-photo-editor/ai-photo-prompts/og-cover.png';
 
 const loadInitialGalleryPage = createServerFn({ method: 'GET' }).handler(
   async (): Promise<GalleryPage | null> => {
@@ -41,6 +45,7 @@ function PromptTile({
   );
   const [manual, setManual] = useState<string | null>(null);
   const [broken, setBroken] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const busy = useRef(false);
   const textarea = useRef<HTMLTextAreaElement>(null);
@@ -49,7 +54,8 @@ function PromptTile({
     if (manual !== null) textarea.current?.select();
   }, [manual]);
 
-  async function copyPrompt() {
+  async function copyPrompt(e: MouseEvent) {
+    e.stopPropagation();
     if (busy.current) return;
     busy.current = true;
     clearTimeout(timer.current);
@@ -88,11 +94,6 @@ function PromptTile({
 
   const ratio =
     item.width && item.height ? item.width / item.height : undefined;
-  const attribution =
-    item.author ||
-    item.sourceUrl ||
-    item.license === 'CC-BY-4.0' ||
-    item.modifications;
 
   return (
     <article className="group bg-muted relative isolate overflow-hidden">
@@ -104,25 +105,32 @@ function PromptTile({
           Image unavailable
         </div>
       ) : (
-        <img
-          src={item.imageUrl}
-          alt={item.title}
-          width={item.width}
-          height={item.height}
-          className="block h-auto w-full"
-          style={ratio ? { aspectRatio: ratio } : undefined}
-          loading={priority ? 'eager' : 'lazy'}
-          decoding="async"
-          fetchPriority={priority ? 'high' : undefined}
-          onError={() => setBroken(true)}
-        />
+        <button
+          type="button"
+          onClick={() => setPreviewOpen(true)}
+          aria-label={'View ' + item.title + ' fullscreen'}
+          className="block w-full cursor-zoom-in p-0"
+        >
+          <img
+            src={item.imageUrl}
+            alt={item.title}
+            width={item.width}
+            height={item.height}
+            className="block h-auto w-full"
+            style={ratio ? { aspectRatio: ratio } : undefined}
+            loading={priority ? 'eager' : 'lazy'}
+            decoding="async"
+            fetchPriority={priority ? 'high' : undefined}
+            onError={() => setBroken(true)}
+          />
+        </button>
       )}
       <button
         type="button"
         onClick={copyPrompt}
         disabled={copyState === 'loading'}
         aria-label={'Copy prompt: ' + item.title}
-        className="absolute top-2 right-2 z-10 inline-flex min-h-10 items-center gap-1.5 rounded-md bg-black/75 px-3 text-xs font-medium text-white opacity-100 transition-opacity focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-white [@media(hover:hover)_and_(pointer:fine)]:opacity-0 [@media(hover:hover)_and_(pointer:fine)]:group-focus-within:opacity-100 [@media(hover:hover)_and_(pointer:fine)]:group-hover:opacity-100"
+        className="absolute top-2 right-2 z-10 inline-flex size-9 items-center justify-center rounded-full bg-black/45 text-white opacity-100 shadow-sm backdrop-blur-[2px] transition-opacity focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-white [@media(hover:hover)_and_(pointer:fine)]:opacity-0 [@media(hover:hover)_and_(pointer:fine)]:group-focus-within:opacity-100 [@media(hover:hover)_and_(pointer:fine)]:group-hover:opacity-100"
       >
         {copyState === 'loading' ? (
           <Loader2 className="size-4 animate-spin" />
@@ -131,40 +139,7 @@ function PromptTile({
         ) : (
           <Copy className="size-4" />
         )}
-        {copyState === 'loading'
-          ? 'Copying…'
-          : copyState === 'copied'
-            ? 'Copied'
-            : 'Copy'}
       </button>
-      {attribution && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-2 pt-6 pb-2 text-xs text-white opacity-100 transition-opacity [@media(hover:hover)_and_(pointer:fine)]:opacity-0 [@media(hover:hover)_and_(pointer:fine)]:group-focus-within:opacity-100 [@media(hover:hover)_and_(pointer:fine)]:group-hover:opacity-100">
-          <div className="pointer-events-auto flex flex-wrap items-center gap-x-2 gap-y-1">
-            {item.author && <span>{item.author}</span>}
-            {item.sourceUrl && (
-              <a
-                href={item.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                Source
-              </a>
-            )}
-            {item.license === 'CC-BY-4.0' && (
-              <a
-                href="https://creativecommons.org/licenses/by/4.0/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                CC BY 4.0
-              </a>
-            )}
-          </div>
-          {item.modifications && <p className="mt-1">{item.modifications}</p>}
-        </div>
-      )}
       {manual !== null && (
         <div className="absolute inset-0 z-20 flex flex-col gap-2 bg-black/90 p-3 text-white">
           <label className="text-xs font-medium" htmlFor={'prompt-' + item.id}>
@@ -186,6 +161,13 @@ function PromptTile({
           </button>
         </div>
       )}
+      {previewOpen && !broken ? (
+        <ImageLightbox
+          src={item.imageUrl}
+          alt={item.title}
+          onClose={() => setPreviewOpen(false)}
+        />
+      ) : null}
     </article>
   );
 }
@@ -259,16 +241,16 @@ function Gallery() {
   );
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#f7f9fc] text-slate-900">
       <Header />
       <main>
         <section className="px-4 py-4 text-center sm:py-5">
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
             AI Photo Prompts
           </h1>
-          <p className="text-muted-foreground mx-auto mt-1.5 max-w-2xl text-sm">
-            Find inspiration for your next image. Browse examples and copy the
-            prompts you like.
+          <p className="mx-auto mt-1.5 max-w-2xl text-sm text-slate-600">
+            Browse examples, copy a prompt, and run it on your own photo — no
+            sign-up to try.
           </p>
         </section>
         <div
@@ -292,7 +274,7 @@ function Gallery() {
         </div>
         <div
           ref={sentinel}
-          className="text-muted-foreground flex min-h-24 flex-col items-center justify-center gap-3 px-4 py-6 text-center text-sm"
+          className="flex min-h-24 flex-col items-center justify-center gap-3 px-4 py-6 text-center text-sm text-slate-500"
           aria-live="polite"
         >
           {isFetching && (
@@ -328,6 +310,7 @@ function Gallery() {
               ? 'You’ve reached the end.'
               : 'No published prompts available yet.')}
         </div>
+        <AiPhotoPromptsSeo />
       </main>
       <Footer />
     </div>
@@ -336,6 +319,19 @@ function Gallery() {
 
 export const Route = createFileRoute('/ai-photo-prompts')({
   loader: () => loadInitialGalleryPage(),
-  head: () => pageHead({ title, description, path: '/ai-photo-prompts' }),
+  head: () => ({
+    ...pageHead({
+      title,
+      description,
+      path: '/ai-photo-prompts',
+      image: ogImage,
+    }),
+    scripts: [
+      {
+        type: 'application/ld+json',
+        children: JSON.stringify(promptsSeoJsonLd()),
+      },
+    ],
+  }),
   component: Gallery,
 });

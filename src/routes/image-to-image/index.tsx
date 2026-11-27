@@ -682,6 +682,13 @@ function ImageToImagePage() {
             </Link>
             , browse{' '}
             <Link
+              href="/ai-photo-prompts"
+              className="font-semibold text-blue-600 hover:underline"
+            >
+              AI photo prompts
+            </Link>
+            , explore{' '}
+            <Link
               href="/tools"
               className="font-semibold text-blue-600 hover:underline"
             >

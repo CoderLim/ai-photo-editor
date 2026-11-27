@@ -26,6 +26,7 @@ const AREA_EDIT_BLOG_HREF =
 /** Inline FAQ phrases that should render as internal links. Longer labels first. */
 const FAQ_INLINE_LINKS: ReadonlyArray<readonly [string, string]> = [
   [AREA_EDIT_BLOG_LABEL, AREA_EDIT_BLOG_HREF],
+  ['AI Photo Prompts', '/ai-photo-prompts'],
   ['Photo Background Changer', '/photo-background-changer'],
   ['Photo Text Editor', '/photo-text-editor'],
 ];
@@ -33,7 +34,7 @@ const FAQ_INLINE_LINKS: ReadonlyArray<readonly [string, string]> = [
 const FAQS = [
   [
     'Can I edit an existing photo using text prompts?',
-    "Yes. Upload a photo, describe what you'd like to change, and let AI handle the edit. You can remove objects, change outfits, adjust lighting, or try a different style without using Photoshop.",
+    "Yes. Upload a photo, describe what you'd like to change, and let AI handle the edit. You can remove objects, change outfits, adjust lighting, or try a different style without using Photoshop. For ready-made examples, browse our AI Photo Prompts gallery.",
   ],
   // Prompt localization only — precision brush/mask UI is off
   // (PRECISION_EDIT_UI_ENABLED = false).

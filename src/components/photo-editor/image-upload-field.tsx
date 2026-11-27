@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
-import { Plus, Trash2, X } from 'lucide-react';
-import { createPortal } from 'react-dom';
+import { Plus, Trash2 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { ImageLightbox } from '@/components/image-lightbox';
 
 const ACCEPTED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
@@ -82,15 +82,6 @@ export function ImageUploadField({
     window.addEventListener('paste', onPaste);
     return () => window.removeEventListener('paste', onPaste);
   }, [canAdd, remaining]);
-
-  useEffect(() => {
-    if (!lightbox) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setLightbox(null);
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [lightbox]);
 
   return (
     <div className={className}>
@@ -210,33 +201,13 @@ export function ImageUploadField({
         </ul>
       </div>
 
-      {lightbox && typeof document !== 'undefined'
-        ? createPortal(
-            <div
-              role="dialog"
-              aria-modal="true"
-              aria-label={lightbox.fileName || 'Photo preview'}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
-              onClick={() => setLightbox(null)}
-            >
-              <button
-                type="button"
-                aria-label="Close preview"
-                onClick={() => setLightbox(null)}
-                className="absolute top-4 right-4 inline-flex size-10 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25"
-              >
-                <X className="size-5" />
-              </button>
-              <img
-                src={lightbox.preview}
-                alt={lightbox.fileName || 'Photo preview'}
-                className="max-h-full max-w-full rounded-xl object-contain shadow-2xl"
-                onClick={(e) => e.stopPropagation()}
-              />
-            </div>,
-            document.body
-          )
-        : null}
+      {lightbox ? (
+        <ImageLightbox
+          src={lightbox.preview}
+          alt={lightbox.fileName || 'Photo preview'}
+          onClose={() => setLightbox(null)}
+        />
+      ) : null}
     </div>
   );
 }
