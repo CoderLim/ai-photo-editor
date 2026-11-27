@@ -64,11 +64,11 @@ function PromptTile({ item }: { item: GalleryCard }) {
       )}
       <button type="button" onClick={copyPrompt} disabled={copyState === 'loading'}
         aria-label={'Copy prompt: ' + item.title}
-        className="absolute top-2 right-2 z-10 inline-flex min-h-10 items-center gap-1.5 rounded-md bg-black/75 px-3 text-xs font-medium text-white opacity-100 transition-opacity focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-white group-hover:opacity-100 [@media(hover:hover)_and_(pointer:fine)]:opacity-0 [@media(hover:hover)_and_(pointer:fine)]:group-focus-within:opacity-100">
+        className="absolute top-2 right-2 z-10 inline-flex min-h-10 items-center gap-1.5 rounded-md bg-black/75 px-3 text-xs font-medium text-white opacity-100 transition-opacity focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-white [@media(hover:hover)_and_(pointer:fine)]:opacity-0 [@media(hover:hover)_and_(pointer:fine)]:group-hover:opacity-100 [@media(hover:hover)_and_(pointer:fine)]:group-focus-within:opacity-100">
         {copyState === 'loading' ? <Loader2 className="size-4 animate-spin" /> : copyState === 'copied' ? <Check className="size-4" /> : <Copy className="size-4" />}
         {copyState === 'loading' ? 'Copying…' : copyState === 'copied' ? 'Copied' : 'Copy'}
       </button>
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-2 pt-6 pb-2 text-xs text-white opacity-100 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:hover)_and_(pointer:fine)]:opacity-0">
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-2 pt-6 pb-2 text-xs text-white opacity-100 transition-opacity [@media(hover:hover)_and_(pointer:fine)]:opacity-0 [@media(hover:hover)_and_(pointer:fine)]:group-hover:opacity-100 [@media(hover:hover)_and_(pointer:fine)]:group-focus-within:opacity-100">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           {item.author && <span>{item.author}</span>}
           {item.sourceUrl && <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">Source</a>}
