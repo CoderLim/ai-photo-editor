@@ -18,6 +18,7 @@ export function Header() {
         { href: '/photo-text-editor', label: 'Photo Text Editor' },
       ],
     },
+    { href: '/ai-photo-prompts', label: 'AI Photo Prompts' },
     { href: '/pricing', label: m['landing.nav.pricing']() },
     { href: '/blog', label: m['landing.nav.blog']() },
     { href: '/creations', label: 'My Creations' },
