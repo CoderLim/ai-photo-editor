@@ -117,7 +117,7 @@ test('public read service and private media gate using SQLite', async () => {
     const list = await repo.getPrompts({ limit: 2 });
     assert.deepEqual(
       list.map((row) => row.id),
-      ['z', 'a']
+      ['a', 'z']
     );
     assert.ok(!('prompt' in list[0]));
     assert.deepEqual(
@@ -128,7 +128,7 @@ test('public read service and private media gate using SQLite', async () => {
     assert.equal((await repo.getCategories())[0].total, 4);
     assert.deepEqual(
       (await repo.getFeaturedPrompts()).map((row) => row.id),
-      ['z', 'a']
+      ['a', 'z']
     );
     assert.equal(await repo.getPromptById('hidden'), null);
     assert.equal(await repo.getPromptBySlug('missing'), null);
@@ -140,7 +140,7 @@ test('public read service and private media gate using SQLite', async () => {
     const page = await getGalleryPage(0, 2);
     assert.deepEqual(
       page.items.map((card) => card.id),
-      ['z', 'a']
+      ['a', 'z']
     );
     assert.equal(page.nextOffset, 2);
     assert.equal((await getGalleryPage(2, 2)).nextOffset, null);
@@ -440,6 +440,8 @@ test('pagination boundaries and featured-first ordering stay stable', async () =
       1
     );
   }
+  sqlite.exec('ALTER TABLE prompts ADD COLUMN created_at INTEGER NOT NULL DEFAULT 0');
+  sqlite.exec("UPDATE prompts SET created_at=200 WHERE id='d'; UPDATE prompts SET created_at=100 WHERE id='c'");
   const global = globalThis as typeof globalThis & { __CF_ENV__?: unknown };
   const previous = global.__CF_ENV__;
   global.__CF_ENV__ = { PROMPTS_DB: makeDb(sqlite) };
@@ -447,13 +449,13 @@ test('pagination boundaries and featured-first ordering stay stable', async () =
     const first = await getGalleryPage(0, 2);
     assert.deepEqual(
       first.items.map((item) => item.id),
-      ['b', 'a']
+      ['a', 'b']
     );
     assert.equal(first.nextOffset, 2);
     const second = await getGalleryPage(2, 2);
     assert.deepEqual(
       second.items.map((item) => item.id),
-      ['c', 'd']
+      ['d', 'c']
     );
     assert.equal(second.nextOffset, null);
     const beyond = await getGalleryPage(4, 2);

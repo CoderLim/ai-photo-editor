@@ -31,8 +31,12 @@ export interface PromptOptions {
 export const PUBLIC = "json_extract(author, '$.publicationStatus') = 'cleared'";
 const FIELDS =
   'id, media_type, slug, title, description, category, tags, input_mode, model, media, author, source_url, featured, featured_rank, updated_at';
+// The source stores feature selections in append order (larger rank = newer).
+const FEATURE_ORDER =
+  'featured DESC, CASE WHEN featured = 1 THEN featured_rank END DESC';
 const ORDER =
-  'featured DESC, CASE WHEN featured = 1 THEN COALESCE(featured_rank, 2147483647) ELSE 2147483647 END ASC, id ASC';
+  FEATURE_ORDER + ', CASE WHEN featured = 0 THEN created_at END DESC, id ASC';
+const LEGACY_ORDER = FEATURE_ORDER + ', id ASC';
 
 /**
  * SQL prefilter for rows that look displayable. Keep GLOB patterns simple —
@@ -137,18 +141,30 @@ export function createRepository(db: GalleryDatabase) {
     const offset = Number.isSafeInteger(options.offset)
       ? Math.max(0, options.offset!)
       : 0;
-    const result = await db
-      .prepare(
-        'SELECT ' +
-          FIELDS +
-          ' FROM prompts WHERE ' +
-          sql +
-          ' ORDER BY ' +
-          ORDER +
-          ' LIMIT ? OFFSET ?'
-      )
-      .bind(...values, limit, offset)
-      .all<Omit<RawPrompt, 'prompt'>>();
+    const fetchPage = (order: string) =>
+      db
+        .prepare(
+          'SELECT ' +
+            FIELDS +
+            ' FROM prompts WHERE ' +
+            sql +
+            ' ORDER BY ' +
+            order +
+            ' LIMIT ? OFFSET ?'
+        )
+        .bind(...values, limit, offset)
+        .all<Omit<RawPrompt, 'prompt'>>();
+    // Deployment can precede the additive migration in the producer sync.
+    // Only fall back for the missing column; propagate unrelated D1 errors.
+    const result = await (async () => {
+      try {
+        return await fetchPage(ORDER);
+      } catch (error) {
+        if (!/no such column:\s*(?:prompts\.)?created_at\b/i.test(String(error)))
+          throw error;
+        return await fetchPage(LEGACY_ORDER);
+      }
+    })();
     return result.results.map((row) => {
       const { prompt: _, ...rest } = parseRow({ ...row, prompt: '' });
       return rest;
